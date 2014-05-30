@@ -35,7 +35,7 @@ import org.objectweb.asm.util.TraceClassVisitor;
 import org.objectweb.asm.util.CheckClassAdapter;
 //*/
 
-public class Compiler implements Opcodes{
+public class LeanCompiler implements Opcodes{
 
 static final Symbol DEF = Symbol.intern("def");
 static final Symbol LOOP = Symbol.intern("loop*");
@@ -191,6 +191,8 @@ static final public Var LOOP_LABEL = Var.create().setDynamic();
 //vector<object>
 static final public Var CONSTANTS = Var.create().setDynamic();
 
+static final public Var CONSTANT_LEAN_FLAGS = Var.create().setDynamic();
+
 //IdentityHashMap
 static final public Var CONSTANT_IDS = Var.create().setDynamic();
 
@@ -246,9 +248,15 @@ static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
 
 static final public Var COMPILER_OPTIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                                       Symbol.intern("*compiler-options*"), null).setDynamic();
+static final public Var LEAN_VAR_PRED = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                                   Symbol.intern("*lean-var?*"), null).setDynamic();
 
 static public Object getCompilerOption(Keyword k){
 	return RT.get(COMPILER_OPTIONS.deref(),k);
+}
+
+static public boolean isLeanVar(Var var){
+        return RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var));
 }
 
 static Object elideMeta(Object m){
@@ -302,6 +310,10 @@ static final public Var CLEAR_ROOT = Var.create(null).setDynamic();
 
 //LocalBinding -> Set<LocalBindingExpr>
 static final public Var CLEAR_SITES = Var.create(null).setDynamic();
+
+static final public Var EMIT_LEAN_CODE = Var.create(false).setDynamic();
+static final public Var IS_ANALYZING_META = Var.create(false).setDynamic();
+static final public Var IS_COMPILING_A_MACRO = Var.create(false).setDynamic();
 
     public enum C{
 	STATEMENT,  //value ignored
@@ -434,7 +446,17 @@ static class DefExpr implements Expr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		objx.emitVar(gen, var);
+                boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
+                if (emitLeanCode && RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
+                        // Don't emit macros in lean compilation mode
+                        return;
+                }
+
+                if (emitLeanCode && isLeanVar(var))
+                        objx.emitVarLean(gen, var);
+                else
+                    objx.emitVar(gen, var);
+
 		if(isDynamic)
 			{
 			gen.push(isDynamic);
@@ -444,14 +466,22 @@ static class DefExpr implements Expr{
 			{
             if (initProvided || true)//includesExplicitMetadata((MapExpr) meta))
                 {
+                // Don't set metadata in lean compilation mode
+                if (!emitLeanCode) {
                 gen.dup();
                 meta.emit(C.EXPRESSION, objx, gen);
                 gen.checkCast(IPERSISTENTMAP_TYPE);
                 gen.invokeVirtual(VAR_TYPE, setMetaMethod);
                 }
+                }
 			}
 		if(initProvided)
 			{
+                        if (emitLeanCode && isLeanVar(var))
+                            {
+                                init.emit(C.EXPRESSION, objx, gen);
+                                gen.putStatic(objx.objtype, munge(var.sym.name), OBJECT_TYPE);
+                            } else {
 			gen.dup();
 			if(init instanceof FnExpr)
 				{
@@ -460,6 +490,7 @@ static class DefExpr implements Expr{
 			else
 				init.emit(C.EXPRESSION, objx, gen);
 			gen.invokeVirtual(VAR_TYPE, bindRootMethod);
+                        }
 			}
 
 		if(context == C.STATEMENT)
@@ -534,7 +565,13 @@ static class DefExpr implements Expr{
 //					.without(Keyword.intern(null, "added"))
 //					.without(Keyword.intern(null, "static"));
             mm = (IPersistentMap) elideMeta(mm);
-			Expr meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
+            Expr meta = null;
+            try {
+                Var.pushThreadBindings(RT.map(IS_ANALYZING_META, true));
+                meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
+            } finally {
+                Var.popThreadBindings();
+            }
 			return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
 			                   v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
 			                   meta, RT.count(form) == 3, isDynamic);
@@ -596,7 +633,11 @@ public static class VarExpr implements Expr, AssignableExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		objx.emitVarValue(gen,var);
+            if (RT.booleanCast(EMIT_LEAN_CODE.deref()) && isLeanVar(var))
+                objx.emitVarLean(gen,var);
+            else
+                objx.emitVarValue(gen,var);
+
 		if(context == C.STATEMENT)
 			{
 			gen.pop();
@@ -1782,6 +1823,11 @@ static class NumberExpr extends LiteralExpr implements MaybePrimitiveExpr{
 		this.id = registerConstant(n);
 	}
 
+    public NumberExpr(Number n, boolean isLean){
+		this.n = n;
+		this.id = registerConstant(n, isLean);
+	}
+
 	Object val(){
 		return n;
 	}
@@ -1831,6 +1877,15 @@ static class NumberExpr extends LiteralExpr implements MaybePrimitiveExpr{
 		else
 			return new ConstantExpr(form);
 	}
+
+	static public Expr parse(Number form, boolean isLean){
+            if(form instanceof Integer
+               || form instanceof Double
+               || form instanceof Long)
+                return new NumberExpr(form, isLean);
+            else
+                return new ConstantExpr(form, isLean);
+	}
 }
 
 static class ConstantExpr extends LiteralExpr{
@@ -1845,6 +1900,11 @@ static class ConstantExpr extends LiteralExpr{
 //		this.id = RT.nextID();
 //		DynamicClassLoader loader = (DynamicClassLoader) LOADER.get();
 //		loader.registerQuotedVal(id, v);
+	}
+
+    public ConstantExpr(Object v, boolean isLean){
+		this.v = v;
+		this.id = registerConstant(v, isLean);
 	}
 
 	Object val(){
@@ -3012,7 +3072,7 @@ public static class MapExpr implements Expr{
 					m = m.assoc(((LiteralExpr)keyvals.nth(i)).val(), ((LiteralExpr)keyvals.nth(i+1)).val());
 					}
 //				System.err.println("Constant: " + m);
-				return new ConstantExpr(m);
+				return new ConstantExpr(m, RT.booleanCast(IS_ANALYZING_META.deref()));
 				}
 			else
 				return ret;
@@ -3079,7 +3139,7 @@ public static class SetExpr implements Expr{
 				set = (IPersistentSet)set.cons(ve.val());
 				}
 //			System.err.println("Constant: " + set);
-			return new ConstantExpr(set);
+			return new ConstantExpr(set, RT.booleanCast(IS_ANALYZING_META.deref()));
 			}
 		else
 			return ret;
@@ -3141,7 +3201,7 @@ public static class VectorExpr implements Expr{
 				rv = rv.cons(ve.val());
 				}
 //			System.err.println("Constant: " + rv);
-			return new ConstantExpr(rv);
+			return new ConstantExpr(rv, RT.booleanCast(IS_ANALYZING_META.deref()));
 			}
 		else
 			return ret;
@@ -3815,6 +3875,7 @@ static public class FnExpr extends ObjExpr{
 			{
 			Var.pushThreadBindings(
 					RT.mapUniqueKeys(CONSTANTS, PersistentVector.EMPTY,
+					       CONSTANT_LEAN_FLAGS, PersistentVector.EMPTY,
 					       CONSTANT_IDS, new IdentityHashMap(),
 					       KEYWORDS, PersistentHashMap.EMPTY,
 					       VARS, PersistentHashMap.EMPTY,
@@ -3880,6 +3941,7 @@ static public class FnExpr extends ObjExpr{
 			fn.keywords = (IPersistentMap) KEYWORDS.deref();
 			fn.vars = (IPersistentMap) VARS.deref();
 			fn.constants = (PersistentVector) CONSTANTS.deref();
+			fn.constantLeanFlags = (PersistentVector) CONSTANT_LEAN_FLAGS.deref();
 			fn.keywordCallsites = (IPersistentVector) KEYWORD_CALLSITES.deref();
 			fn.protocolCallsites = (IPersistentVector) PROTOCOL_CALLSITES.deref();
 			fn.varCallsites = (IPersistentSet) VAR_CALLSITES.deref();
@@ -3980,6 +4042,7 @@ static public class ObjExpr implements Expr{
 	int line;
 	int column;
 	PersistentVector constants;
+	PersistentVector constantLeanFlags;
 	int constantsID;
 	int altCtorDrops = 0;
 
@@ -4448,10 +4511,331 @@ static public class ObjExpr implements Expr{
 		cv.visitEnd();
 
 		bytecode = cw.toByteArray();
-		if(RT.booleanCast(COMPILE_FILES.deref()))
-			writeClassFile(internalName, bytecode);
-//		else
-//			getCompiledClass();
+		if(RT.booleanCast(COMPILE_FILES.deref()) && !RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
+                    try {
+			Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, true));
+                        compileLean(superName, interfaceNames, oneTimeUse);
+                    } finally {
+                        Var.popThreadBindings();
+                    }
+
+                }
+	}
+
+	void compileLean(String superName, String[] interfaceNames, boolean oneTimeUse) throws IOException{
+		//create bytecode for a class
+		//with name current_ns.defname[$letname]+
+		//anonymous fns get names fn__id
+		//derived from AFn/RestFn
+		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+//		ClassWriter cw = new ClassWriter(0);
+		ClassVisitor cv = cw;
+//		ClassVisitor cv = new TraceClassVisitor(new CheckClassAdapter(cw), new PrintWriter(System.out));
+		//ClassVisitor cv = new TraceClassVisitor(cw, new PrintWriter(System.out));
+		cv.visit(V1_5, ACC_PUBLIC + ACC_SUPER + ACC_FINAL, internalName, null,superName,interfaceNames);
+//		         superName != null ? superName :
+//		         (isVariadic() ? "clojure/lang/RestFn" : "clojure/lang/AFunction"), null);
+		String source = (String) SOURCE.deref();
+		int lineBefore = (Integer) LINE_BEFORE.deref();
+		int lineAfter = (Integer) LINE_AFTER.deref() + 1;
+		int columnBefore = (Integer) COLUMN_BEFORE.deref();
+		int columnAfter = (Integer) COLUMN_AFTER.deref() + 1;
+
+		if(source != null && SOURCE_PATH.deref() != null)
+			{
+			//cv.visitSource(source, null);
+			String smap = "SMAP\n" +
+			              ((source.lastIndexOf('.') > 0) ?
+			               source.substring(0, source.lastIndexOf('.'))
+			                :source)
+			                       //                      : simpleName)
+			              + ".java\n" +
+			              "Clojure\n" +
+			              "*S Clojure\n" +
+			              "*F\n" +
+			              "+ 1 " + source + "\n" +
+			              (String) SOURCE_PATH.deref() + "\n" +
+			              "*L\n" +
+			              String.format("%d#1,%d:%d\n", lineBefore, lineAfter - lineBefore, lineBefore) +
+			              "*E";
+			cv.visitSource(source, smap);
+			}
+		addAnnotation(cv, classMeta);
+		//static fields for constants
+		for(int i = 0; i < constants.count(); i++)
+                    if ((Boolean)constantLeanFlags.nth(i) == false)
+			{
+			cv.visitField(ACC_PUBLIC + ACC_FINAL
+			              + ACC_STATIC, constantName(i), constantType(i).getDescriptor(),
+			              null, null);
+			}
+
+		//static fields for lookup sites
+		for(int i = 0; i < keywordCallsites.count(); i++)
+			{
+			cv.visitField(ACC_FINAL
+			              + ACC_STATIC, siteNameStatic(i), KEYWORD_LOOKUPSITE_TYPE.getDescriptor(),
+			              null, null);
+			cv.visitField(ACC_STATIC, thunkNameStatic(i), ILOOKUP_THUNK_TYPE.getDescriptor(),
+			              null, null);
+			}
+
+//		for(int i=0;i<varCallsites.count();i++)
+//			{
+//			cv.visitField(ACC_PRIVATE + ACC_STATIC + ACC_FINAL
+//					, varCallsiteName(i), IFN_TYPE.getDescriptor(), null, null);
+//			}
+
+		//static init for constants, keywords and vars
+		GeneratorAdapter clinitgen = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC,
+		                                                  Method.getMethod("void <clinit> ()"),
+		                                                  null,
+		                                                  null,
+		                                                  cv);
+		clinitgen.visitCode();
+		clinitgen.visitLineNumber(line, clinitgen.mark());
+
+		if(constants.count() > 0)
+			{
+			emitLeanConstants(clinitgen);
+			}
+
+		if(keywordCallsites.count() > 0)
+			emitKeywordCallsites(clinitgen);
+
+		clinitgen.returnValue();
+
+		clinitgen.endMethod();
+		if(supportsMeta())
+			{
+			cv.visitField(ACC_FINAL, "__meta", IPERSISTENTMAP_TYPE.getDescriptor(), null, null);
+			}
+		//instance fields for closed-overs
+		for(ISeq s = RT.keys(closes); s != null; s = s.next())
+			{
+			LocalBinding lb = (LocalBinding) s.first();
+			if(isDeftype())
+				{
+				int access = isVolatile(lb) ? ACC_VOLATILE :
+				             isMutable(lb) ? 0 :
+				             (ACC_PUBLIC + ACC_FINAL);
+				FieldVisitor fv;
+				if(lb.getPrimitiveType() != null)
+					fv = cv.visitField(access
+							, lb.name, Type.getType(lb.getPrimitiveType()).getDescriptor(),
+								  null, null);
+				else
+				//todo - when closed-overs are fields, use more specific types here and in ctor and emitLocal?
+                                    fv = cv.visitField(access
+                                                       , lb.name, OBJECT_TYPE.getDescriptor(), null, null);
+				addAnnotation(fv, RT.meta(lb.sym));
+				}
+			else
+				{
+				//todo - only enable this non-private+writability for letfns where we need it
+				if(lb.getPrimitiveType() != null)
+					cv.visitField(0 + (isVolatile(lb) ? ACC_VOLATILE : 0)
+							, lb.name, Type.getType(lb.getPrimitiveType()).getDescriptor(),
+								  null, null);
+				else
+					cv.visitField(0 //+ (oneTimeUse ? 0 : ACC_FINAL)
+							, lb.name, OBJECT_TYPE.getDescriptor(), null, null);
+				}
+			}
+
+		//static fields for callsites and thunks
+		for(int i=0;i<protocolCallsites.count();i++)
+			{
+			cv.visitField(ACC_PRIVATE + ACC_STATIC, cachedClassName(i), CLASS_TYPE.getDescriptor(), null, null);
+			}
+
+ 		//ctor that takes closed-overs and inits base + fields
+		Method m = new Method("<init>", Type.VOID_TYPE, ctorTypes());
+		GeneratorAdapter ctorgen = new GeneratorAdapter(ACC_PUBLIC,
+		                                                m,
+		                                                null,
+		                                                null,
+		                                                cv);
+		Label start = ctorgen.newLabel();
+		Label end = ctorgen.newLabel();
+		ctorgen.visitCode();
+		ctorgen.visitLineNumber(line, ctorgen.mark());
+		ctorgen.visitLabel(start);
+		ctorgen.loadThis();
+                ctorgen.invokeConstructor(Type.getObjectType(superName), voidctor);
+
+		if(supportsMeta())
+			{
+			ctorgen.loadThis();
+			ctorgen.visitVarInsn(IPERSISTENTMAP_TYPE.getOpcode(Opcodes.ILOAD), 1);
+			ctorgen.putField(objtype, "__meta", IPERSISTENTMAP_TYPE);
+			}
+
+		int a = supportsMeta()?2:1;
+		for(ISeq s = RT.keys(closes); s != null; s = s.next(), ++a)
+			{
+			LocalBinding lb = (LocalBinding) s.first();
+			ctorgen.loadThis();
+			Class primc = lb.getPrimitiveType();
+			if(primc != null)
+				{
+				ctorgen.visitVarInsn(Type.getType(primc).getOpcode(Opcodes.ILOAD), a);
+				ctorgen.putField(objtype, lb.name, Type.getType(primc));
+				if(primc == Long.TYPE || primc == Double.TYPE)
+					++a;
+				}
+			else
+				{
+				ctorgen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ILOAD), a);
+				ctorgen.putField(objtype, lb.name, OBJECT_TYPE);
+				}
+			}
+
+
+		ctorgen.visitLabel(end);
+
+		ctorgen.returnValue();
+
+		ctorgen.endMethod();
+
+		if(altCtorDrops > 0)
+			{
+					//ctor that takes closed-overs and inits base + fields
+			Type[] ctorTypes = ctorTypes();
+			Type[] altCtorTypes = new Type[ctorTypes.length-altCtorDrops];
+			for(int i=0;i<altCtorTypes.length;i++)
+				altCtorTypes[i] = ctorTypes[i];
+			Method alt = new Method("<init>", Type.VOID_TYPE, altCtorTypes);
+			ctorgen = new GeneratorAdapter(ACC_PUBLIC,
+															alt,
+															null,
+															null,
+															cv);
+			ctorgen.visitCode();
+			ctorgen.loadThis();
+			ctorgen.loadArgs();
+			for(int i=0;i<altCtorDrops;i++)
+				ctorgen.visitInsn(Opcodes.ACONST_NULL);
+
+			ctorgen.invokeConstructor(objtype, new Method("<init>", Type.VOID_TYPE, ctorTypes));
+
+			ctorgen.returnValue();
+			ctorgen.endMethod();
+			}
+
+		if(supportsMeta())
+			{
+			//ctor that takes closed-overs but not meta
+			Type[] ctorTypes = ctorTypes();
+			Type[] noMetaCtorTypes = new Type[ctorTypes.length-1];
+			for(int i=1;i<ctorTypes.length;i++)
+				noMetaCtorTypes[i-1] = ctorTypes[i];
+			Method alt = new Method("<init>", Type.VOID_TYPE, noMetaCtorTypes);
+			ctorgen = new GeneratorAdapter(ACC_PUBLIC,
+															alt,
+															null,
+															null,
+															cv);
+			ctorgen.visitCode();
+			ctorgen.loadThis();
+			ctorgen.visitInsn(Opcodes.ACONST_NULL);	//null meta
+			ctorgen.loadArgs();
+			ctorgen.invokeConstructor(objtype, new Method("<init>", Type.VOID_TYPE, ctorTypes));
+
+			ctorgen.returnValue();
+			ctorgen.endMethod();
+
+			//meta()
+			Method meth = Method.getMethod("clojure.lang.IPersistentMap meta()");
+
+			GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC,
+												meth,
+												null,
+												null,
+												cv);
+			gen.visitCode();
+			gen.loadThis();
+			gen.getField(objtype,"__meta",IPERSISTENTMAP_TYPE);
+
+			gen.returnValue();
+			gen.endMethod();
+
+			//withMeta()
+			meth = Method.getMethod("clojure.lang.IObj withMeta(clojure.lang.IPersistentMap)");
+
+			gen = new GeneratorAdapter(ACC_PUBLIC,
+												meth,
+												null,
+												null,
+												cv);
+			gen.visitCode();
+			gen.newInstance(objtype);
+			gen.dup();
+			gen.loadArg(0);
+
+			for(ISeq s = RT.keys(closes); s != null; s = s.next(), ++a)
+				{
+				LocalBinding lb = (LocalBinding) s.first();
+				gen.loadThis();
+				Class primc = lb.getPrimitiveType();
+				if(primc != null)
+					{
+					gen.getField(objtype, lb.name, Type.getType(primc));
+					}
+				else
+					{
+					gen.getField(objtype, lb.name, OBJECT_TYPE);
+					}
+				}
+
+			gen.invokeConstructor(objtype, new Method("<init>", Type.VOID_TYPE, ctorTypes));
+			gen.returnValue();
+			gen.endMethod();
+			}
+
+		emitStatics(cv);
+		emitMethods(cv);
+
+		if(keywordCallsites.count() > 0)
+			{
+			Method meth = Method.getMethod("void swapThunk(int,clojure.lang.ILookupThunk)");
+
+			GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC,
+												meth,
+												null,
+												null,
+												cv);
+			gen.visitCode();
+			Label endLabel = gen.newLabel();
+
+			Label[] labels = new Label[keywordCallsites.count()];
+			for(int i = 0; i < keywordCallsites.count();i++)
+				{
+				labels[i] = gen.newLabel();
+				}
+			gen.loadArg(0);
+			gen.visitTableSwitchInsn(0,keywordCallsites.count()-1,endLabel,labels);
+
+			for(int i = 0; i < keywordCallsites.count();i++)
+				{
+				gen.mark(labels[i]);
+//				gen.loadThis();
+				gen.loadArg(1);
+				gen.putStatic(objtype, thunkNameStatic(i),ILOOKUP_THUNK_TYPE);
+				gen.goTo(endLabel);
+				}
+
+			gen.mark(endLabel);
+
+			gen.returnValue();
+			gen.endMethod();
+			}
+
+		//end of class
+		cv.visitEnd();
+
+                byte[] leanBytecode = cw.toByteArray();
+                writeClassFile(internalName, leanBytecode);
 	}
 
 	private void emitKeywordCallsites(GeneratorAdapter clinitgen){
@@ -4711,6 +5095,22 @@ static public class ObjExpr implements Expr{
 			}
 	}
 
+    	void emitLeanConstants(GeneratorAdapter clinitgen){
+            try {
+                Var.pushThreadBindings(RT.map(RT.PRINT_DUP, RT.T));
+
+                for(int i = 0; i < constants.count(); i++)
+                    if ((Boolean)constantLeanFlags.nth(i) == false)
+                        {
+                            emitValue(constants.nth(i), clinitgen);
+                            clinitgen.checkCast(constantType(i));
+                            clinitgen.putStatic(objtype, constantName(i), constantType(i));
+                        }
+            } finally {
+                Var.popThreadBindings();
+            }
+	}
+
 	boolean isMutable(LocalBinding lb){
 		return isVolatile(lb) ||
 		       RT.booleanCast(RT.contains(fields, lb.sym)) &&
@@ -4940,9 +5340,24 @@ static public class ObjExpr implements Expr{
 	}
 
 	public void emitVar(GeneratorAdapter gen, Var var){
-		Integer i = (Integer) vars.valAt(var);
-		emitConstant(gen, i);
-		//gen.getStatic(fntype, munge(var.sym.toString()), VAR_TYPE);
+            if (RT.booleanCast(EMIT_LEAN_CODE.deref()) && isLeanVar(var)) {
+                emitVarLean(gen, var);
+            } else {
+                Integer i = (Integer) vars.valAt(var);
+                emitConstant(gen, i);
+                //gen.getStatic(fntype, munge(var.sym.toString()), VAR_TYPE);
+            }
+	}
+
+	public void emitVarLean(GeneratorAdapter gen, Var var){
+            String typeStr = null;
+            try {
+                typeStr = "L"+var.ns.name.toString().replace(".", "/")+"__init;";
+                gen.getStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+            } catch (Exception e) {
+                throw new CompilerException((String) SOURCE_PATH.deref(), RT.intCast(LINE.deref()),
+                                            RT.intCast(COLUMN.deref()), e);
+            }
 	}
 
 	final static Method varGetMethod = Method.getMethod("Object get()");
@@ -6408,6 +6823,7 @@ public static Expr analyze(C context, Object form) {
 
 private static Expr analyze(C context, Object form, String name) {
 	//todo symbol macro expansion?
+        boolean isAnalyzingMeta = RT.booleanCast(IS_ANALYZING_META.deref());
 	try
 		{
 		if(form instanceof LazySeq)
@@ -6426,9 +6842,9 @@ private static Expr analyze(C context, Object form, String name) {
 		if(fclass == Symbol.class)
 			return analyzeSymbol((Symbol) form);
 		else if(fclass == Keyword.class)
-			return registerKeyword((Keyword) form);
+                    return registerKeyword((Keyword) form, isAnalyzingMeta);
 		else if(form instanceof Number)
-			return NumberExpr.parse((Number) form);
+                    return NumberExpr.parse((Number) form, isAnalyzingMeta);
 		else if(fclass == String.class)
 				return new StringExpr(((String) form).intern());
 //	else if(fclass == Character.class)
@@ -6722,19 +7138,30 @@ public static Object eval(Object form, boolean freshLoader) {
 }
 
 private static int registerConstant(Object o){
+        return registerConstant(o, false);
+}
+
+private static int registerConstant(Object o, boolean isLean){
 	if(!CONSTANTS.isBound())
 		return -1;
 	PersistentVector v = (PersistentVector) CONSTANTS.deref();
 	IdentityHashMap<Object,Integer> ids = (IdentityHashMap<Object,Integer>) CONSTANT_IDS.deref();
 	Integer i = ids.get(o);
 	if(i != null)
+            {
+                if (!isLean)
+                    CONSTANT_LEAN_FLAGS.set(RT.assoc((PersistentVector)CONSTANT_LEAN_FLAGS.deref(), i, false));
 		return i;
+            }
+
 	CONSTANTS.set(RT.conj(v, o));
 	ids.put(o, v.count());
+
+        CONSTANT_LEAN_FLAGS.set(RT.conj((PersistentVector)CONSTANT_LEAN_FLAGS.deref(), isLean));
 	return v.count();
 }
 
-private static KeywordExpr registerKeyword(Keyword keyword){
+private static KeywordExpr registerKeyword(Keyword keyword, boolean isLean){
 	if(!KEYWORDS.isBound())
 		return new KeywordExpr(keyword);
 
@@ -6742,8 +7169,13 @@ private static KeywordExpr registerKeyword(Keyword keyword){
 	Object id = RT.get(keywordsMap, keyword);
 	if(id == null)
 		{
-		KEYWORDS.set(RT.assoc(keywordsMap, keyword, registerConstant(keyword)));
+		int constId = registerConstant(keyword, isLean);
+		KEYWORDS.set(RT.assoc(keywordsMap, keyword, constId));
 		}
+        else
+            if (!isLean)
+                registerConstant(keyword, false);
+
 	return new KeywordExpr(keyword);
 //	KeywordExpr ke = (KeywordExpr) RT.get(keywordsMap, keyword);
 //	if(ke == null)
@@ -7028,7 +7460,7 @@ private static void registerVar(Var var) {
 	Object id = RT.get(varsMap, var);
 	if(id == null)
 		{
-		VARS.set(RT.assoc(varsMap, var, registerConstant(var)));
+		VARS.set(RT.assoc(varsMap, var, registerConstant(var, isLeanVar(var))));
 		}
 //	if(varsMap != null && RT.get(varsMap, var) == null)
 //		VARS.set(RT.assoc(varsMap, var, var));
@@ -7211,10 +7643,25 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 		form = macroexpand(form);
 		if(form instanceof ISeq && Util.equals(RT.first(form), DO))
 			{
+                            // This hack checks if the (do ...) form is the
+                            // product of `defmacro` expansion.
+                            Object maybeMacroFlag = RT.first(RT.next(form));
+                            if ("__COMPILER__MACRO__FLAG__".equals(maybeMacroFlag)) {
+                                try {
+                                    Var.pushThreadBindings(RT.map(IS_COMPILING_A_MACRO, true));
+                                    for(ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s))
+                                    {
+                                        compile1(gen, objx, RT.first(s));
+                                    }
+                                } finally {
+                                    Var.popThreadBindings();
+                                }
+                            } else {
 			for(ISeq s = RT.next(form); s != null; s = RT.next(s))
 				{
 				compile1(gen, objx, RT.first(s));
 				}
+                            }
 			}
 		else
 			{
@@ -7222,9 +7669,19 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 			objx.keywords = (IPersistentMap) KEYWORDS.deref();
 			objx.vars = (IPersistentMap) VARS.deref();
 			objx.constants = (PersistentVector) CONSTANTS.deref();
-			expr.emit(C.EXPRESSION, objx, gen);
+			objx.constantLeanFlags = (PersistentVector) CONSTANT_LEAN_FLAGS.deref();
+
 			expr.eval();
+
+                        if (!RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
+                            try {
+                                Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, true));
+                                expr.emit(C.EXPRESSION, objx, gen);
+                            } finally {
+                                Var.popThreadBindings();
+                            }
 			}
+                        }
 		}
 	finally
 		{
@@ -7255,6 +7712,7 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 			       LINE_AFTER, pushbackReader.getLineNumber(),
 			       COLUMN_AFTER, pushbackReader.getColumnNumber(),
 			       CONSTANTS, PersistentVector.EMPTY,
+                               CONSTANT_LEAN_FLAGS, PersistentVector.EMPTY,
 			       CONSTANT_IDS, new IdentityHashMap(),
 			       KEYWORDS, PersistentHashMap.EMPTY,
 			       VARS, PersistentHashMap.EMPTY
@@ -7297,8 +7755,19 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 		gen.returnValue();
 		gen.endMethod();
 
+                // static fields for vars
+                Iterator it = ((PersistentHashMap)objx.vars).keySet().iterator();
+                while (it.hasNext()) {
+                    Object var = it.next();
+                    if (isLeanVar((Var)var)) {
+                    cv.visitField(ACC_PUBLIC + ACC_STATIC, munge(((Var)var).sym.name), OBJECT_TYPE.getDescriptor(),
+                                          null, null);
+                    }
+                }
+
 		//static fields for constants
 		for(int i = 0; i < objx.constants.count(); i++)
+                    if ((Boolean)objx.constantLeanFlags.nth(i) == false)
 			{
 			cv.visitField(ACC_PUBLIC + ACC_FINAL + ACC_STATIC, objx.constantName(i), objx.constantType(i).getDescriptor(),
 			              null, null);
@@ -7322,6 +7791,7 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 				Var.pushThreadBindings(RT.map(RT.PRINT_DUP, RT.T));
 
 				for(int i = n*INITS_PER; i < objx.constants.count() && i < (n+1)*INITS_PER; i++)
+                                    if ((Boolean)objx.constantLeanFlags.nth(i) == false)
 					{
 					objx.emitValue(objx.constants.nth(i), clinitgen);
 					clinitgen.checkCast(objx.constantType(i));
@@ -7358,7 +7828,7 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 		clinitgen.push(objx.internalName.replace('/','.'));
 		clinitgen.invokeStatic(CLASS_TYPE, Method.getMethod("Class forName(String)"));
 		clinitgen.invokeVirtual(CLASS_TYPE,Method.getMethod("ClassLoader getClassLoader()"));
-		clinitgen.invokeStatic(Type.getType(Compiler.class), Method.getMethod("void pushNSandLoader(ClassLoader)"));
+		clinitgen.invokeStatic(Type.getType(LeanCompiler.class), Method.getMethod("void pushNSandLoader(ClassLoader)"));
 		clinitgen.mark(startTry);
 		clinitgen.invokeStatic(objx.objtype, Method.getMethod("void load()"));
 		clinitgen.mark(endTry);
@@ -7518,6 +7988,7 @@ static public class NewInstanceExpr extends ObjExpr{
 			{
 			Var.pushThreadBindings(
 					RT.mapUniqueKeys(CONSTANTS, PersistentVector.EMPTY,
+                                               CONSTANT_LEAN_FLAGS, PersistentVector.EMPTY,
 					       CONSTANT_IDS, new IdentityHashMap(),
 					       KEYWORDS, PersistentHashMap.EMPTY,
 					       VARS, PersistentHashMap.EMPTY,
@@ -7550,6 +8021,7 @@ static public class NewInstanceExpr extends ObjExpr{
 			ret.keywords = (IPersistentMap) KEYWORDS.deref();
 			ret.vars = (IPersistentMap) VARS.deref();
 			ret.constants = (PersistentVector) CONSTANTS.deref();
+			ret.constantLeanFlags = (PersistentVector) CONSTANT_LEAN_FLAGS.deref();
 			ret.constantsID = RT.nextID();
 			ret.keywordCallsites = (IPersistentVector) KEYWORD_CALLSITES.deref();
 			ret.protocolCallsites = (IPersistentVector) PROTOCOL_CALLSITES.deref();
@@ -7564,12 +8036,17 @@ static public class NewInstanceExpr extends ObjExpr{
 
 		try
 			{
+                        Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, false));
 			ret.compile(slashname(superClass),inames,false);
 			}
 		catch(IOException e)
 			{
 			throw Util.sneakyThrow(e);
 			}
+                finally
+                        {
+                        Var.popThreadBindings();
+                        }
 		ret.getCompiledClass();
 		return ret;
 		}
