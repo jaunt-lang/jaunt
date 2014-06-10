@@ -7673,6 +7673,18 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 
 			expr.eval();
 
+                        if ((RT.CURRENT_NS.deref().toString().equals("clojure.core")) && (RT.first(form) instanceof Symbol) && ((Symbol)RT.first(form)).name.equals("load")
+                            && !("core/protocols".equals(RT.second(form))) && !("uuid".equals(RT.second(form)))
+                            && !("instant".equals(RT.second(form)))) {
+                            String path = "clojure/" + (String)RT.second(form) + ".clj";
+                            try{
+                                compileSeparateCoreFile(new InputStreamReader(RT.resourceAsStream(RT.baseLoader(), path)), path, path, objx, gen);
+                            } catch (Exception ex) {
+                                    ex.printStackTrace();
+                            }
+                            return;
+                        }
+
                         if (!RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
                             try {
                                 Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, true));
@@ -7687,6 +7699,42 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 		{
 		Var.popThreadBindings();
 		}
+}
+
+public static void compileSeparateCoreFile(Reader rdr, String sourcePath, String sourceName,
+                                             ObjExpr objx, GeneratorAdapter gen) throws IOException{
+    	if(COMPILE_PATH.deref() == null)
+		throw Util.runtimeException("*compile-path* not set");
+
+	Object EOF = new Object();
+	Object ret = null;
+	LineNumberingPushbackReader pushbackReader =
+			(rdr instanceof LineNumberingPushbackReader) ? (LineNumberingPushbackReader) rdr :
+			new LineNumberingPushbackReader(rdr);
+	Var.pushThreadBindings(
+			RT.mapUniqueKeys(SOURCE_PATH, sourcePath,
+			       SOURCE, sourceName,
+			       LINE_BEFORE, pushbackReader.getLineNumber(),
+			       COLUMN_BEFORE, pushbackReader.getColumnNumber(),
+			       LINE_AFTER, pushbackReader.getLineNumber(),
+			       COLUMN_AFTER, pushbackReader.getColumnNumber()
+			));
+
+	try
+		{
+		for(Object r = LispReader.read(pushbackReader, false, EOF, false); r != EOF;
+		    r = LispReader.read(pushbackReader, false, EOF, false))
+			{
+				LINE_AFTER.set(pushbackReader.getLineNumber());
+				COLUMN_AFTER.set(pushbackReader.getColumnNumber());
+				compile1(gen, objx, r);
+				LINE_BEFORE.set(pushbackReader.getLineNumber());
+				COLUMN_BEFORE.set(pushbackReader.getColumnNumber());
+			}
+                }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
 }
 
 public static Object compile(Reader rdr, String sourcePath, String sourceName) throws IOException{
