@@ -255,8 +255,10 @@ static public Object getCompilerOption(Keyword k){
 	return RT.get(COMPILER_OPTIONS.deref(),k);
 }
 
+static private IPersistentSet nonLeanVars = PersistentHashSet.EMPTY;
+
 static public boolean isLeanVar(Var var){
-        return RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var));
+    return !nonLeanVars.contains(var.sym) && RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var));
 }
 
 static Object elideMeta(Object m){
@@ -7638,6 +7640,25 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 			RT.map(LINE, line, COLUMN, column
 			       ,LOADER, RT.makeClassLoader()
 			));
+
+        if (form instanceof ISeq && (Util.equals(RT.first(form), Symbol.intern("defmulti")) ||
+                                     Util.equals(RT.first(form), Symbol.intern("definline")))) {
+            nonLeanVars = ((PersistentHashSet)nonLeanVars).cons(RT.first(RT.next(form)));
+        }
+
+        if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("deftype"))
+            || Util.equals(RT.first(form), Symbol.intern("defrecord"))) {
+            nonLeanVars = ((PersistentHashSet)nonLeanVars).cons(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()));
+        }
+
+        if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("defprotocol"))) {
+            nonLeanVars = ((PersistentHashSet)nonLeanVars).cons(RT.first(RT.next(form)));
+            for (ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s)) {
+                if (RT.first(s) instanceof ISeq)
+                    nonLeanVars = ((PersistentHashSet)nonLeanVars).cons(RT.first(RT.first(s)));
+            }
+        }
+
 	try
 		{
 		form = macroexpand(form);
@@ -7666,6 +7687,7 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 		else
 			{
 			Expr expr = analyze(C.EVAL, form);
+                        System.out.println("compiling: " + form + " --- " + RT.CURRENT_NS.deref());
 			objx.keywords = (IPersistentMap) KEYWORDS.deref();
 			objx.vars = (IPersistentMap) VARS.deref();
 			objx.constants = (PersistentVector) CONSTANTS.deref();
