@@ -1,0 +1,7 @@
+#!/bin/bash
+mvn package
+java -cp target/clojure-1.7.0-skummet-SNAPSHOT.jar clojure.main test.clj
+cp -r target/classes/clojure/asm clojure/
+cp -r target/classes/clojure/lang clojure/
+cp target/classes/clojure/version.properties clojure/
+java testskummet.bar 123456 example
