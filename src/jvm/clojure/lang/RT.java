@@ -225,6 +225,8 @@ final static Var PRINT_READABLY = Var.intern(CLOJURE_NS, Symbol.intern("*print-r
 final static Var PRINT_DUP = Var.intern(CLOJURE_NS, Symbol.intern("*print-dup*"), F).setDynamic();
 final static Var WARN_ON_REFLECTION = Var.intern(CLOJURE_NS, Symbol.intern("*warn-on-reflection*"), F).setDynamic();
 final static Var ALLOW_UNRESOLVED_VARS = Var.intern(CLOJURE_NS, Symbol.intern("*allow-unresolved-vars*"), F).setDynamic();
+final static Var LEAN_COMPILE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                           Symbol.intern("*lean-compile*"), null).setDynamic();
 
 final static Var IN_NS_VAR = Var.intern(CLOJURE_NS, Symbol.intern("in-ns"), F);
 final static Var NS_VAR = Var.intern(CLOJURE_NS, Symbol.intern("ns"), F);
@@ -395,6 +397,10 @@ static void compile(String cljfile) throws IOException{
         InputStream ins = resourceAsStream(baseLoader(), cljfile);
 	if(ins != null) {
 		try {
+                    if (RT.booleanCast(LEAN_COMPILE.deref()))
+			LeanCompiler.compile(new InputStreamReader(ins, UTF8), cljfile,
+			                 cljfile.substring(1 + cljfile.lastIndexOf("/")));
+                    else
 			Compiler.compile(new InputStreamReader(ins, UTF8), cljfile,
 			                 cljfile.substring(1 + cljfile.lastIndexOf("/")));
 		}

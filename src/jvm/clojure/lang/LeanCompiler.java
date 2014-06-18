@@ -468,8 +468,8 @@ static class DefExpr implements Expr{
 			{
             if (initProvided || true)//includesExplicitMetadata((MapExpr) meta))
                 {
-                // Don't set metadata in lean compilation mode
-                if (!emitLeanCode) {
+                // Don't set metadata in lean compilation mode and if var is lean
+                if (!(emitLeanCode && isLeanVar(var))) {
                 gen.dup();
                 meta.emit(C.EXPRESSION, objx, gen);
                 gen.checkCast(IPERSISTENTMAP_TYPE);
@@ -569,7 +569,7 @@ static class DefExpr implements Expr{
             mm = (IPersistentMap) elideMeta(mm);
             Expr meta = null;
             try {
-                Var.pushThreadBindings(RT.map(IS_ANALYZING_META, true));
+                Var.pushThreadBindings(RT.map(IS_ANALYZING_META, isLeanVar(v)));
                 meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
             } finally {
                 Var.popThreadBindings();
@@ -7695,16 +7695,21 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 
 			expr.eval();
 
-                        if ((RT.CURRENT_NS.deref().toString().equals("clojure.core")) && (RT.first(form) instanceof Symbol) && ((Symbol)RT.first(form)).name.equals("load")
-                            && !("core/protocols".equals(RT.second(form))) && !("uuid".equals(RT.second(form)))
-                            && !("instant".equals(RT.second(form)))) {
+                        if ((RT.CURRENT_NS.deref().toString().equals("clojure.core"))
+                            && (RT.first(form) instanceof Symbol)
+                            && ((Symbol)RT.first(form)).name.equals("load")) {
                             String path = "clojure/" + (String)RT.second(form) + ".clj";
-                            try{
-                                compileSeparateCoreFile(new InputStreamReader(RT.resourceAsStream(RT.baseLoader(), path)), path, path, objx, gen);
-                            } catch (Exception ex) {
+                            try {
+                                if (!("core/protocols".equals(RT.second(form))) && !("uuid".equals(RT.second(form)))
+                                    && !("instant".equals(RT.second(form)))) {
+                                    compileSeparateCoreFile(new InputStreamReader(RT.resourceAsStream(RT.baseLoader(), path)), path, path, objx, gen);
+                                    return;
+                                }
+                                else
+                                    compile(new InputStreamReader(RT.resourceAsStream(RT.baseLoader(), path)), path, path);
+                                } catch (Exception ex) {
                                     ex.printStackTrace();
-                            }
-                            return;
+                                }
                         }
 
                         if (!RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
