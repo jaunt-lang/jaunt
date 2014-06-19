@@ -5653,6 +5653,11 @@
     (load-one lib true true))
   lib)
 
+(defn lean-compile [lib]
+  (binding [*compile-files* true
+            *lean-compile* true]
+    (clojure.lang.RT/compile (str (subs (root-resource lib) 1) ".clj"))))
+
 ;;;;;;;;;;;;; nested associative ops ;;;;;;;;;;;
 
 (defn get-in
