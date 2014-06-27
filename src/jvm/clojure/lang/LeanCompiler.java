@@ -258,7 +258,8 @@ static public Object getCompilerOption(Keyword k){
 static private IPersistentSet nonLeanVars = PersistentHashSet.EMPTY;
 
 static public boolean isLeanVar(Var var){
-    return !nonLeanVars.contains(var.sym) && RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var));
+    return !nonLeanVars.contains(var.sym) && RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var))
+        && !var.isDynamic();
 }
 
 static Object elideMeta(Object m){

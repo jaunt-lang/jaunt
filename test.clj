@@ -2,14 +2,15 @@
 
 (import 'clojure.lang.LeanCompiler)
 
-(def not-lean-vars
-  #{"in-ns" "refer" "load-file" "load" "-main" "defn" "defmacro" "parents" "ancestors"
-    "pr-on" "isa?" "global-hierarchy" ".."
- })
+(def not-lean-vars #{"#'clojure.core/in-ns" "#'clojure.core/refer"
+                     "#'clojure.core/load-file" "#'clojure.core/load"
+                     "#'clojure.core/defn" "#'clojure.core/defmacro" "#'clojure.core/parents"
+                     "#'clojure.core/ancestors" "#'clojure.core/pr-on" "#'clojure.core/isa?"
+                     "#'clojure.core/global-hierarchy" "#'clojure.core/.."})
 
 (defn lean-var? [^clojure.lang.Var var]
-  (and (not (not-lean-vars (.. var sym getName)))
-       (not (.isDynamic var))))
+  (and (not (not-lean-vars (.toString var)))
+       (not (.startsWith (.. var sym getName) "-"))))
 
 (binding [;; *lean-compile* true
           *compile-path* "./target-skummet"
