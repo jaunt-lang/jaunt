@@ -257,6 +257,9 @@ static public Object getCompilerOption(Keyword k){
 
 static private IPersistentSet nonLeanVars = PersistentHashSet.EMPTY;
 
+static public boolean isLeanVar(Symbol sym){
+    return isLeanVar(lookupVar(sym, false));
+}
 static public boolean isLeanVar(Var var){
     return !nonLeanVars.contains(var.sym) && RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var))
         && !var.isDynamic();
@@ -7666,6 +7669,12 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
                 if (RT.first(s) instanceof ISeq)
                     nonLeanVars = ((PersistentHashSet)nonLeanVars).cons(RT.first(RT.first(s)));
             }
+        }
+
+        if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("alter-meta!"))) {
+            Object var_sym = RT.second(RT.first(RT.next(form)));
+            if (var_sym instanceof Symbol && isLeanVar((Symbol)var_sym))
+                form = null;
         }
 
 	try
