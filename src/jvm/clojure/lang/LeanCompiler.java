@@ -5359,7 +5359,7 @@ static public class ObjExpr implements Expr{
 	public void emitVarLean(GeneratorAdapter gen, Var var){
             String typeStr = null;
             try {
-                typeStr = "L"+var.ns.name.toString().replace(".", "/")+"__init;";
+                typeStr = "L"+munge(var.ns.name.toString()).replace(".", "/")+"__init;";
                 gen.getStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
             } catch (Exception e) {
                 throw new CompilerException((String) SOURCE_PATH.deref(), RT.intCast(LINE.deref()),
