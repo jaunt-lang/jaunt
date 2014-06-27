@@ -3913,12 +3913,11 @@
       (doseq [sym to-do]
         (when-not (exclude sym)
           (let [v (nspublics sym)]
-            (when-not v
-              (throw (new java.lang.IllegalAccessError
-                          (if (get (ns-interns ns) sym)
-                            (str sym " is not public")
-                            (str sym " does not exist")))))
-            (. *ns* (refer (or (rename sym) sym) v)))))))
+            (if-not v
+              (println "WARNING: " (if (get (ns-interns ns) sym)
+                                     (str sym " is not public")
+                                     (str sym " does not exist")))
+              (. *ns* (refer (or (rename sym) sym) v))))))))
 
 (defn ns-refers
   "Returns a map of the refer mappings for the namespace."
