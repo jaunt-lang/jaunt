@@ -522,7 +522,10 @@ static class DefExpr implements Expr{
 			else if(!(RT.second(form) instanceof Symbol))
 					throw Util.runtimeException("First argument to def must be a Symbol");
 			Symbol sym = (Symbol) RT.second(form);
-			Var v = lookupVar(sym, true);
+			IPersistentMap mm = sym.meta();
+			boolean isDynamic = RT.booleanCast(RT.get(mm,dynamicKey));
+			Var dummyVar = new Var(currentNS(), sym);
+			Var v = lookupVar(sym, true, true, !(isDynamic || nonLeanVars.contains(sym)) && isLeanVar(dummyVar));
 			if(v == null)
 				throw Util.runtimeException("Can't refer to qualified var that doesn't exist");
 			if(!v.ns.equals(currentNS()))
@@ -534,8 +537,6 @@ static class DefExpr implements Expr{
 				else
 					throw Util.runtimeException("Can't create defs outside of current ns");
 				}
-			IPersistentMap mm = sym.meta();
-			boolean isDynamic = RT.booleanCast(RT.get(mm,dynamicKey));
 			if(isDynamic)
 			   v.setDynamic();
             if(!isDynamic && sym.name.startsWith("*") && sym.name.endsWith("*") && sym.name.length() > 2)
@@ -7152,6 +7153,9 @@ private static int registerConstant(Object o, boolean isLean){
 	if(i != null)
             {
                 if (!isLean)
+                    // A constant might have been declared lean (= omit) before,
+                    // but now non-lean instance of it appeared. We should clear
+                    // the flag in CONSTANT_LEAN_FLAGS.
                     CONSTANT_LEAN_FLAGS.set(RT.assoc((PersistentVector)CONSTANT_LEAN_FLAGS.deref(), i, false));
 		return i;
             }
@@ -7284,7 +7288,7 @@ private static Expr analyzeSymbol(Symbol sym) {
 			throw Util.runtimeException("Can't take value of a macro: " + v);
 		if(RT.booleanCast(RT.get(v.meta(),RT.CONST_KEY)))
 			return analyze(C.EXPRESSION, RT.list(QUOTE, v.get()));
-		registerVar(v);
+		registerVar(v, false);
 		return new VarExpr(v, tag);
 		}
 	else if(o instanceof Class)
@@ -7409,6 +7413,10 @@ static public Object maybeResolveIn(Namespace n, Symbol sym) {
 
 
 static Var lookupVar(Symbol sym, boolean internNew, boolean registerMacro) {
+        return lookupVar(sym, internNew, registerMacro, false);
+}
+
+static Var lookupVar(Symbol sym, boolean internNew, boolean registerMacro, boolean isLean) {
 	Var var = null;
 
 	//note - ns-qualified vars in other namespaces must already exist
@@ -7448,21 +7456,21 @@ static Var lookupVar(Symbol sym, boolean internNew, boolean registerMacro) {
 				}
 			}
 	if(var != null && (!var.isMacro() || registerMacro))
-		registerVar(var);
+		registerVar(var, isLean);
 	return var;
 }
 static Var lookupVar(Symbol sym, boolean internNew) {
     return lookupVar(sym, internNew, true);
 }
 
-private static void registerVar(Var var) {
+private static void registerVar(Var var, boolean isLean) {
 	if(!VARS.isBound())
 		return;
 	IPersistentMap varsMap = (IPersistentMap) VARS.deref();
 	Object id = RT.get(varsMap, var);
 	if(id == null)
 		{
-		VARS.set(RT.assoc(varsMap, var, registerConstant(var, isLeanVar(var))));
+		VARS.set(RT.assoc(varsMap, var, registerConstant(var, isLean)));
 		}
 //	if(varsMap != null && RT.get(varsMap, var) == null)
 //		VARS.set(RT.assoc(varsMap, var, var));
