@@ -3,7 +3,9 @@
 (import 'clojure.lang.LeanCompiler)
 
 (def not-lean-vars
-  #{"in-ns" "refer" "load-file" "load" "-main" "defn" "defmacro" "parents" "ancestors"})
+  #{"in-ns" "refer" "load-file" "load" "-main" "defn" "defmacro" "parents" "ancestors"
+    "pr-on" "isa?" "global-hierarchy" ".."
+ })
 
 (defn lean-var? [^clojure.lang.Var var]
   (and (not (not-lean-vars (.. var sym getName)))
