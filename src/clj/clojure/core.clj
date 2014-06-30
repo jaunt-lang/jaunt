@@ -5049,7 +5049,7 @@
   current value plus any args"
   {:added "1.0"
    :static true}
-  [^clojure.lang.Var v f & args] (.alterRoot v f args))
+  [v f & args] (clojure.lang.Var/alterVarRoot v f args))
 
 (defn bound?
   "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.

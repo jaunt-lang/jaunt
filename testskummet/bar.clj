@@ -12,5 +12,8 @@
 
 (def function-call-in-def (str @(atom [17 19 21])))
 
+(alter-var-root #'testskummet.foo/just-value + 1500)
+
 (defn -main [& args]
+  (println "Value is " testskummet.foo/just-value)
   (println (ordinary-function args)))

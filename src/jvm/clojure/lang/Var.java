@@ -309,6 +309,15 @@ synchronized public Object alterRoot(IFn fn, ISeq args) {
 	return newRoot;
 }
 
+public static Object alterVarRoot(Object var, IFn fn, ISeq args) {
+	if (var instanceof Var)
+                return ((Var)var).alterRoot(fn, args);
+	else {
+		Object newRoot = fn.applyTo(RT.cons(var, args));
+		return newRoot;
+	}
+}
+
 public static void pushThreadBindings(Associative bindings){
 	Frame f = dvals.get();
 	Associative bmap = f.bindings;

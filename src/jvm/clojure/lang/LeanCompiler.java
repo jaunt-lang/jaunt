@@ -240,6 +240,9 @@ static final public Var COMPILE_FILES = Var.intern(Namespace.findOrCreate(Symbol
 static final public Var INSTANCE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                             Symbol.intern("instance?"));
 
+static final public Var ALTER_VAR_ROOT = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                                    Symbol.intern("alter-var-root"));
+
 static final public Var ADD_ANNOTATIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                             Symbol.intern("add-annotations"));
 
@@ -3547,6 +3550,7 @@ static class InvokeExpr implements Expr{
 	public final String source;
 	public boolean isProtocol = false;
 	public boolean isDirect = false;
+	public boolean isAlterVarRoot = false;
 	public int siteIndex = -1;
 	public Class protocolOn;
 	public java.lang.reflect.Method onMethod;
@@ -3588,6 +3592,13 @@ static class InvokeExpr implements Expr{
 					this.onMethod = (java.lang.reflect.Method) methods.get(0);
 					}
 				}
+
+                        if (fvar.equals(ALTER_VAR_ROOT)) {
+                            Object target = RT.first(args);
+                            if (target instanceof TheVarExpr && isLeanVar(((TheVarExpr)target).var)) {
+                                this.isAlterVarRoot = true;
+                            }
+                        }
 			}
 		
 		if (tag != null) {
@@ -3640,6 +3651,12 @@ static class InvokeExpr implements Expr{
 			fexpr.emit(C.EXPRESSION, objx, gen);
 			gen.checkCast(IFN_TYPE);
 			emitArgsAndCall(0, context,objx,gen);
+                        if (isAlterVarRoot) {
+                                Var var = ((TheVarExpr)RT.first(args)).var;
+                                String typeStr = "L"+munge(var.ns.name.toString()).replace(".", "/")+"__init;";
+                                gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+                                context = C.RETURN;
+                        }
 			}
 		if(context == C.STATEMENT)
 			gen.pop();		
