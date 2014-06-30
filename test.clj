@@ -6,27 +6,38 @@
                      "#'clojure.core/load-file" "#'clojure.core/load"
                      "#'clojure.core/defn" "#'clojure.core/defmacro" "#'clojure.core/parents"
                      "#'clojure.core/ancestors" "#'clojure.core/pr-on" "#'clojure.core/isa?"
-                     "#'clojure.core/global-hierarchy" "#'clojure.core/.."})
+                     "#'clojure.core/global-hierarchy"
+                     "#'clojure.core/.." "#'neko.context/context"
+                     "#'neko.resource/package-name" "#'neko.threading/ui-thread" "#'neko.threading/handler"
+                     "#'neko.-utils/keyword->static-field" "#'neko.-utils/keyword->setter"
+                     "#'neko.ui.traits/get-display-metrics"
+                     })
 
 (defn lean-var? [^clojure.lang.Var var]
-  (and (not (not-lean-vars (.toString var)))
-       (not (.startsWith (.. var sym getName) "-"))))
+  (let [res (and (not (not-lean-vars (.toString var)))
+              (not (.startsWith (.. var sym getName) "-")))]
+    res))
 
-(binding [;; *lean-compile* true
+(binding [*lean-compile* true
           *compile-path* "./target-skummet"
           *compiler-options* {:elide-meta [:doc :file :line :added :arglists :column :static]}
           *lean-var?* lean-var?]
-  (lean-compile 'clojure.core)
-  (lean-compile 'clojure.string)
-  (lean-compile 'clojure.java.io)
-  (lean-compile 'clojure.instant)
-  (lean-compile 'clojure.uuid)
+  (force-compile 'clojure.core)
+  (force-compile 'clojure.string)
+  (force-compile 'clojure.java.io)
+  (force-compile 'clojure.instant)
+  (force-compile 'clojure.uuid)
 
-  (lean-compile 'clojure.data)
-  (lean-compile 'clojure.edn)
-  (lean-compile 'clojure.genclass)
-  ;; (cc "src/clj/clojure/main.clj"  "clojure/main.clj")
-  ;; (cc "src/clj/clojure/pprint.clj"  "clojure/pprint.clj")
+  (force-compile 'clojure.data)
+  (force-compile 'clojure.edn)
+  (force-compile 'clojure.genclass)
+  (force-compile 'clojure.main)
+  (force-compile 'clojure.pprint)
+  (force-compile 'clojure.set)
+  (force-compile 'clojure.stacktrace)
+  (force-compile 'clojure.walk)
+  (force-compile 'clojure.zip)
+  (force-compile 'clojure.xml)
 
-  (lean-compile 'testskummet.bar)
+  (force-compile 'testskummet.bar)
   )
