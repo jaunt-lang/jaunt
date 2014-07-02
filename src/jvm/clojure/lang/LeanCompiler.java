@@ -545,7 +545,7 @@ static class DefExpr implements Expr{
 			boolean isDynamic = RT.booleanCast(RT.get(mm,dynamicKey));
 			if(isDynamic)
 			   v.setDynamic();
-                        registerVar(v, isLeanVar(v));
+			registerVar(v);
             if(!isDynamic && sym.name.startsWith("*") && sym.name.endsWith("*") && sym.name.length() > 2)
                 {
                 RT.errPrintWriter().format("Warning: %1$s not declared dynamic and thus is not dynamically rebindable, "
@@ -6929,7 +6929,7 @@ static public Var isMacro(Object op) {
 		return null;
 	if(op instanceof Symbol || op instanceof Var)
 		{
-                Var v = (op instanceof Var) ? (Var) op : lookupVar((Symbol) op, false, false);
+		Var v = (op instanceof Var) ? (Var) op : lookupVarNoRegister((Symbol) op, false);
 		if(v != null && v.isMacro())
 			{
 			if(v.ns != currentNS() && !v.isPublic())
@@ -7309,7 +7309,7 @@ private static Expr analyzeSymbol(Symbol sym) {
 			throw Util.runtimeException("Can't take value of a macro: " + v);
 		if(RT.booleanCast(RT.get(v.meta(),RT.CONST_KEY)))
 			return analyze(C.EXPRESSION, RT.list(QUOTE, v.get()));
-		registerVar(v, false);
+		registerVar(v);
 		return new VarExpr(v, tag);
 		}
 	else if(o instanceof Class)
@@ -7432,12 +7432,7 @@ static public Object maybeResolveIn(Namespace n, Symbol sym) {
 				}
 }
 
-
-static Var lookupVar(Symbol sym, boolean internNew, boolean registerMacro) {
-        return lookupVar(sym, internNew, registerMacro, false);
-}
-
-static Var lookupVar(Symbol sym, boolean internNew, boolean registerMacro, boolean isLean) {
+static Var lookupVarNoRegister(Symbol sym, boolean internNew) {
 	Var var = null;
 
 	//note - ns-qualified vars in other namespaces must already exist
@@ -7476,22 +7471,31 @@ static Var lookupVar(Symbol sym, boolean internNew, boolean registerMacro, boole
 				throw Util.runtimeException("Expecting var, but " + sym + " is mapped to " + o);
 				}
 			}
-	if(var != null && (!var.isMacro() || registerMacro))
-		registerVar(var, isLean);
 	return var;
 }
+
+static Var lookupVar(Symbol sym, boolean internNew, boolean registerMacro) {
+	Var var = lookupVarNoRegister(sym, internNew);
+	if(var != null && (!var.isMacro() || registerMacro)
+		&& (!isLeanVar(var) || RT.CURRENT_NS.deref().equals(var.ns)))
+		registerVar(var);
+	return var;
+}
+
 static Var lookupVar(Symbol sym, boolean internNew) {
     return lookupVar(sym, internNew, true);
 }
 
-private static void registerVar(Var var, boolean isLean) {
+private static void registerVar(Var var) {
 	if(!VARS.isBound())
 		return;
 	IPersistentMap varsMap = (IPersistentMap) VARS.deref();
 	Object id = RT.get(varsMap, var);
 	if(id == null)
 		{
-		VARS.set(RT.assoc(varsMap, var, registerConstant(var, isLean)));
+		// if (var.sym.toString().equals("booleans"))
+		// 	throw new RuntimeException("Booleans that is: " + var.isNotLean());
+		VARS.set(RT.assoc(varsMap, var, registerConstant(var, isLeanVar(var))));
 		}
 //	if(varsMap != null && RT.get(varsMap, var) == null)
 //		VARS.set(RT.assoc(varsMap, var, var));
@@ -7672,22 +7676,22 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 
         if (form instanceof ISeq && (Util.equals(RT.first(form), Symbol.intern("defmulti")) ||
                                      Util.equals(RT.first(form), Symbol.intern("definline")))) {
-                Var v = lookupVar((Symbol)RT.first(RT.next(form)), true);
+                Var v = lookupVarNoRegister((Symbol)RT.first(RT.next(form)), true);
                 v.setNotLean(true);
         }
 
         if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("deftype"))
             || Util.equals(RT.first(form), Symbol.intern("defrecord"))) {
-                Var v = lookupVar(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()), true);
+                Var v = lookupVarNoRegister(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()), true);
                 v.setNotLean(true);
         }
 
         if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("defprotocol"))) {
-                Var v = lookupVar((Symbol)RT.first(RT.next(form)), true);
+                Var v = lookupVarNoRegister((Symbol)RT.first(RT.next(form)), true);
                 v.setNotLean(true);
                 for (ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s))
                         if (RT.first(s) instanceof ISeq) {
-                                Var mv = lookupVar((Symbol)RT.first(RT.first(s)), true);
+                                Var mv = lookupVarNoRegister((Symbol)RT.first(RT.first(s)), true);
                                 mv.setNotLean(true);
                         }
         }
@@ -7871,13 +7875,14 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 
                 // static fields for vars
                 Iterator it = ((PersistentHashMap)objx.vars).keySet().iterator();
-                while (it.hasNext()) {
-                    Object var = it.next();
-                    if (isLeanVar((Var)var)) {
-                    cv.visitField(ACC_PUBLIC + ACC_STATIC, munge(((Var)var).sym.name), OBJECT_TYPE.getDescriptor(),
-                                          null, null);
-                    }
-                }
+				while (it.hasNext())
+					{
+					Var var = (Var)it.next();
+					// Only emit static fields for own lean Vars
+					if (isLeanVar(var) && RT.CURRENT_NS.deref().equals(var.ns))
+						cv.visitField(ACC_PUBLIC + ACC_STATIC, munge(var.sym.name), OBJECT_TYPE.getDescriptor(),
+							null, null);
+					}
 
 		//static fields for constants
 		for(int i = 0; i < objx.constants.count(); i++)
