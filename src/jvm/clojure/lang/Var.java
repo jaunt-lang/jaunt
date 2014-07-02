@@ -83,6 +83,7 @@ static Keyword nsKey = Keyword.intern(null, "ns");
 volatile Object root;
 
 volatile boolean dynamic = false;
+volatile boolean notLean = false;
 transient final AtomicBoolean threadBound;
 public final Symbol sym;
 public final Namespace ns;
@@ -113,6 +114,15 @@ public Var setDynamic(boolean b){
 
 public final boolean isDynamic(){
 	return dynamic;
+}
+
+public Var setNotLean(boolean b){
+	this.notLean = b;
+	return this;
+}
+
+public final boolean isNotLean(){
+        return notLean;
 }
 
 public static Var intern(Namespace ns, Symbol sym, Object root){

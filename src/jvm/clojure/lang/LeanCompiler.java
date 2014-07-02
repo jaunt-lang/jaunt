@@ -258,14 +258,14 @@ static public Object getCompilerOption(Keyword k){
 	return RT.get(COMPILER_OPTIONS.deref(),k);
 }
 
-static private IPersistentSet nonLeanVars = PersistentHashSet.EMPTY;
-
 static public boolean isLeanVar(Symbol sym){
-    return isLeanVar(lookupVar(sym, false));
+        Var v = lookupVarNoRegister(sym, false);
+        return (v == null || isLeanVar(v));
 }
+
 static public boolean isLeanVar(Var var){
-    return !nonLeanVars.contains(var.sym) && RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var))
-        && !var.isDynamic();
+        return !var.isNotLean() && !var.isDynamic()
+                && RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var));
 }
 
 static Object elideMeta(Object m){
@@ -530,9 +530,7 @@ static class DefExpr implements Expr{
 					throw Util.runtimeException("First argument to def must be a Symbol");
 			Symbol sym = (Symbol) RT.second(form);
 			IPersistentMap mm = sym.meta();
-			boolean isDynamic = RT.booleanCast(RT.get(mm,dynamicKey));
-			Var dummyVar = new Var(currentNS(), sym);
-			Var v = lookupVar(sym, true, true, !(isDynamic || nonLeanVars.contains(sym)) && isLeanVar(dummyVar));
+			Var v = lookupVarNoRegister(sym, true);
 			if(v == null)
 				throw Util.runtimeException("Can't refer to qualified var that doesn't exist");
 			if(!v.ns.equals(currentNS()))
@@ -544,8 +542,10 @@ static class DefExpr implements Expr{
 				else
 					throw Util.runtimeException("Can't create defs outside of current ns");
 				}
+			boolean isDynamic = RT.booleanCast(RT.get(mm,dynamicKey));
 			if(isDynamic)
 			   v.setDynamic();
+                        registerVar(v, isLeanVar(v));
             if(!isDynamic && sym.name.startsWith("*") && sym.name.endsWith("*") && sym.name.length() > 2)
                 {
                 RT.errPrintWriter().format("Warning: %1$s not declared dynamic and thus is not dynamically rebindable, "
@@ -7672,20 +7672,24 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 
         if (form instanceof ISeq && (Util.equals(RT.first(form), Symbol.intern("defmulti")) ||
                                      Util.equals(RT.first(form), Symbol.intern("definline")))) {
-            nonLeanVars = ((PersistentHashSet)nonLeanVars).cons(RT.first(RT.next(form)));
+                Var v = lookupVar((Symbol)RT.first(RT.next(form)), true);
+                v.setNotLean(true);
         }
 
         if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("deftype"))
             || Util.equals(RT.first(form), Symbol.intern("defrecord"))) {
-            nonLeanVars = ((PersistentHashSet)nonLeanVars).cons(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()));
+                Var v = lookupVar(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()), true);
+                v.setNotLean(true);
         }
 
         if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("defprotocol"))) {
-            nonLeanVars = ((PersistentHashSet)nonLeanVars).cons(RT.first(RT.next(form)));
-            for (ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s)) {
-                if (RT.first(s) instanceof ISeq)
-                    nonLeanVars = ((PersistentHashSet)nonLeanVars).cons(RT.first(RT.first(s)));
-            }
+                Var v = lookupVar((Symbol)RT.first(RT.next(form)), true);
+                v.setNotLean(true);
+                for (ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s))
+                        if (RT.first(s) instanceof ISeq) {
+                                Var mv = lookupVar((Symbol)RT.first(RT.first(s)), true);
+                                mv.setNotLean(true);
+                        }
         }
 
         if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("alter-meta!"))) {
