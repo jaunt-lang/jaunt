@@ -210,6 +210,7 @@ static final public Var KEYWORDS = Var.create().setDynamic();
 
 //var->constid
 static final public Var VARS = Var.create().setDynamic();
+static final public Var TOP_LEVEL_VARS = Var.create().setDynamic();
 
 //FnFrame
 static final public Var METHOD = Var.create(null).setDynamic();
@@ -487,9 +488,10 @@ static class DefExpr implements Expr{
 		if(initProvided)
 			{
                         if (emitLeanCode && isLeanVar(var))
-                            {
-                                init.emit(C.EXPRESSION, objx, gen);
-                                gen.putStatic(objx.objtype, munge(var.sym.name), OBJECT_TYPE);
+							{
+							init.emit(C.EXPRESSION, objx, gen);
+							String typeStr = "L"+munge(currentNS().toString()).replace(".", "/")+"__init;";
+							gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
                             } else {
 			gen.dup();
 			if(init instanceof FnExpr)
@@ -545,7 +547,8 @@ static class DefExpr implements Expr{
 			boolean isDynamic = RT.booleanCast(RT.get(mm,dynamicKey));
 			if(isDynamic)
 			   v.setDynamic();
-			registerVar(v);
+			registerVar(v, isLeanVar(v));
+
             if(!isDynamic && sym.name.startsWith("*") && sym.name.endsWith("*") && sym.name.length() > 2)
                 {
                 RT.errPrintWriter().format("Warning: %1$s not declared dynamic and thus is not dynamically rebindable, "
@@ -4062,6 +4065,7 @@ static public class ObjExpr implements Expr{
 	//Keyword->KeywordExpr
 	IPersistentMap keywords = PersistentHashMap.EMPTY;
 	IPersistentMap vars = PersistentHashMap.EMPTY;
+	IPersistentMap topLevelVars = PersistentHashMap.EMPTY;
 	Class compiledClass;
 	int line;
 	int column;
@@ -7487,13 +7491,27 @@ static Var lookupVar(Symbol sym, boolean internNew) {
 }
 
 private static void registerVar(Var var) {
+	registerVar(var, false);
+}
+
+private static void registerVar(Var var, boolean topLevel) {
 	if(!VARS.isBound())
 		return;
 	IPersistentMap varsMap = (IPersistentMap) VARS.deref();
 	Object id = RT.get(varsMap, var);
-	if(id == null)
+	if (id == null)
 		{
-		VARS.set(RT.assoc(varsMap, var, registerConstant(var, isLeanVar(var))));
+		id = registerConstant(var, isLeanVar(var));
+		VARS.set(RT.assoc(varsMap, var, id));
+		}
+
+	if (topLevel)
+		{
+		IPersistentMap topLevelVarsMap = (IPersistentMap) TOP_LEVEL_VARS.deref();
+		if(RT.get(topLevelVarsMap, var) == null)
+			{
+			TOP_LEVEL_VARS.set(RT.assoc(topLevelVarsMap, var, id));
+			}
 		}
 //	if(varsMap != null && RT.get(varsMap, var) == null)
 //		VARS.set(RT.assoc(varsMap, var, var));
@@ -7731,6 +7749,7 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
                         System.out.println("compiling: " + form + " --- " + RT.CURRENT_NS.deref());
 			objx.keywords = (IPersistentMap) KEYWORDS.deref();
 			objx.vars = (IPersistentMap) VARS.deref();
+			objx.topLevelVars = (IPersistentMap) TOP_LEVEL_VARS.deref();
 			objx.constants = (PersistentVector) CONSTANTS.deref();
 			objx.constantLeanFlags = (PersistentVector) CONSTANT_LEAN_FLAGS.deref();
 
@@ -7831,7 +7850,8 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
                                CONSTANT_LEAN_FLAGS, PersistentVector.EMPTY,
 			       CONSTANT_IDS, new IdentityHashMap(),
 			       KEYWORDS, PersistentHashMap.EMPTY,
-			       VARS, PersistentHashMap.EMPTY
+				VARS, PersistentHashMap.EMPTY,
+				TOP_LEVEL_VARS, PersistentHashMap.EMPTY
 					,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()
 					,RT.WARN_ON_REFLECTION, RT.WARN_ON_REFLECTION.deref()
 					,RT.DATA_READERS, RT.DATA_READERS.deref()
@@ -7871,16 +7891,29 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 		gen.returnValue();
 		gen.endMethod();
 
-                // static fields for vars
-                Iterator it = ((PersistentHashMap)objx.vars).keySet().iterator();
-				while (it.hasNext())
-					{
-					Var var = (Var)it.next();
-					// Only emit static fields for own lean Vars
-					if (isLeanVar(var) && RT.CURRENT_NS.deref().equals(var.ns))
-						cv.visitField(ACC_PUBLIC + ACC_STATIC, munge(var.sym.name), OBJECT_TYPE.getDescriptor(),
-							null, null);
-					}
+		IPersistentSet allVars = PersistentHashSet.EMPTY;
+		// Merge two varsets
+		Iterator it = ((PersistentHashMap)objx.vars).keySet().iterator();
+		while (it.hasNext())
+			{
+			allVars = (IPersistentSet)allVars.cons(it.next());
+			}
+		it = ((PersistentHashMap)objx.topLevelVars).keySet().iterator();
+		while (it.hasNext())
+			{
+			allVars = (IPersistentSet)allVars.cons(it.next());
+			}
+
+		// static fields for vars
+		it = ((APersistentSet)allVars).iterator();
+		while (it.hasNext())
+			{
+			Var var = (Var)it.next();
+			// Only emit static fields for own lean Vars
+			if (isLeanVar(var) && RT.CURRENT_NS.deref().equals(var.ns))
+				cv.visitField(ACC_PUBLIC + ACC_STATIC, munge(var.sym.name), OBJECT_TYPE.getDescriptor(),
+					null, null);
+			}
 
 		//static fields for constants
 		for(int i = 0; i < objx.constants.count(); i++)
