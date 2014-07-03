@@ -704,7 +704,7 @@ public static class TheVarExpr implements Expr{
 	static class Parser implements IParser{
 		public Expr parse(C context, Object form) {
 			Symbol sym = (Symbol) RT.second(form);
-			Var v = lookupVar(sym, false);
+			Var v = lookupVar(sym, false, false);
 			if(v != null)
 				return new TheVarExpr(v);
 			throw Util.runtimeException("Unable to resolve var: " + sym + " in this context");
@@ -6946,7 +6946,7 @@ static public IFn isInline(Object op, int arity) {
 		return null;
 	if(op instanceof Symbol || op instanceof Var)
 		{
-		Var v = (op instanceof Var) ? (Var) op : lookupVar((Symbol) op, false);
+		Var v = (op instanceof Var) ? (Var) op : lookupVarNoRegister((Symbol) op, false);
 		if(v != null)
 			{
 			if(v.ns != currentNS() && !v.isPublic())
@@ -7493,8 +7493,6 @@ private static void registerVar(Var var) {
 	Object id = RT.get(varsMap, var);
 	if(id == null)
 		{
-		// if (var.sym.toString().equals("booleans"))
-		// 	throw new RuntimeException("Booleans that is: " + var.isNotLean());
 		VARS.set(RT.assoc(varsMap, var, registerConstant(var, isLeanVar(var))));
 		}
 //	if(varsMap != null && RT.get(varsMap, var) == null)
