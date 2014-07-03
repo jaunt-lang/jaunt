@@ -461,7 +461,6 @@
                             (recur (next p) (cons (first p) d))
                             d))]
                (list 'do
-                     "__COMPILER__MACRO__FLAG__"
                      (cons `defn decl)
                      (list '. (list 'var name) '(setMacro))
                      (list 'var name)))))

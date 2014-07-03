@@ -7702,30 +7702,30 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
                 form = null;
         }
 
+		boolean isCompilingAMacro = false;
+		if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("defmacro")))
+			isCompilingAMacro = true;
+
 	try
 		{
 		form = macroexpand(form);
 		if(form instanceof ISeq && Util.equals(RT.first(form), DO))
 			{
-                            // This hack checks if the (do ...) form is the
-                            // product of `defmacro` expansion.
-                            Object maybeMacroFlag = RT.first(RT.next(form));
-                            if ("__COMPILER__MACRO__FLAG__".equals(maybeMacroFlag)) {
-                                try {
-                                    Var.pushThreadBindings(RT.map(IS_COMPILING_A_MACRO, true));
-                                    for(ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s))
-                                    {
-                                        compile1(gen, objx, RT.first(s));
-                                    }
-                                } finally {
-                                    Var.popThreadBindings();
-                                }
-                            } else {
-			for(ISeq s = RT.next(form); s != null; s = RT.next(s))
+			if (isCompilingAMacro) {
+				try {
+					Var.pushThreadBindings(RT.map(IS_COMPILING_A_MACRO, true));
+					for(ISeq s = RT.next(form); s != null; s = RT.next(s))
+						compile1(gen, objx, RT.first(s));
+					} finally {
+					Var.popThreadBindings();
+					}
+				} else
 				{
-				compile1(gen, objx, RT.first(s));
+					for(ISeq s = RT.next(form); s != null; s = RT.next(s))
+						{
+							compile1(gen, objx, RT.first(s));
+						}
 				}
-                            }
 			}
 		else
 			{
