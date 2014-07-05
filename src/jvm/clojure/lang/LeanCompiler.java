@@ -7084,6 +7084,15 @@ private static Expr analyzeSeq(C context, ISeq form, String name) {
 		IParser p;
 		if(op.equals(FN))
 			return FnExpr.parse(context, form, name);
+		else if(op.equals(Symbol.intern("alter-meta!")) ||
+			op.equals(Symbol.intern("clojure.core", "alter-meta!")))
+			{
+			Object var_sym = RT.second(RT.first(RT.next(form)));
+			if (var_sym instanceof Symbol && isLeanVar((Symbol)var_sym))
+				return NIL_EXPR;
+			else
+				return InvokeExpr.parse(context, form);
+			}
 		else if((p = (IParser) specials.valAt(op)) != null)
 			return p.parse(context, form);
 		else
@@ -7690,8 +7699,7 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 			       ,LOADER, RT.makeClassLoader()
 			));
 
-        if (form instanceof ISeq && (Util.equals(RT.first(form), Symbol.intern("defmulti")) ||
-                                     Util.equals(RT.first(form), Symbol.intern("definline")))) {
+        if (form instanceof ISeq && (Util.equals(RT.first(form), Symbol.intern("defmulti")))) {
                 Var v = lookupVarNoRegister((Symbol)RT.first(RT.next(form)), true);
                 v.setNotLean(true);
         }
@@ -7710,12 +7718,6 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
                                 Var mv = lookupVarNoRegister((Symbol)RT.first(RT.first(s)), true);
                                 mv.setNotLean(true);
                         }
-        }
-
-        if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("alter-meta!"))) {
-            Object var_sym = RT.second(RT.first(RT.next(form)));
-            if (var_sym instanceof Symbol && isLeanVar((Symbol)var_sym))
-                form = null;
         }
 
 		boolean isCompilingAMacro = false;
