@@ -3,7 +3,8 @@
 (def just-value 42)
 
 (defmacro mymacro [b]
-  `(first ~b))
+  (let [foo :bar]
+   `(first ~b)))
 
 (defn ^{:some-meta true
         :more-meta 24

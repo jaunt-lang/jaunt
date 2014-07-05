@@ -1656,7 +1656,7 @@
           hierarchy (get options :hierarchy #'global-hierarchy)]
       (check-valid-options options :default :hierarchy)
       `(let [v# (def ~mm-name)]
-         (when-not (and (.hasRoot v#) (instance? clojure.lang.MultiFn (deref v#)))
+         (when-not (instance? clojure.lang.MultiFn (deref v#))
            (def ~(with-meta mm-name m)
                 (new clojure.lang.MultiFn ~(name mm-name) ~dispatch-fn ~default ~hierarchy)))))))
 
@@ -2196,9 +2196,13 @@
   value is available. See also - realized?."
   {:added "1.0"
    :static true}
-  ([ref] (if (instance? clojure.lang.IDeref ref)
-           (.deref ^clojure.lang.IDeref ref)
-           (deref-future ref)))
+  ([ref] (cond (instance? clojure.lang.IDeref ref)
+               (.deref ^clojure.lang.IDeref ref)
+
+               (instance? java.util.concurrent.Future ref)
+               (deref-future ref)
+
+               :else ref))
   ([ref timeout-ms timeout-val]
      (if (instance? clojure.lang.IBlockingDeref ref)
        (.deref ^clojure.lang.IBlockingDeref ref timeout-ms timeout-val)

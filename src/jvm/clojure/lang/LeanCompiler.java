@@ -7699,11 +7699,6 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 			       ,LOADER, RT.makeClassLoader()
 			));
 
-        if (form instanceof ISeq && (Util.equals(RT.first(form), Symbol.intern("defmulti")))) {
-                Var v = lookupVarNoRegister((Symbol)RT.first(RT.next(form)), true);
-                v.setNotLean(true);
-        }
-
         if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("deftype"))
             || Util.equals(RT.first(form), Symbol.intern("defrecord"))) {
                 Var v = lookupVarNoRegister(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()), true);
