@@ -1,4 +1,4 @@
-(require '[clojure.java.io :as io])
+;; (require '[clojure.java.io :as io])
 
 (import 'clojure.lang.LeanCompiler)
 
@@ -20,24 +20,20 @@
 
 (binding [*lean-compile* true
           *compile-path* "./target-skummet"
-          *compiler-options* {:elide-meta [:doc :file :line :added :arglists :column :static]}
+          *compiler-options* {:elide-meta [:doc :file :line :added :arglists :column :static :author :added]
+                              :neko.init/release-build true}
           *lean-var?* lean-var?]
-  (force-compile 'clojure.core)
-  (force-compile 'clojure.string)
-  (force-compile 'clojure.java.io)
-  (force-compile 'clojure.instant)
-  (force-compile 'clojure.uuid)
+  (push-thread-bindings {#'clojure.core/*loaded-libs* (ref (sorted-set))})
+  (try
+    (compile 'clojure.core)
+    (compile 'testskummet.bar)
+    (finally (pop-thread-bindings)))
+  ;; (force-compile 'clojure.string)
+  ;; (force-compile 'clojure.java.io)
+  ;; (force-compile 'clojure.uuid)
+  ;; (force-compile 'clojure.instant)
 
-  (force-compile 'clojure.data)
-  (force-compile 'clojure.edn)
-  (force-compile 'clojure.genclass)
-  (force-compile 'clojure.main)
-  (force-compile 'clojure.pprint)
-  (force-compile 'clojure.set)
-  (force-compile 'clojure.stacktrace)
-  (force-compile 'clojure.walk)
-  (force-compile 'clojure.zip)
-  (force-compile 'clojure.xml)
-
-  (force-compile 'testskummet.bar)
+  ;; (clojure.lang.Compiler/compile (io/reader "testskummet/foo.clj") "testskummet/foo.clj" "testskummet/foo.clj" )
+  ;; (clojure.lang.Compiler/compile (io/reader "testskummet/bar.clj") "testskummet/bar.clj" "testskummet/bar.clj" )
+  ;; (force-compile 'org.bytopia.skummtest.main)
   )

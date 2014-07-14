@@ -424,6 +424,16 @@ static public void load(String scriptbase, boolean failIfNotFound) throws IOExce
 	URL cljURL = getResource(baseLoader(), cljfile);
 	boolean loaded = false;
 
+        if(booleanCast(Compiler.COMPILE_FILES.deref()) && booleanCast(LEAN_COMPILE.deref())) {
+            if (!scriptbase.equals("clojure/core_proxy") && !scriptbase.equals("clojure/core_print")
+                && !scriptbase.equals("clojure/genclass") && !scriptbase.equals("clojure/core_deftype")
+                && !scriptbase.equals("clojure/core")) {
+                File cfile = new File(var("clojure.core", "*compile-path*").deref().toString(), classfile);
+                if (!cfile.exists())
+                    compile(cljfile);
+            }
+        }
+
 	if((classURL != null &&
 	    (cljURL == null
 	     || lastModified(classURL, classfile) > lastModified(cljURL, cljfile)))

@@ -1,5 +1,6 @@
 (ns testskummet.bar
   (:use [testskummet.foo :only [myfn]])
+  (:require clojure.zip)
   (:gen-class))
 
 (def simple-constant 42)
@@ -30,7 +31,9 @@
 
 (defn -main [& args]
   (println "Value is " (my-multi 500 testskummet.foo/just-value))
-  (println (ordinary-function args)))
+  (println "inside-var" 150)
+  (println (ordinary-function args))
+  (println (rest (conj [1 2 3] 4))))
 
 ;; (defn -main [& args]
 ;;   (dotimes [i 10]
