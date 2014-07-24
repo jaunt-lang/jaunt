@@ -81,6 +81,7 @@ static final Symbol ISEQ = Symbol.intern("clojure.lang.ISeq");
 static final Keyword inlineKey = Keyword.intern(null, "inline");
 static final Keyword inlineAritiesKey = Keyword.intern(null, "inline-arities");
 static final Keyword staticKey = Keyword.intern(null, "static");
+static final IPersistentMap staticMetaMap = PersistentHashMap.create(staticKey, RT.T);
 static final Keyword arglistsKey = Keyword.intern(null, "arglists");
 static final Symbol INVOKE_STATIC = Symbol.intern("invokeStatic");
 
@@ -577,6 +578,7 @@ static class DefExpr implements Expr{
 //					.without(Keyword.intern(null, "name"))
 //					.without(Keyword.intern(null, "added"))
 //					.without(Keyword.intern(null, "static"));
+			boolean isStatic = RT.booleanCast(RT.get(mm, staticKey));
             mm = (IPersistentMap) elideMeta(mm);
             Expr meta = null;
             try {
@@ -585,9 +587,12 @@ static class DefExpr implements Expr{
             } finally {
                 Var.popThreadBindings();
             }
+			Object initForm = RT.third(form);
+			Expr initExpr = analyze(context == C.EVAL ? context : C.EXPRESSION,
+				isStatic ? ((IObj)initForm).withMeta(staticMetaMap) : initForm,
+				v.sym.name);
 			return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
-			                   v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
-			                   meta, RT.count(form) == 3, isDynamic);
+				v, initExpr, meta, RT.count(form) == 3, isDynamic);
 		}
 	}
 }
@@ -3399,7 +3404,7 @@ static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
 	public final Class retClass;
 	public final Class[] paramclasses;
 	public final Type[] paramtypes;
-	public final IPersistentVector args;
+	public IPersistentVector args;
 	public final boolean variadic;
 	public final Symbol tag;
 
@@ -3506,7 +3511,7 @@ static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
 		if(paramlist == null)
 			throw new IllegalArgumentException("Invalid arity - can't call: " + v + " with " + argcount + " args");
 
-		Class retClass = tagClass(tagOf(paramlist));
+		Class retClass = primClass(tagClass(tagOf(paramlist)));
 
 		ArrayList<Class> paramClasses = new ArrayList();
 		ArrayList<Type> paramTypes = new ArrayList();
@@ -3515,7 +3520,7 @@ static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
 			{
 			for(int i = 0; i < paramlist.count()-2;i++)
 				{
-				Class pc = tagClass(tagOf(paramlist.nth(i)));
+				Class pc = primClass(tagClass(tagOf(paramlist.nth(i))));
 				paramClasses.add(pc);
 				paramTypes.add(Type.getType(pc));
 				}
@@ -3526,7 +3531,7 @@ static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
 			{
 			for(int i = 0; i < argcount;i++)
 				{
-				Class pc = tagClass(tagOf(paramlist.nth(i)));
+				Class pc = primClass(tagClass(tagOf(paramlist.nth(i))));
 				paramClasses.add(pc);
 				paramTypes.add(Type.getType(pc));
 				}
@@ -3536,8 +3541,12 @@ static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
 		Type target = Type.getObjectType(cname);
 
 		PersistentVector argv = PersistentVector.EMPTY;
-		for(ISeq s = RT.seq(args); s != null; s = s.next())
-			argv = argv.cons(analyze(C.EXPRESSION, s.first()));
+		// Don't parse arguments here as they are parsed in InvokeExpr
+		// and delivered later. Doing it here leads to mutual unending
+		// recursion.
+
+		// for(ISeq s = RT.seq(args); s != null; s = s.next())
+		// 	argv = argv.cons(analyze(C.EXPRESSION, s.first()));
 
 		return new StaticInvokeExpr(target,retClass,paramClasses.toArray(new Class[paramClasses.size()]),
 		                            paramTypes.toArray(new Type[paramTypes.size()]),variadic, argv, tag);
@@ -3546,6 +3555,7 @@ static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
 
 static class InvokeExpr implements Expr{
 	public final Expr fexpr;
+	public final Expr staticExpr;
 	public final Object tag;
 	public final IPersistentVector args;
 	public final int line;
@@ -3560,12 +3570,14 @@ static class InvokeExpr implements Expr{
 	static Keyword onKey = Keyword.intern("on");
 	static Keyword methodMapKey = Keyword.intern("method-map");
 
-	public InvokeExpr(String source, int line, int column, Symbol tag, Expr fexpr, IPersistentVector args) {
+	public InvokeExpr(String source, int line, int column, Symbol tag, Expr fexpr, IPersistentVector args, Expr staticExpr) {
 		this.source = source;
 		this.fexpr = fexpr;
 		this.args = args;
 		this.line = line;
 		this.column = column;
+		this.staticExpr = staticExpr;
+		this.isDirect = (staticExpr != null);
 		if(fexpr instanceof VarExpr)
 			{
 			Var fvar = ((VarExpr)fexpr).var;
@@ -3643,6 +3655,12 @@ static class InvokeExpr implements Expr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
+		if(isDirect && RT.booleanCast(EMIT_LEAN_CODE.deref()))
+			{
+			staticExpr.emit(context, objx, gen);
+			return;
+			}
+
 		gen.visitLineNumber(line, gen.mark());
 		if(isProtocol)
 			{
@@ -3763,14 +3781,13 @@ static class InvokeExpr implements Expr{
 				}
 			}
 
-//		if(fexpr instanceof VarExpr && context != C.EVAL)
-//			{
-//			Var v = ((VarExpr)fexpr).var;
-//			if(RT.booleanCast(RT.get(RT.meta(v),staticKey)))
-//				{
-//				return StaticInvokeExpr.parse(v, RT.next(form), tagOf(form));
-//				}
-//			}
+		Expr staticExpr = null;
+		if(fexpr instanceof VarExpr)
+			{
+			Var v = ((VarExpr)fexpr).var;
+			if (RT.booleanCast(RT.get(RT.meta(v),staticKey)))
+				staticExpr = StaticInvokeExpr.parse(v, RT.next(form), tagOf(form));
+			}
 
 		if(fexpr instanceof VarExpr && context != C.EVAL)
 			{
@@ -3809,7 +3826,9 @@ static class InvokeExpr implements Expr{
 //			throw new IllegalArgumentException(
 //					String.format("No more than %d args supported", MAX_POSITIONAL_ARITY));
 
-		return new InvokeExpr((String) SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form), fexpr, args);
+		if (staticExpr != null)
+			((StaticInvokeExpr)staticExpr).args = args;
+		return new InvokeExpr((String) SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form), fexpr, args, staticExpr);
 	}
 }
 
@@ -3897,6 +3916,8 @@ static public class FnExpr extends ObjExpr{
 		fn.name = basename + simpleName;
 		fn.internalName = fn.name.replace('.', '/');
 		fn.objtype = Type.getObjectType(fn.internalName);
+		if (((IObj)form).meta() != null)
+			fn.isStatic = RT.booleanCast(((IObj)form).meta().valAt(staticKey));
 		ArrayList<String> prims = new ArrayList();
 		try
 			{
@@ -3917,7 +3938,8 @@ static public class FnExpr extends ObjExpr{
 				{
 				Symbol nm = (Symbol) RT.second(form);
 				fn.thisName = nm.name;
-				fn.isStatic = false; //RT.booleanCast(RT.get(nm.meta(), staticKey));
+				if (RT.booleanCast(RT.get(nm.meta(), staticKey)))
+					fn.isStatic = true;
 				form = RT.cons(FN, RT.next(RT.next(form)));
 				}
 
@@ -5646,8 +5668,7 @@ public static class FnMethod extends ObjMethod{
 				throw Util.runtimeException("Can't specify more than " + MAX_POSITIONAL_ARITY + " params");
 			LOOP_LOCALS.set(argLocals);
 			method.argLocals = argLocals;
-//			if(isStatic)
-			if(method.prim != null)
+			if(isStatic || method.prim != null)
 				{
 				method.argtypes = argtypes.toArray(new Type[argtypes.size()]);
 				method.argclasses = argclasses.toArray(new Class[argtypes.size()]);
@@ -5760,7 +5781,7 @@ public static class FnMethod extends ObjMethod{
 			for(ISeq lbs = argLocals.seq(); lbs != null; lbs = lbs.next())
 				{
 				LocalBinding lb = (LocalBinding) lbs.first();
-				gen.visitLocalVariable(lb.name, argtypes[lb.idx-1].getDescriptor(), null, loopLabel, end, lb.idx);
+				gen.visitLocalVariable(lb.name, argtypes[lb.idx].getDescriptor(), null, loopLabel, end, lb.idx);
 				}
 			}
 		finally
@@ -7742,8 +7763,8 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 			}
 		else
 			{
+			System.out.println("compiling: " + form + " --- " + RT.CURRENT_NS.deref());
 			Expr expr = analyze(C.EVAL, form);
-                        System.out.println("compiling: " + form + " --- " + RT.CURRENT_NS.deref());
 			objx.keywords = (IPersistentMap) KEYWORDS.deref();
 			objx.vars = (IPersistentMap) VARS.deref();
 			objx.topLevelVars = (IPersistentMap) TOP_LEVEL_VARS.deref();
