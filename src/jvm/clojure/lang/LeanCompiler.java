@@ -3655,7 +3655,7 @@ static class InvokeExpr implements Expr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		if(isDirect && RT.booleanCast(EMIT_LEAN_CODE.deref()))
+            if(isDirect) // && RT.booleanCast(EMIT_LEAN_CODE.deref()))
 			{
 			staticExpr.emit(context, objx, gen);
 			if (isAlterVarRoot)
