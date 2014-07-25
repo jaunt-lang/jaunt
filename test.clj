@@ -20,7 +20,9 @@
 
 (binding [*lean-compile* true
           *compile-path* "./target-skummet"
-          *compiler-options* {:elide-meta [:doc :file :line :added :arglists :column :static :author :added]
+          *compiler-options* {:elide-meta [:doc :file :line :added ;; :arglists
+                                           :column ;; :static
+                                           :author :added]
                               :neko.init/release-build true}
           *lean-var?* lean-var?]
   (push-thread-bindings {#'clojure.core/*loaded-libs* (ref (sorted-set))})
