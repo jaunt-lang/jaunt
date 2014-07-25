@@ -5778,10 +5778,12 @@ public static class FnMethod extends ObjMethod{
 
 			Label end = gen.mark();
 			gen.visitLocalVariable("this", "Ljava/lang/Object;", null, loopLabel, end, 0);
+                        int argoff = fn.isStatic ? 0 : 1;
 			for(ISeq lbs = argLocals.seq(); lbs != null; lbs = lbs.next())
 				{
 				LocalBinding lb = (LocalBinding) lbs.first();
-				gen.visitLocalVariable(lb.name, argtypes[lb.idx].getDescriptor(), null, loopLabel, end, lb.idx);
+                                System.out.println("NAme: " + lb.name + ", id: " + lb.idx);
+				gen.visitLocalVariable(lb.name, argtypes[lb.idx-argoff].getDescriptor(), null, loopLabel, end, lb.idx);
 				}
 			}
 		finally
