@@ -3,4 +3,4 @@ mvn package
 mkdir -p target-skummet
 rm -rf target-skummet/*
 java -cp target/clojure-1.7.0-skummet-SNAPSHOT.jar:. clojure.main test.clj
-java -cp testskummet/clojure-1.7.0-leanbase.jar:target-skummet testskummet.bar 123456 example
+java -cp testskummet/clojure-1.7.0-leanbase-SNAPSHOT.jar:target-skummet testskummet.bar 123456 example

@@ -29,11 +29,18 @@
   {:added "1.1"}
   [xs] `(. clojure.lang.Numbers booleans ~xs))
 
+(defn ^long primitive-function
+  {:static true}
+  [^long a, ^long b]
+  (unchecked-add a b))
+
 (defn -main [& args]
   (println "Value is " (my-multi 500 testskummet.foo/just-value))
   (println "inside-var" 150)
   (println (ordinary-function args))
-  (println (rest (conj [1 2 3] 4))))
+  (println (rest (conj [1 2 3] 4)))
+  (let [x 20, y 10]
+    (println (primitive-function x y))))
 
 ;; (defn -main [& args]
 ;;   (dotimes [i 10]
