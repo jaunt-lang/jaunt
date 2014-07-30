@@ -260,14 +260,22 @@ static public Object getCompilerOption(Keyword k){
 	return RT.get(COMPILER_OPTIONS.deref(),k);
 }
 
+static public IPersistentSet coreNonLeanVars = PersistentHashSet.create(
+	"#'clojure.core/in-ns", "#'clojure.core/refer", "#'clojure.core/load-file",
+	"#'clojure.core/load", "#'clojure.core/defn", "#'clojure.core/defmacro",
+	"#'clojure.core/parents", "#'clojure.core/ancestors", "#'clojure.core/pr-on",
+	"#'clojure.core/isa?", "#'clojure.core/global-hierarchy", "#'clojure.core/..");
+
 static public boolean isLeanVar(Symbol sym){
-        Var v = lookupVarNoRegister(sym, false);
-        return (v == null || isLeanVar(v));
+	Var v = lookupVarNoRegister(sym, false);
+	return (v == null || isLeanVar(v));
 }
 
 static public boolean isLeanVar(Var var){
-        return !var.isNotLean() && !var.isDynamic()
-                && RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var));
+	return !RT.booleanCast(coreNonLeanVars.get(var.toString())) &&
+		!var.sym.getName().startsWith("-") &&
+		!var.isNotLean() && !var.isDynamic() &&
+		RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var));
 }
 
 static Object elideMeta(Object m){
