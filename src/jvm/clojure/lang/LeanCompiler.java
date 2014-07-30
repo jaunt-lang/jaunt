@@ -7775,22 +7775,24 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 
 			expr.eval();
 
-                        if ((RT.CURRENT_NS.deref().toString().equals("clojure.core"))
-                            && (RT.first(form) instanceof Symbol)
-                            && ((Symbol)RT.first(form)).name.equals("load")) {
-                            String path = "clojure/" + (String)RT.second(form) + ".clj";
-                            try {
-                                if (!("core/protocols".equals(RT.second(form))) && !("uuid".equals(RT.second(form)))
-                                    && !("instant".equals(RT.second(form)))) {
-                                    compileSeparateCoreFile(new InputStreamReader(RT.resourceAsStream(RT.baseLoader(), path)), path, path, objx, gen);
-                                    return;
-                                }
-                                else
-                                    compile(new InputStreamReader(RT.resourceAsStream(RT.baseLoader(), path)), path, path);
-                                } catch (Exception ex) {
-                                    ex.printStackTrace();
-                                }
-                        }
+			if (((RT.CURRENT_NS.deref().toString().equals("clojure.core")) || (RT.CURRENT_NS.deref().toString().equals("clojure.pprint")))
+				&& (RT.first(form) instanceof Symbol)
+				&& ((Symbol)RT.first(form)).name.equals("load"))
+				{
+				String path = "clojure/" + (String)RT.second(form) + ".clj";
+				try {
+					if (!("core/protocols".equals(RT.second(form))) && !("uuid".equals(RT.second(form)))
+						&& !("instant".equals(RT.second(form))))
+						{
+						compileSeparateCoreFile(new InputStreamReader(RT.resourceAsStream(RT.baseLoader(), path)), path, path, objx, gen);
+						return;
+						}
+					else
+						compile(new InputStreamReader(RT.resourceAsStream(RT.baseLoader(), path)), path, path);
+					} catch (Exception ex) {
+					ex.printStackTrace();
+					}
+				}
 
                         if (!RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
                             try {
