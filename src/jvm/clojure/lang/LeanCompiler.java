@@ -332,6 +332,7 @@ static final public Var CLEAR_SITES = Var.create(null).setDynamic();
 
 static final public Var EMIT_LEAN_CODE = Var.create(false).setDynamic();
 static final public Var IS_ANALYZING_META = Var.create(false).setDynamic();
+static final public Var IS_DEFINING_LEAN_VAR = Var.create(false).setDynamic();
 static final public Var IS_COMPILING_A_MACRO = Var.create(false).setDynamic();
 
     public enum C{
@@ -589,16 +590,25 @@ static class DefExpr implements Expr{
 			boolean isStatic = RT.booleanCast(RT.get(mm, staticKey));
             mm = (IPersistentMap) elideMeta(mm);
             Expr meta = null;
-            try {
+			Object initForm = RT.third(form);
+			Expr initExpr = null;
+            try
+				{
                 Var.pushThreadBindings(RT.map(IS_ANALYZING_META, isLeanVar(v)));
                 meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
+				}
+			finally {
+                Var.popThreadBindings();
+            }
+			try
+				{
+                Var.pushThreadBindings(RT.map(IS_DEFINING_LEAN_VAR, isLeanVar(v)));
+				initExpr = analyze(context == C.EVAL ? context : C.EXPRESSION,
+					isStatic ? ((IObj)initForm).withMeta(staticMetaMap) : initForm,
+					v.sym.name);
             } finally {
                 Var.popThreadBindings();
             }
-			Object initForm = RT.third(form);
-			Expr initExpr = analyze(context == C.EVAL ? context : C.EXPRESSION,
-				isStatic ? ((IObj)initForm).withMeta(staticMetaMap) : initForm,
-				v.sym.name);
 			return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
 				v, initExpr, meta, RT.count(form) == 3, isDynamic);
 		}
@@ -1986,7 +1996,7 @@ static class ConstantExpr extends LiteralExpr{
 			else if(v instanceof IPersistentCollection && ((IPersistentCollection) v).count() == 0)
 				return new EmptyExpr(v);
 			else
-				return new ConstantExpr(v);
+				return new ConstantExpr(v, RT.booleanCast(IS_ANALYZING_META.deref()));
 		}
 	}
 }
@@ -2653,10 +2663,13 @@ public static class MetaExpr implements Expr{
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
 		expr.emit(C.EXPRESSION, objx, gen);
-		gen.checkCast(IOBJ_TYPE);
-		meta.emit(C.EXPRESSION, objx, gen);
-		gen.checkCast(IPERSISTENTMAP_TYPE);
-		gen.invokeInterface(IOBJ_TYPE, withMetaMethod);
+		if (!RT.booleanCast(EMIT_LEAN_CODE) && ((MapExpr)meta).keyvals.count() > 0)
+			{
+			gen.checkCast(IOBJ_TYPE);
+			meta.emit(C.EXPRESSION, objx, gen);
+			gen.checkCast(IPERSISTENTMAP_TYPE);
+			gen.invokeInterface(IOBJ_TYPE, withMetaMethod);
+			}
 		if(context == C.STATEMENT)
 			{
 			gen.pop();
@@ -4035,8 +4048,16 @@ static public class FnExpr extends ObjExpr{
 		if(fn.supportsMeta())
 			{
 			//System.err.println(name + " supports meta");
-			return new MetaExpr(fn, MapExpr
+            try
+				{
+				Var.pushThreadBindings(RT.map(IS_ANALYZING_META, RT.booleanCast(IS_DEFINING_LEAN_VAR.deref())));
+				return new MetaExpr(fn, MapExpr
 					.parse(context == C.EVAL ? context : C.EXPRESSION, fmeta));
+				}
+			finally
+				{
+				Var.popThreadBindings();
+				}
 			}
 		else
 			return fn;
@@ -5124,12 +5145,15 @@ static public class ObjExpr implements Expr{
 			{
 			if(value instanceof IObj && RT.count(((IObj) value).meta()) > 0)
 				{
-				gen.checkCast(IOBJ_TYPE);
-                Object m = ((IObj) value).meta();
-				emitValue(elideMeta(m), gen);
-				gen.checkCast(IPERSISTENTMAP_TYPE);
-				gen.invokeInterface(IOBJ_TYPE,
-				                    Method.getMethod("clojure.lang.IObj withMeta(clojure.lang.IPersistentMap)"));
+				Object m = elideMeta(((IObj) value).meta());
+				if (RT.count(m) > 0)
+					{
+					gen.checkCast(IOBJ_TYPE);
+					emitValue(elideMeta(m), gen);
+					gen.checkCast(IPERSISTENTMAP_TYPE);
+					gen.invokeInterface(IOBJ_TYPE,
+						Method.getMethod("clojure.lang.IObj withMeta(clojure.lang.IPersistentMap)"));
+					}
 				}
 			}
 	}
