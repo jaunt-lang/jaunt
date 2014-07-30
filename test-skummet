@@ -2,5 +2,17 @@
 mvn package
 mkdir -p target-skummet
 rm -rf target-skummet/*
-java -cp target/clojure-1.7.0-skummet-SNAPSHOT.jar:. clojure.main test.clj
-java -cp testskummet/clojure-1.7.0-leanbase-SNAPSHOT.jar:target-skummet testskummet.bar 123456 example
+rm -rf linkage-deps/clojure/core
+mkdir -p linkage-deps/clojure/core
+cp target/classes/clojure/core/IVecImpl.class linkage-deps/clojure/core
+cp target/classes/clojure/core/Vec.class linkage-deps/clojure/core
+cp target/classes/clojure/core/VecNode.class linkage-deps/clojure/core
+java -cp target/clojure-1.7.0-skummet-SNAPSHOT-slim.jar:linkage-deps:. clojure.main test.clj
+# java -cp /home/unlogic/.m2/repository/org/clojure/clojure/1.6.0/clojure-1.6.0.jar:. clojure.main test.clj
+# java -cp target/clojure-1.7.0-skummet-SNAPSHOT-slim.jar:. clojure.main test.clj
+mkdir -p target-skummet/clojure/lang
+cp -r target/classes/clojure/lang/* target-skummet/clojure/lang/
+cp -r target/classes/clojure/asm target-skummet/clojure/
+cp target/classes/clojure/version.properties target-skummet/clojure/
+java -cp target-skummet testskummet.bar 123456 example
+# java -cp testskummet/clojure-1.7.0-leanbase-SNAPSHOT.jar:target-skummet testskummet.bar 123456 example
