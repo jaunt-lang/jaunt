@@ -5149,7 +5149,7 @@ static public class ObjExpr implements Expr{
 				if (RT.count(m) > 0)
 					{
 					gen.checkCast(IOBJ_TYPE);
-					emitValue(elideMeta(m), gen);
+					emitValue(m, gen);
 					gen.checkCast(IPERSISTENTMAP_TYPE);
 					gen.invokeInterface(IOBJ_TYPE,
 						Method.getMethod("clojure.lang.IObj withMeta(clojure.lang.IPersistentMap)"));

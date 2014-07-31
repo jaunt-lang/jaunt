@@ -5903,7 +5903,13 @@
 (alter-meta! #'load-file assoc :added "1.0")
 
 (defmacro add-doc-and-meta {:private true} [name docstring meta]
-  `(alter-meta! (var ~name) merge (assoc ~meta :doc ~docstring)))
+  (let [new-meta (assoc meta :doc docstring)
+        elide-meta (:elide-meta *compiler-options*)
+        new-meta (if elide-meta
+                   (reduce1 (fn [m k] (dissoc m k)) new-meta elide-meta)
+                   new-meta)]
+    (when (seq new-meta)
+      `(alter-meta! (var ~name) merge ~new-meta))))
 
 (add-doc-and-meta *file*
   "The path of the file being evaluated, as a String.
