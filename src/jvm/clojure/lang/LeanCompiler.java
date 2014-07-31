@@ -5814,7 +5814,6 @@ public static class FnMethod extends ObjMethod{
 			for(ISeq lbs = argLocals.seq(); lbs != null; lbs = lbs.next())
 				{
 				LocalBinding lb = (LocalBinding) lbs.first();
-                                System.out.println("NAme: " + lb.name + ", id: " + lb.idx);
 				gen.visitLocalVariable(lb.name, argtypes[lb.idx-argoff].getDescriptor(), null, loopLabel, end, lb.idx);
 				}
 			}
@@ -7978,14 +7977,13 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 			}
 
 		final int INITS_PER = 100;
-		int numInits =  objx.constants.count() / INITS_PER;
-		if(objx.constants.count() % INITS_PER != 0)
-			++numInits;
-
-		for(int n = 0;n<numInits;n++)
+		int emitedCounter = 0;
+		int i = 0;
+		int initN;
+		for(initN = 0; i < objx.constants.count(); initN++)
 			{
 			GeneratorAdapter clinitgen = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC,
-			                                                  Method.getMethod("void __init" + n + "()"),
+			                                                  Method.getMethod("void __init" + initN + "()"),
 			                                                  null,
 			                                                  null,
 			                                                  cv);
@@ -7994,13 +7992,18 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 				{
 				Var.pushThreadBindings(RT.map(RT.PRINT_DUP, RT.T));
 
-				for(int i = n*INITS_PER; i < objx.constants.count() && i < (n+1)*INITS_PER; i++)
-                                    if ((Boolean)objx.constantLeanFlags.nth(i) == false)
+				while ((emitedCounter < INITS_PER) && (i < objx.constants.count()))
 					{
-					objx.emitValue(objx.constants.nth(i), clinitgen);
-					clinitgen.checkCast(objx.constantType(i));
-					clinitgen.putStatic(objx.objtype, objx.constantName(i), objx.constantType(i));
+					if ((Boolean)objx.constantLeanFlags.nth(i) == false)
+						{
+						objx.emitValue(objx.constants.nth(i), clinitgen);
+						clinitgen.checkCast(objx.constantType(i));
+						clinitgen.putStatic(objx.objtype, objx.constantName(i), objx.constantType(i));
+						emitedCounter++;
+						}
+					i++;
 					}
+				emitedCounter = 0;
 				}
 			finally
 				{
@@ -8026,7 +8029,7 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 //			{
 //			objx.emitConstants(clinitgen);
 //			}
-		for(int n = 0;n<numInits;n++)
+		for(int n = 0;n<initN;n++)
 			clinitgen.invokeStatic(objx.objtype, Method.getMethod("void __init" + n + "()"));
 
 		clinitgen.push(objx.internalName.replace('/','.'));
