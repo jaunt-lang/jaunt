@@ -716,11 +716,14 @@
 
   [& options]
     (let [options-map (apply hash-map options)
-          [cname bytecode] (generate-interface options-map)]
+          [cname bytecode] (generate-interface options-map)
+          loader (deref (if *lean-compile*
+                          clojure.lang.LeanCompiler/LOADER
+                          clojure.lang.Compiler/LOADER))]
       (if *compile-files*
-        (clojure.lang.Compiler/writeClassFile cname bytecode)
-        (.defineClass ^DynamicClassLoader (deref clojure.lang.Compiler/LOADER) 
-                      (str (:name options-map)) bytecode options)))) 
+        (clojure.lang.LeanCompiler/writeClassFile cname bytecode))
+      (.defineClass ^DynamicClassLoader loader
+                    (str (:name options-map)) bytecode options)))
 
 (comment
 
