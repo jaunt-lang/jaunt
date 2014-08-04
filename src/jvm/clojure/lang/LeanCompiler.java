@@ -3679,12 +3679,6 @@ static class InvokeExpr implements Expr{
 		if(isDirect)
 			{
 			staticExpr.emit(context, objx, gen);
-			if (isAlterVarRoot)
-				{
-				Var var = ((TheVarExpr)RT.first(args)).var;
-				String typeStr = "L"+munge(var.ns.name.toString()).replace(".", "/")+"__init;";
-				gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
-				}
 			return;
 			}
 
@@ -3699,6 +3693,12 @@ static class InvokeExpr implements Expr{
 			fexpr.emit(C.EXPRESSION, objx, gen);
 			gen.checkCast(IFN_TYPE);
 			emitArgsAndCall(0, context,objx,gen);
+			if (isAlterVarRoot)
+				{
+				Var var = ((TheVarExpr)RT.first(args)).var;
+				String typeStr = "L"+munge(var.ns.name.toString()).replace(".", "/")+"__init;";
+				gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+				}
 			}
 		if(context == C.STATEMENT)
 			gen.pop();		
