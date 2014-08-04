@@ -4890,8 +4890,8 @@ static public class ObjExpr implements Expr{
 		//end of class
 		cv.visitEnd();
 
-                byte[] leanBytecode = cw.toByteArray();
-                writeClassFile(internalName, leanBytecode);
+		byte[] leanBytecode = cw.toByteArray();
+		writeClassFile(internalName, leanBytecode);
 	}
 
 	private void emitKeywordCallsites(GeneratorAdapter clinitgen){
@@ -7673,6 +7673,55 @@ public static Object load(Reader rdr, String sourcePath, String sourceName) {
 	return ret;
 }
 
+public static Object loadLean(Reader rdr, String sourcePath, String sourceName) throws IOException{
+	Object EOF = new Object();
+	Object ret = null;
+	LineNumberingPushbackReader pushbackReader =
+		(rdr instanceof LineNumberingPushbackReader) ? (LineNumberingPushbackReader) rdr :
+		new LineNumberingPushbackReader(rdr);
+	Var.pushThreadBindings(
+		RT.mapUniqueKeys(SOURCE_PATH, sourcePath,
+			SOURCE, sourceName,
+			METHOD, null,
+			LOCAL_ENV, null,
+			LOOP_LOCALS, null,
+			NEXT_LOCAL_NUM, 0,
+			ONLY_LOAD, RT.T,
+			COMPILE_FILES, RT.F,
+			RT.READEVAL, RT.T,
+			RT.CURRENT_NS, RT.CURRENT_NS.deref(),
+			LINE_BEFORE, pushbackReader.getLineNumber(),
+			COLUMN_BEFORE, pushbackReader.getColumnNumber(),
+			LINE_AFTER, pushbackReader.getLineNumber(),
+			COLUMN_AFTER, pushbackReader.getColumnNumber()
+			,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()
+			,RT.WARN_ON_REFLECTION, RT.WARN_ON_REFLECTION.deref()
+			,RT.DATA_READERS, RT.DATA_READERS.deref()
+			));
+
+	try
+		{
+		for(Object r = LispReader.read(pushbackReader, false, EOF, false); r != EOF;
+		    r = LispReader.read(pushbackReader, false, EOF, false))
+			{
+				LINE_AFTER.set(pushbackReader.getLineNumber());
+				COLUMN_AFTER.set(pushbackReader.getColumnNumber());
+				ret = leanEval(r);
+				LINE_BEFORE.set(pushbackReader.getLineNumber());
+				COLUMN_BEFORE.set(pushbackReader.getColumnNumber());
+			}
+		}
+	catch(LispReader.ReaderException e)
+		{
+		throw new CompilerException(sourcePath, e.line, e.column, e.getCause());
+		}
+	finally
+		{
+		Var.popThreadBindings();
+		}
+	return ret;
+}
+
 static public void writeClassFile(String internalName, byte[] bytecode) throws IOException{
 	String genPath = (String) COMPILE_PATH.deref();
 	if(genPath == null)
@@ -7811,6 +7860,58 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
                             }
 			}
                         }
+		}
+	finally
+		{
+		Var.popThreadBindings();
+		}
+}
+
+static Object leanEval(Object form) {
+	Object line = lineDeref();
+	Object column = columnDeref();
+	if(RT.meta(form) != null && RT.meta(form).containsKey(RT.LINE_KEY))
+		line = RT.meta(form).valAt(RT.LINE_KEY);
+	if(RT.meta(form) != null && RT.meta(form).containsKey(RT.COLUMN_KEY))
+		column = RT.meta(form).valAt(RT.COLUMN_KEY);
+	Var.pushThreadBindings(
+		RT.map(LINE, line, COLUMN, column
+			,LOADER, RT.makeClassLoader()
+			));
+
+	if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("deftype"))
+		|| Util.equals(RT.first(form), Symbol.intern("defrecord"))) {
+		Var v = lookupVarNoRegister(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()), true);
+		v.setNotLean(true);
+        }
+
+	if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("defprotocol"))) {
+		Var v = lookupVarNoRegister((Symbol)RT.first(RT.next(form)), true);
+		v.setNotLean(true);
+		for (ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s))
+			if (RT.first(s) instanceof ISeq) {
+				Var mv = lookupVarNoRegister((Symbol)RT.first(RT.first(s)), true);
+				mv.setNotLean(true);
+				}
+        }
+
+	try
+		{
+		form = macroexpand(form);
+		if(form instanceof ISeq && Util.equals(RT.first(form), DO))
+			{
+			Object ret = null;
+			for(ISeq s = RT.next(form); s != null; s = RT.next(s))
+				{
+				ret = leanEval(RT.first(s));
+				}
+			return ret;
+			}
+		else
+			{
+			Expr expr = analyze(C.EVAL, form);
+			return expr.eval();
+			}
 		}
 	finally
 		{
