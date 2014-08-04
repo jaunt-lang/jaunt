@@ -587,7 +587,7 @@ static class DefExpr implements Expr{
 //					.without(Keyword.intern(null, "name"))
 //					.without(Keyword.intern(null, "added"))
 //					.without(Keyword.intern(null, "static"));
-			boolean isStatic = RT.booleanCast(RT.get(mm, staticKey));
+			boolean isStatic = false;//RT.booleanCast(RT.get(mm, staticKey));
             mm = (IPersistentMap) elideMeta(mm);
             Expr meta = null;
 			Object initForm = RT.third(form);
@@ -3576,7 +3576,6 @@ static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
 
 static class InvokeExpr implements Expr{
 	public final Expr fexpr;
-	public final Expr staticExpr;
 	public final Object tag;
 	public final IPersistentVector args;
 	public final int line;
@@ -3591,14 +3590,12 @@ static class InvokeExpr implements Expr{
 	static Keyword onKey = Keyword.intern("on");
 	static Keyword methodMapKey = Keyword.intern("method-map");
 
-	public InvokeExpr(String source, int line, int column, Symbol tag, Expr fexpr, IPersistentVector args, Expr staticExpr) {
+	public InvokeExpr(String source, int line, int column, Symbol tag, Expr fexpr, IPersistentVector args) {
 		this.source = source;
 		this.fexpr = fexpr;
 		this.args = args;
 		this.line = line;
 		this.column = column;
-		this.staticExpr = staticExpr;
-		this.isDirect = (staticExpr != null);
 		if(fexpr instanceof VarExpr)
 			{
 			Var fvar = ((VarExpr)fexpr).var;
@@ -3676,12 +3673,6 @@ static class InvokeExpr implements Expr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		if(isDirect)
-			{
-			staticExpr.emit(context, objx, gen);
-			return;
-			}
-
 		gen.visitLineNumber(line, gen.mark());
 		if(isProtocol)
 			{
@@ -3802,14 +3793,6 @@ static class InvokeExpr implements Expr{
 				}
 			}
 
-		Expr staticExpr = null;
-		if(fexpr instanceof VarExpr)
-			{
-			Var v = ((VarExpr)fexpr).var;
-			if (RT.booleanCast(RT.get(RT.meta(v),staticKey)))
-				staticExpr = StaticInvokeExpr.parse(v, RT.next(form), tagOf(form));
-			}
-
 		if(fexpr instanceof VarExpr && context != C.EVAL)
 			{
 			Var v = ((VarExpr)fexpr).var;
@@ -3847,9 +3830,7 @@ static class InvokeExpr implements Expr{
 //			throw new IllegalArgumentException(
 //					String.format("No more than %d args supported", MAX_POSITIONAL_ARITY));
 
-		if (staticExpr != null)
-			((StaticInvokeExpr)staticExpr).args = args;
-		return new InvokeExpr((String) SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form), fexpr, args, staticExpr);
+		return new InvokeExpr((String) SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form), fexpr, args);
 	}
 }
 
@@ -3937,8 +3918,6 @@ static public class FnExpr extends ObjExpr{
 		fn.name = basename + simpleName;
 		fn.internalName = fn.name.replace('.', '/');
 		fn.objtype = Type.getObjectType(fn.internalName);
-		if (((IObj)form).meta() != null)
-			fn.isStatic = RT.booleanCast(((IObj)form).meta().valAt(staticKey));
 		ArrayList<String> prims = new ArrayList();
 		try
 			{
@@ -3959,8 +3938,6 @@ static public class FnExpr extends ObjExpr{
 				{
 				Symbol nm = (Symbol) RT.second(form);
 				fn.thisName = nm.name;
-				if (RT.booleanCast(RT.get(nm.meta(), staticKey)))
-					fn.isStatic = true;
 				form = RT.cons(FN, RT.next(RT.next(form)));
 				}
 
