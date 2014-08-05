@@ -369,7 +369,10 @@ public static void loadResourceScript(Class c, String name, boolean failIfNotFou
 	InputStream ins = resourceAsStream(baseLoader(), name);
 	if(ins != null) {
 		try {
-			Compiler.load(new InputStreamReader(ins, UTF8), name, file);
+			if (RT.booleanCast(LEAN_COMPILE.deref()))
+				LeanCompiler.load(new InputStreamReader(ins, UTF8), name, file);
+			else
+				Compiler.load(new InputStreamReader(ins, UTF8), name, file);
 		}
 		finally {
 			ins.close();
@@ -413,6 +416,21 @@ static public void compile(String cljfile) throws IOException{
 		throw new FileNotFoundException("Could not locate Clojure resource on classpath: " + cljfile);
 }
 
+static public void loadLean(String cljfile) throws IOException{
+        InputStream ins = resourceAsStream(baseLoader(), cljfile);
+	if(ins != null) {
+		try {
+			LeanCompiler.loadLean(new InputStreamReader(ins, UTF8), cljfile,
+				cljfile.substring(1 + cljfile.lastIndexOf("/")));
+		}
+		finally {
+			ins.close();
+		}
+	}
+	else
+		throw new FileNotFoundException("Could not locate Clojure resource on classpath: " + cljfile);
+}
+
 static public void load(String scriptbase) throws IOException, ClassNotFoundException{
 	load(scriptbase, true);
 }
@@ -423,6 +441,20 @@ static public void load(String scriptbase, boolean failIfNotFound) throws IOExce
 	URL classURL = getResource(baseLoader(),classfile);
 	URL cljURL = getResource(baseLoader(), cljfile);
 	boolean loaded = false;
+
+	if ((classURL != null) && (cljURL != null) && (booleanCast(LEAN_COMPILE.deref())))
+		{
+		try
+			{
+			Class possiblyLeanClass = Class.forName(scriptbase.replace('/', '.') + LOADER_SUFFIX, false, new DynamicClassLoader(baseLoader()));
+			possiblyLeanClass.getField("__LEAN_COMPILATION_FLAG__");
+			loadLean(cljfile);
+			return;
+			}
+		// no such field means the namespace is not lean-compiled
+		catch (NoSuchFieldException e) { }
+		catch (Exception e) { throw new CompilerException(e); }
+		}
 
 	if((classURL != null &&
 	    (cljURL == null

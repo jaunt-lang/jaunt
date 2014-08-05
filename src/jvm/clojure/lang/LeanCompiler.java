@@ -7686,7 +7686,6 @@ public static Object loadLean(Reader rdr, String sourcePath, String sourceName) 
 			LOCAL_ENV, null,
 			LOOP_LOCALS, null,
 			NEXT_LOCAL_NUM, 0,
-			ONLY_LOAD, RT.T,
 			COMPILE_FILES, RT.F,
 			RT.READEVAL, RT.T,
 			RT.CURRENT_NS, RT.CURRENT_NS.deref(),
@@ -8053,6 +8052,9 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 			cv.visitField(ACC_PUBLIC + ACC_FINAL + ACC_STATIC, objx.constantName(i), objx.constantType(i).getDescriptor(),
 			              null, null);
 			}
+
+		//field which indicates that the compiled namespace is lean
+		cv.visitField(ACC_PUBLIC + ACC_FINAL , "__LEAN_COMPILATION_FLAG__", OBJECT_TYPE.getDescriptor(), null, null);
 
 		final int INITS_PER = 100;
 		int emitedCounter = 0;
