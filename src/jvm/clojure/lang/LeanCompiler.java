@@ -7545,7 +7545,7 @@ private static void registerVar(Var var, boolean topLevel) {
 		VARS.set(RT.assoc(varsMap, var, id));
 		}
 
-	if (topLevel)
+	if (topLevel && TOP_LEVEL_VARS.isBound())
 		{
 		IPersistentMap topLevelVarsMap = (IPersistentMap) TOP_LEVEL_VARS.deref();
 		if(RT.get(topLevelVarsMap, var) == null)

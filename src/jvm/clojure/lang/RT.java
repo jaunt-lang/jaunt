@@ -441,20 +441,32 @@ static public void load(String scriptbase, boolean failIfNotFound) throws IOExce
 	URL classURL = getResource(baseLoader(),classfile);
 	URL cljURL = getResource(baseLoader(), cljfile);
 	boolean loaded = false;
+	boolean isLean = false;
 
-	if ((classURL != null) && (cljURL != null) && (booleanCast(LEAN_COMPILE.deref())))
-		{
+	if (classURL != null)
 		try
 			{
-			Class possiblyLeanClass = Class.forName(scriptbase.replace('/', '.') + LOADER_SUFFIX, false, new DynamicClassLoader(baseLoader()));
+			Class possiblyLeanClass = Class.forName(scriptbase.replace('/', '.') + LOADER_SUFFIX,
+				false, new DynamicClassLoader(baseLoader()));
 			possiblyLeanClass.getField("__LEAN_COMPILATION_FLAG__");
-			loadLean(cljfile);
-			return;
+			isLean = true;
 			}
 		// no such field means the namespace is not lean-compiled
 		catch (NoSuchFieldException e) { }
-		catch (Exception e) { throw new CompilerException(e); }
-		}
+
+	// Prefer evaluating clojure files over loading lean-compiled namespaces.
+	if (isLean && (cljURL != null))
+		if (booleanCast(LEAN_COMPILE.deref()))
+			{
+			loadLean(cljfile);
+			return;
+			}
+		else
+			{
+			// load the Clojure file naturally
+			loadResourceScript(RT.class, cljfile);
+			return;
+			}
 
 	if((classURL != null &&
 	    (cljURL == null
