@@ -264,7 +264,8 @@ static public IPersistentSet coreNonLeanVars = PersistentHashSet.create(
 	"#'clojure.core/in-ns", "#'clojure.core/refer", "#'clojure.core/load-file",
 	"#'clojure.core/load", "#'clojure.core/defn", "#'clojure.core/defmacro",
 	"#'clojure.core/parents", "#'clojure.core/ancestors", "#'clojure.core/pr-on",
-	"#'clojure.core/isa?", "#'clojure.core/global-hierarchy", "#'clojure.core/..");
+	"#'clojure.core/isa?", "#'clojure.core/global-hierarchy", "#'clojure.core/..",
+	"#'clojure.core/imap-cons");
 
 static public boolean isLeanVar(Symbol sym){
 	Var v = lookupVarNoRegister(sym, false);
@@ -7118,8 +7119,9 @@ private static Expr analyzeSeq(C context, ISeq form, String name) {
 		else if(op.equals(Symbol.intern("alter-meta!")) ||
 			op.equals(Symbol.intern("clojure.core", "alter-meta!")))
 			{
-			Object var_sym = RT.second(RT.first(RT.next(form)));
-			if (var_sym instanceof Symbol && isLeanVar((Symbol)var_sym))
+			Object var_form = RT.first(RT.next(form));
+			if (var_form instanceof ISeq && RT.second(var_form) instanceof Symbol
+				&& isLeanVar((Symbol)RT.second(var_form)))
 				return NIL_EXPR;
 			else
 				return InvokeExpr.parse(context, form);
