@@ -455,7 +455,8 @@ static public void load(String scriptbase, boolean failIfNotFound) throws IOExce
 		catch (NoSuchFieldException e) { }
 
 	// Prefer evaluating clojure files over loading lean-compiled namespaces.
-	if (isLean && (cljURL != null))
+	if (isLean && (cljURL != null) &&
+		(System.getProperty("clojure.compile.ignore-lean-classes") != null))
 		if (booleanCast(LEAN_COMPILE.deref()))
 			{
 			loadLean(cljfile);
