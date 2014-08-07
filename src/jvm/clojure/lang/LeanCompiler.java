@@ -265,7 +265,7 @@ static public IPersistentSet coreNonLeanVars = PersistentHashSet.create(
 	"#'clojure.core/load", "#'clojure.core/defn", "#'clojure.core/defmacro",
 	"#'clojure.core/parents", "#'clojure.core/ancestors", "#'clojure.core/pr-on",
 	"#'clojure.core/isa?", "#'clojure.core/global-hierarchy", "#'clojure.core/..",
-	"#'clojure.core/imap-cons");
+	"#'clojure.core/imap-cons", "#'clojure.core/instance?");
 
 static public boolean isLeanVar(Symbol sym){
 	Var v = lookupVarNoRegister(sym, false);
@@ -7833,8 +7833,8 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 
 			expr.eval();
 
-			if (((RT.CURRENT_NS.deref().toString().equals("clojure.core")) || (RT.CURRENT_NS.deref().toString().equals("clojure.pprint")))
-				&& (RT.first(form) instanceof Symbol)
+			if (((RT.CURRENT_NS.deref().toString().equals("clojure.core")) || (RT.CURRENT_NS.deref().toString().equals("clojure.pprint")) || (RT.CURRENT_NS.deref().toString().equals("clojure.reflect")))
+				&& (form instanceof ISeq) && (RT.first(form) instanceof Symbol)
 				&& ((Symbol)RT.first(form)).name.equals("load"))
 				{
 				String path = "clojure/" + (String)RT.second(form) + ".clj";
@@ -7954,6 +7954,10 @@ public static void compileSeparateCoreFile(Reader rdr, String sourcePath, String
         catch (Exception ex) {
             ex.printStackTrace();
         }
+		finally
+			{
+			Var.popThreadBindings();
+			}
 }
 
 public static Object compile(Reader rdr, String sourcePath, String sourceName) throws IOException{

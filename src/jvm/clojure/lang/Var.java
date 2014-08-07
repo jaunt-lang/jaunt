@@ -273,6 +273,13 @@ public void setTag(Symbol tag) {
     alterMeta(assoc, RT.list(RT.TAG_KEY, tag));
 }
 
+public static boolean hasRoot(Object v){
+	if (v instanceof Var)
+		return ((Var)v).hasRoot();
+	else
+		return v != null;
+	}
+
 final public boolean hasRoot(){
 	return !(root instanceof Unbound);
 }
