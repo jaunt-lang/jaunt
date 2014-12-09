@@ -273,7 +273,7 @@ public static PrintWriter errPrintWriter(){
 static public final Object[] EMPTY_ARRAY = new Object[]{};
 static public final Comparator DEFAULT_COMPARATOR = new DefaultComparator();
 
-private static final class DefaultComparator implements Comparator, Serializable {
+private static final class DefaultComparator implements Comparator<Object>, Serializable {
     public int compare(Object o1, Object o2){
 		return Util.compare(o1, o2);
 	}
@@ -943,27 +943,27 @@ static public Object box(Boolean x){
 }
 
 static public Number box(byte x){
-	return x;//Num.from(x);
+	return new Byte(x);//Num.from(x);
 }
 
 static public Number box(short x){
-	return x;//Num.from(x);
+	return (Number)x;//Num.from(x);
 }
 
 static public Number box(int x){
-	return x;//Num.from(x);
+	return (Number)x;//Num.from(x);
 }
 
 static public Number box(long x){
-	return x;//Num.from(x);
+	return (Number)x;//Num.from(x);
 }
 
 static public Number box(float x){
-	return x;//Num.from(x);
+	return (Number)x;//Num.from(x);
 }
 
 static public Number box(double x){
-	return x;//Num.from(x);
+	return (Number)x;//Num.from(x);
 }
 
 static public char charCast(Object x){

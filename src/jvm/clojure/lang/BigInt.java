@@ -148,6 +148,15 @@ public BigInt add(BigInt y) {
     return BigInt.fromBigInteger(this.toBigInteger().add(y.toBigInteger()));
 }
 
+public BigInt subtract(BigInt y) {
+    if ((bipart == null) && (y.bipart == null)) {
+        long ret = lpart - y.lpart;
+        if ((ret ^ lpart) >= 0 || (ret ^ y.lpart) >= 0)
+            return BigInt.valueOf(ret);
+    }
+    return BigInt.fromBigInteger(this.toBigInteger().subtract(y.toBigInteger()));
+}
+
 public BigInt multiply(BigInt y) {
     if ((bipart == null) && (y.bipart == null)) {
         long ret = lpart * y.lpart;

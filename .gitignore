@@ -5,3 +5,6 @@ clojure.ipr
 nbproject/private/
 maven-classpath
 maven-classpath.properties
+/bin
+/.classpath
+/.project
