@@ -245,6 +245,13 @@ static final public Var INSTANCE = Var.intern(Namespace.findOrCreate(Symbol.inte
 static final public Var ALTER_VAR_ROOT = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                                     Symbol.intern("alter-var-root"));
 
+static final public Var REFER = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                           Symbol.intern("refer"));
+static final public Var REQUIRE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                             Symbol.intern("require"));
+static final public Var IMPORT_VAR = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                             Symbol.intern("import"));
+
 static final public Var ADD_ANNOTATIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                             Symbol.intern("add-annotations"));
 
@@ -3585,6 +3592,7 @@ static class InvokeExpr implements Expr{
 	public boolean isProtocol = false;
 	public boolean isDirect = false;
 	public boolean isAlterVarRoot = false;
+    public boolean isNsOp = false;
 	public int siteIndex = -1;
 	public Class protocolOn;
 	public java.lang.reflect.Method onMethod;
@@ -3633,6 +3641,10 @@ static class InvokeExpr implements Expr{
                                 this.isAlterVarRoot = true;
                             }
                         }
+
+                        if (fvar.equals(REFER) || fvar.equals(REQUIRE) || fvar.equals(IMPORT_VAR)) {
+                            this.isNsOp = true;
+                        }
 			}
 		
 		if (tag != null) {
@@ -3674,12 +3686,16 @@ static class InvokeExpr implements Expr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
+        boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
 		gen.visitLineNumber(line, gen.mark());
 		if(isProtocol)
 			{
 			emitProto(context,objx,gen);
 			}
 
+		else if (emitLeanCode && isNsOp) {
+            gen.visitInsn(Opcodes.ACONST_NULL);
+        }
 		else
 			{
 			fexpr.emit(C.EXPRESSION, objx, gen);
