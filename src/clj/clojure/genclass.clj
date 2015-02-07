@@ -125,8 +125,8 @@
   (validate-generate-class-options options-map)
   (let [default-options {:prefix "-" :load-impl-ns true :impl-ns (ns-name *ns*)}
         {:keys [name extends implements constructors methods main factory state init exposes 
-                exposes-methods prefix load-impl-ns impl-ns post-init]} 
-          (merge default-options options-map)
+                exposes-methods prefix load-impl-ns impl-ns post-init overrides-methods]} 
+        (merge default-options options-map)
         name-meta (meta name)
         name (str name)
         super (if extends (the-class extends) Object)
@@ -161,7 +161,12 @@
         ifn-type (totype clojure.lang.IFn)
         iseq-type (totype clojure.lang.ISeq)
         ex-type  (totype java.lang.UnsupportedOperationException)
-        all-sigs (distinct (concat (map #(let[[m p] (key %)] {m [p]}) (mapcat non-private-methods supers))
+        override-mm (set (map str overrides-methods))
+        non-priv-methods (mapcat non-private-methods supers)
+        all-sigs (distinct (concat () (map #(let[[m p] (key %)] {m [p]})
+                                           (if overrides-methods
+                                             (filter #(override-mm (.getName (second %))) non-priv-methods)
+                                             non-priv-methods))
                                    (map (fn [[m p]] {(str m) [p]}) methods)))
         sigs-by-name (apply merge-with concat {} all-sigs)
         overloads (into1 {} (filter (fn [[m s]] (next s)) sigs-by-name))
@@ -401,7 +406,10 @@
             (. gen (endMethod))))))
     
                                         ;add methods matching supers', if no fn -> call super
-    (let [mm (non-private-methods super)]
+    (let [all-mm (non-private-methods super)
+          mm (if overrides-methods
+               (filter #(override-mm (.getName (second %))) all-mm)
+               all-mm)]
       (doseq [^java.lang.reflect.Method meth (vals mm)]
              (emit-forwarding-method (.getName meth) (.getParameterTypes meth) (.getReturnType meth) false
                                      (fn [^GeneratorAdapter gen ^Method m]
