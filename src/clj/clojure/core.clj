@@ -5372,7 +5372,7 @@
   {:added "1.0"}
   [name expr]
   `(let [v# (def ~name)]
-     (when-not (.hasRoot v#)
+     (when-not (clojure.lang.Var/hasRoot v#)
        (def ~name ~expr))))
 
 ;;;;;;;;;;; require/use/load, contributed by Stephen C. Gilardi ;;;;;;;;;;;;;;;;;;
