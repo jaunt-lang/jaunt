@@ -6509,31 +6509,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; clojure version number ;;;;;;;;;;;;;;;;;;;;;;
 
-(let [properties (with-open [version-stream (.getResourceAsStream
-                                             (clojure.lang.RT/baseLoader)
-                                             "clojure/version.properties")]
-                   (doto (new java.util.Properties)
-                     (.load version-stream)))
-      version-string (.getProperty properties "version")
-      [_ major minor incremental qualifier snapshot]
-      (re-matches
-       #"(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9_]+))?(?:-(SNAPSHOT))?"
-       version-string)
-      clojure-version {:major       (Integer/valueOf ^String major)
-                       :minor       (Integer/valueOf ^String minor)
-                       :incremental (Integer/valueOf ^String incremental)
-                       :qualifier   (if (= qualifier "SNAPSHOT") nil qualifier)}]
-  (def ^:dynamic *clojure-version*
-    (if (.contains version-string "SNAPSHOT")
-      (clojure.lang.RT/assoc clojure-version :interim true)
-      clojure-version)))
-
-(add-doc-and-meta *clojure-version*
-  "The version info for Clojure core, as a map containing :major :minor 
-  :incremental and :qualifier keys. Feature releases may increment 
-  :minor and/or :major, bugfix releases will increment :incremental. 
-  Possible values of :qualifier include \"GA\", \"SNAPSHOT\", \"RC-x\" \"BETA-x\""
-  {:added "1.0"})
+(def ^:dynamic *clojure-version*
+  {:major 1, :minor 7, :incremental 0, :qualifier "skummet-alpha3"})
 
 (defn
   clojure-version 
