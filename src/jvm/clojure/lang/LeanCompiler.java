@@ -81,7 +81,6 @@ static final Symbol ISEQ = Symbol.intern("clojure.lang.ISeq");
 static final Keyword inlineKey = Keyword.intern(null, "inline");
 static final Keyword inlineAritiesKey = Keyword.intern(null, "inline-arities");
 static final Keyword staticKey = Keyword.intern(null, "static");
-static final IPersistentMap staticMetaMap = PersistentHashMap.create(staticKey, RT.T);
 static final Keyword arglistsKey = Keyword.intern(null, "arglists");
 static final Symbol INVOKE_STATIC = Symbol.intern("invokeStatic");
 
@@ -192,8 +191,6 @@ static final public Var LOOP_LABEL = Var.create().setDynamic();
 //vector<object>
 static final public Var CONSTANTS = Var.create().setDynamic();
 
-static final public Var CONSTANT_LEAN_FLAGS = Var.create().setDynamic();
-
 //IdentityHashMap
 static final public Var CONSTANT_IDS = Var.create().setDynamic();
 
@@ -211,7 +208,6 @@ static final public Var KEYWORDS = Var.create().setDynamic();
 
 //var->constid
 static final public Var VARS = Var.create().setDynamic();
-static final public Var TOP_LEVEL_VARS = Var.create().setDynamic();
 
 //FnFrame
 static final public Var METHOD = Var.create(null).setDynamic();
@@ -242,6 +238,41 @@ static final public Var COMPILE_FILES = Var.intern(Namespace.findOrCreate(Symbol
 static final public Var INSTANCE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                             Symbol.intern("instance?"));
 
+static final public Var ADD_ANNOTATIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                            Symbol.intern("add-annotations"));
+
+static final public Keyword disableLocalsClearingKey = Keyword.intern("disable-locals-clearing");
+static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
+
+static final public Var COMPILER_OPTIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                                      Symbol.intern("*compiler-options*"), null).setDynamic();
+
+static public Object getCompilerOption(Keyword k){
+	return RT.get(COMPILER_OPTIONS.deref(),k);
+}
+
+/// Lean vars block
+static final IPersistentMap staticMetaMap = PersistentHashMap.create(staticKey, RT.T);
+
+// For each registered constant contains a boolean value whether it should be
+// included into AOT-classes. True means not include.
+static final public Var CONSTANT_LEAN_FLAGS = Var.create().setDynamic();
+
+// Contains a set of vars that were defined inside InvokeExpr but should be
+// emerge to parent namespace.
+static final public Var TOP_LEVEL_VARS = Var.create().setDynamic();
+
+// Predicate that given a var returns whether it is lean. This is supplied from
+// outside to exclude certain vars from being lean-compiled.
+static final public Var LEAN_VAR_PRED = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                                   Symbol.intern("*lean-var?*"), null).setDynamic();
+
+static final public Var EMIT_LEAN_CODE = Var.create(false).setDynamic();
+static final public Var IS_ANALYZING_META = Var.create(false).setDynamic();
+static final public Var IS_DEFINING_LEAN_VAR = Var.create(false).setDynamic();
+static final public Var IS_COMPILING_A_MACRO = Var.create(false).setDynamic();
+
+// Get handle of some Clojure vars that will be of use later.
 static final public Var ALTER_VAR_ROOT = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                                     Symbol.intern("alter-var-root"));
 
@@ -252,21 +283,6 @@ static final public Var REQUIRE = Var.intern(Namespace.findOrCreate(Symbol.inter
 static final public Var IMPORT_VAR = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                              Symbol.intern("import"));
 
-static final public Var ADD_ANNOTATIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                            Symbol.intern("add-annotations"));
-
-static final public Keyword disableLocalsClearingKey = Keyword.intern("disable-locals-clearing");
-static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
-
-static final public Var COMPILER_OPTIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                                      Symbol.intern("*compiler-options*"), null).setDynamic();
-static final public Var LEAN_VAR_PRED = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                                   Symbol.intern("*lean-var?*"), null).setDynamic();
-
-static public Object getCompilerOption(Keyword k){
-	return RT.get(COMPILER_OPTIONS.deref(),k);
-}
-
 static public IPersistentSet coreNonLeanVars = PersistentHashSet.create(
 	"#'clojure.core/in-ns", "#'clojure.core/refer", "#'clojure.core/load-file",
 	"#'clojure.core/load", "#'clojure.core/defn", "#'clojure.core/defmacro",
@@ -275,7 +291,7 @@ static public IPersistentSet coreNonLeanVars = PersistentHashSet.create(
 	"#'clojure.core/imap-cons", "#'clojure.core/instance?");
 
 static public boolean isLeanVar(Symbol sym){
-	Var v = lookupVarNoRegister(sym, false);
+	Var v = lookupVar(sym, false);
 	return (v == null || isLeanVar(v));
 }
 
@@ -285,6 +301,12 @@ static public boolean isLeanVar(Var var){
 		!var.isNotLean() && !var.isDynamic() &&
 		RT.booleanCast(((IFn)LEAN_VAR_PRED.deref()).invoke(var));
 }
+
+static public String getNSClassname(Namespace ns) {
+	return "L"+munge(ns.toString()).replace(".", "/")+"__init;";
+}
+
+/// Lean vars block ends
 
 static Object elideMeta(Object m){
         Collection<Object> elides = (Collection<Object>) getCompilerOption(elideMetaKey);
@@ -337,11 +359,6 @@ static final public Var CLEAR_ROOT = Var.create(null).setDynamic();
 
 //LocalBinding -> Set<LocalBindingExpr>
 static final public Var CLEAR_SITES = Var.create(null).setDynamic();
-
-static final public Var EMIT_LEAN_CODE = Var.create(false).setDynamic();
-static final public Var IS_ANALYZING_META = Var.create(false).setDynamic();
-static final public Var IS_DEFINING_LEAN_VAR = Var.create(false).setDynamic();
-static final public Var IS_COMPILING_A_MACRO = Var.create(false).setDynamic();
 
     public enum C{
 	STATEMENT,  //value ignored
@@ -474,16 +491,16 @@ static class DefExpr implements Expr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-                boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
-                if (emitLeanCode && RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
-                        // Don't emit macros in lean compilation mode
-                        return;
-                }
+		boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
+		if (emitLeanCode && RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
+			// Don't emit macros in lean compilation mode
+			return;
+		}
 
-                if (emitLeanCode && isLeanVar(var))
-                        objx.emitVarLean(gen, var);
-                else
-                    objx.emitVar(gen, var);
+		if (emitLeanCode && isLeanVar(var))
+			objx.emitVarLean(gen, var);
+		else
+			objx.emitVar(gen, var);
 
 		if(isDynamic)
 			{
@@ -494,23 +511,23 @@ static class DefExpr implements Expr{
 			{
             if (initProvided || true)//includesExplicitMetadata((MapExpr) meta))
                 {
-                // Don't set metadata in lean compilation mode and if var is lean
-                if (!(emitLeanCode && isLeanVar(var))) {
+				// Don't set metadata in lean compilation mode and if var is lean
+				if (!(emitLeanCode && isLeanVar(var))) {
                 gen.dup();
                 meta.emit(C.EXPRESSION, objx, gen);
                 gen.checkCast(IPERSISTENTMAP_TYPE);
                 gen.invokeVirtual(VAR_TYPE, setMetaMethod);
                 }
-                }
+				}
 			}
 		if(initProvided)
 			{
-                        if (emitLeanCode && isLeanVar(var))
-							{
-							init.emit(C.EXPRESSION, objx, gen);
-							String typeStr = "L"+munge(currentNS().toString()).replace(".", "/")+"__init;";
-							gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
-                            } else {
+				if (emitLeanCode && isLeanVar(var))
+					{
+						init.emit(C.EXPRESSION, objx, gen);
+						String typeStr = getNSClassname(currentNS());
+						gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+					} else {
 			gen.dup();
 			if(init instanceof FnExpr)
 				{
@@ -519,7 +536,7 @@ static class DefExpr implements Expr{
 			else
 				init.emit(C.EXPRESSION, objx, gen);
 			gen.invokeVirtual(VAR_TYPE, bindRootMethod);
-                        }
+				}
 			}
 
 		if(context == C.STATEMENT)
@@ -550,7 +567,7 @@ static class DefExpr implements Expr{
 					throw Util.runtimeException("First argument to def must be a Symbol");
 			Symbol sym = (Symbol) RT.second(form);
 			IPersistentMap mm = sym.meta();
-			Var v = lookupVarNoRegister(sym, true);
+			Var v = lookupVar(sym, true);
 			if(v == null)
 				throw Util.runtimeException("Can't refer to qualified var that doesn't exist");
 			if(!v.ns.equals(currentNS()))
@@ -597,26 +614,25 @@ static class DefExpr implements Expr{
 //					.without(Keyword.intern(null, "static"));
 			boolean isStatic = false;//RT.booleanCast(RT.get(mm, staticKey));
             mm = (IPersistentMap) elideMeta(mm);
-            Expr meta = null;
+			Expr meta = null;
 			Object initForm = RT.third(form);
 			Expr initExpr = null;
-            try
-				{
-                Var.pushThreadBindings(RT.map(IS_ANALYZING_META, isLeanVar(v)));
-                meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
-				}
-			finally {
-                Var.popThreadBindings();
-            }
-			try
-				{
-                Var.pushThreadBindings(RT.map(IS_DEFINING_LEAN_VAR, isLeanVar(v)));
+			try {
+				// Analyze metadata with special var set so that
+				// metadata-related constants don't get registered.
+				Var.pushThreadBindings(RT.map(IS_ANALYZING_META, isLeanVar(v)));
+				meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
+			} finally {
+				Var.popThreadBindings();
+			}
+			try {
+				Var.pushThreadBindings(RT.map(IS_DEFINING_LEAN_VAR, isLeanVar(v)));
 				initExpr = analyze(context == C.EVAL ? context : C.EXPRESSION,
-					isStatic ? ((IObj)initForm).withMeta(staticMetaMap) : initForm,
+								   isStatic ? ((IObj)initForm).withMeta(staticMetaMap) : initForm,
 					v.sym.name);
-            } finally {
-                Var.popThreadBindings();
-            }
+			} finally {
+				Var.popThreadBindings();
+			}
 			return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
 				v, initExpr, meta, RT.count(form) == 3, isDynamic);
 		}
@@ -738,7 +754,7 @@ public static class TheVarExpr implements Expr{
 	static class Parser implements IParser{
 		public Expr parse(C context, Object form) {
 			Symbol sym = (Symbol) RT.second(form);
-			Var v = lookupVar(sym, false, false);
+			Var v = lookupVar(sym, false, true);
 			if(v != null)
 				return new TheVarExpr(v);
 			throw Util.runtimeException("Unable to resolve var: " + sym + " in this context");
@@ -1867,11 +1883,6 @@ static class NumberExpr extends LiteralExpr implements MaybePrimitiveExpr{
 		this.id = registerConstant(n);
 	}
 
-    public NumberExpr(Number n, boolean isLean){
-		this.n = n;
-		this.id = registerConstant(n, isLean);
-	}
-
 	Object val(){
 		return n;
 	}
@@ -1921,15 +1932,6 @@ static class NumberExpr extends LiteralExpr implements MaybePrimitiveExpr{
 		else
 			return new ConstantExpr(form);
 	}
-
-	static public Expr parse(Number form, boolean isLean){
-            if(form instanceof Integer
-               || form instanceof Double
-               || form instanceof Long)
-                return new NumberExpr(form, isLean);
-            else
-                return new ConstantExpr(form, isLean);
-	}
 }
 
 static class ConstantExpr extends LiteralExpr{
@@ -1944,11 +1946,6 @@ static class ConstantExpr extends LiteralExpr{
 //		this.id = RT.nextID();
 //		DynamicClassLoader loader = (DynamicClassLoader) LOADER.get();
 //		loader.registerQuotedVal(id, v);
-	}
-
-    public ConstantExpr(Object v, boolean isLean){
-		this.v = v;
-		this.id = registerConstant(v, isLean);
 	}
 
 	Object val(){
@@ -2004,7 +2001,7 @@ static class ConstantExpr extends LiteralExpr{
 			else if(v instanceof IPersistentCollection && ((IPersistentCollection) v).count() == 0)
 				return new EmptyExpr(v);
 			else
-				return new ConstantExpr(v, RT.booleanCast(IS_ANALYZING_META.deref()));
+				return new ConstantExpr(v);
 		}
 	}
 }
@@ -3119,7 +3116,7 @@ public static class MapExpr implements Expr{
 					m = m.assoc(((LiteralExpr)keyvals.nth(i)).val(), ((LiteralExpr)keyvals.nth(i+1)).val());
 					}
 //				System.err.println("Constant: " + m);
-				return new ConstantExpr(m, RT.booleanCast(IS_ANALYZING_META.deref()));
+				return new ConstantExpr(m);
 				}
 			else
 				return ret;
@@ -3186,7 +3183,7 @@ public static class SetExpr implements Expr{
 				set = (IPersistentSet)set.cons(ve.val());
 				}
 //			System.err.println("Constant: " + set);
-			return new ConstantExpr(set, RT.booleanCast(IS_ANALYZING_META.deref()));
+			return new ConstantExpr(set);
 			}
 		else
 			return ret;
@@ -3248,7 +3245,7 @@ public static class VectorExpr implements Expr{
 				rv = rv.cons(ve.val());
 				}
 //			System.err.println("Constant: " + rv);
-			return new ConstantExpr(rv, RT.booleanCast(IS_ANALYZING_META.deref()));
+			return new ConstantExpr(rv);
 			}
 		else
 			return ret;
@@ -3592,7 +3589,7 @@ static class InvokeExpr implements Expr{
 	public boolean isProtocol = false;
 	public boolean isDirect = false;
 	public boolean isAlterVarRoot = false;
-    public boolean isNsOp = false;
+	public boolean isNsOp = false;
 	public int siteIndex = -1;
 	public Class protocolOn;
 	public java.lang.reflect.Method onMethod;
@@ -3635,16 +3632,17 @@ static class InvokeExpr implements Expr{
 					}
 				}
 
-                        if (fvar.equals(ALTER_VAR_ROOT)) {
-                            Object target = RT.first(args);
-                            if (target instanceof TheVarExpr && isLeanVar(((TheVarExpr)target).var)) {
-                                this.isAlterVarRoot = true;
-                            }
-                        }
+			// Set flags for invocation expressions with certain functions.
+			if (fvar.equals(ALTER_VAR_ROOT)) {
+				Object target = RT.first(args);
+				if (target instanceof TheVarExpr && isLeanVar(((TheVarExpr)target).var)) {
+					this.isAlterVarRoot = true;
+				}
+			}
 
-                        if (fvar.equals(REFER) || fvar.equals(REQUIRE) || fvar.equals(IMPORT_VAR)) {
-                            this.isNsOp = true;
-                        }
+			if (fvar.equals(REFER) || fvar.equals(REQUIRE) || fvar.equals(IMPORT_VAR)) {
+				this.isNsOp = true;
+			}
 			}
 		
 		if (tag != null) {
@@ -3686,7 +3684,7 @@ static class InvokeExpr implements Expr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-        boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
+		boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
 		gen.visitLineNumber(line, gen.mark());
 		if(isProtocol)
 			{
@@ -3694,8 +3692,8 @@ static class InvokeExpr implements Expr{
 			}
 
 		else if (emitLeanCode && isNsOp) {
-            gen.visitInsn(Opcodes.ACONST_NULL);
-        }
+			gen.visitInsn(Opcodes.ACONST_NULL);
+		}
 		else
 			{
 			fexpr.emit(C.EXPRESSION, objx, gen);
@@ -3704,7 +3702,7 @@ static class InvokeExpr implements Expr{
 			if (isAlterVarRoot)
 				{
 				Var var = ((TheVarExpr)RT.first(args)).var;
-				String typeStr = "L"+munge(var.ns.name.toString()).replace(".", "/")+"__init;";
+				String typeStr = getNSClassname(var.ns);
 				gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
 				}
 			}
@@ -3809,6 +3807,15 @@ static class InvokeExpr implements Expr{
 					}
 				}
 			}
+
+//		if(fexpr instanceof VarExpr && context != C.EVAL)
+//			{
+//			Var v = ((VarExpr)fexpr).var;
+//			if(RT.booleanCast(RT.get(RT.meta(v),staticKey)))
+//				{
+//				return StaticInvokeExpr.parse(v, RT.next(form), tagOf(form));
+//				}
+//			}
 
 		if(fexpr instanceof VarExpr && context != C.EVAL)
 			{
@@ -5426,9 +5433,8 @@ static public class ObjExpr implements Expr{
 	}
 
 	public void emitVarLean(GeneratorAdapter gen, Var var){
-            String typeStr = null;
             try {
-                typeStr = "L"+munge(var.ns.name.toString()).replace(".", "/")+"__init;";
+                String typeStr = getNSClassname(var.ns);
                 gen.getStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
             } catch (Exception e) {
                 throw new CompilerException((String) SOURCE_PATH.deref(), RT.intCast(LINE.deref()),
@@ -6899,7 +6905,6 @@ public static Expr analyze(C context, Object form) {
 
 private static Expr analyze(C context, Object form, String name) {
 	//todo symbol macro expansion?
-        boolean isAnalyzingMeta = RT.booleanCast(IS_ANALYZING_META.deref());
 	try
 		{
 		if(form instanceof LazySeq)
@@ -6918,9 +6923,9 @@ private static Expr analyze(C context, Object form, String name) {
 		if(fclass == Symbol.class)
 			return analyzeSymbol((Symbol) form);
 		else if(fclass == Keyword.class)
-                    return registerKeyword((Keyword) form, isAnalyzingMeta);
+                    return registerKeyword((Keyword) form);
 		else if(form instanceof Number)
-                    return NumberExpr.parse((Number) form, isAnalyzingMeta);
+                    return NumberExpr.parse((Number) form);
 		else if(fclass == String.class)
 				return new StringExpr(((String) form).intern());
 //	else if(fclass == Character.class)
@@ -6981,7 +6986,7 @@ static public Var isMacro(Object op) {
 		return null;
 	if(op instanceof Symbol || op instanceof Var)
 		{
-		Var v = (op instanceof Var) ? (Var) op : lookupVarNoRegister((Symbol) op, false);
+		Var v = (op instanceof Var) ? (Var) op : lookupVar((Symbol) op, false);
 		if(v != null && v.isMacro())
 			{
 			if(v.ns != currentNS() && !v.isPublic())
@@ -6998,7 +7003,7 @@ static public IFn isInline(Object op, int arity) {
 		return null;
 	if(op instanceof Symbol || op instanceof Var)
 		{
-		Var v = (op instanceof Var) ? (Var) op : lookupVarNoRegister((Symbol) op, false);
+		Var v = (op instanceof Var) ? (Var) op : lookupVar((Symbol) op, false);
 		if(v != null)
 			{
 			if(v.ns != currentNS() && !v.isPublic())
@@ -7224,9 +7229,8 @@ public static Object eval(Object form, boolean freshLoader) {
 }
 
 private static int registerConstant(Object o){
-        return registerConstant(o, false);
+	return registerConstant(o, RT.booleanCast(IS_ANALYZING_META.deref()));
 }
-
 private static int registerConstant(Object o, boolean isLean){
 	if(!CONSTANTS.isBound())
 		return -1;
@@ -7234,23 +7238,23 @@ private static int registerConstant(Object o, boolean isLean){
 	IdentityHashMap<Object,Integer> ids = (IdentityHashMap<Object,Integer>) CONSTANT_IDS.deref();
 	Integer i = ids.get(o);
 	if(i != null)
-            {
-                if (!isLean)
-                    // A constant might have been declared lean (= omit) before,
-                    // but now non-lean instance of it appeared. We should clear
-                    // the flag in CONSTANT_LEAN_FLAGS.
-                    CONSTANT_LEAN_FLAGS.set(RT.assoc((PersistentVector)CONSTANT_LEAN_FLAGS.deref(), i, false));
+		{
+			if (!isLean)
+				// A constant might have been declared lean (= omit) before,
+				// but now non-lean instance of it appeared. We should clear
+				// the flag in CONSTANT_LEAN_FLAGS.
+				CONSTANT_LEAN_FLAGS.set(RT.assoc((PersistentVector)CONSTANT_LEAN_FLAGS.deref(), i, false));
 		return i;
-            }
+		}
 
 	CONSTANTS.set(RT.conj(v, o));
 	ids.put(o, v.count());
 
-        CONSTANT_LEAN_FLAGS.set(RT.conj((PersistentVector)CONSTANT_LEAN_FLAGS.deref(), isLean));
+	CONSTANT_LEAN_FLAGS.set(RT.conj((PersistentVector)CONSTANT_LEAN_FLAGS.deref(), isLean));
 	return v.count();
 }
 
-private static KeywordExpr registerKeyword(Keyword keyword, boolean isLean){
+private static KeywordExpr registerKeyword(Keyword keyword){
 	if(!KEYWORDS.isBound())
 		return new KeywordExpr(keyword);
 
@@ -7258,12 +7262,13 @@ private static KeywordExpr registerKeyword(Keyword keyword, boolean isLean){
 	Object id = RT.get(keywordsMap, keyword);
 	if(id == null)
 		{
-		int constId = registerConstant(keyword, isLean);
+		int constId = registerConstant(keyword);
 		KEYWORDS.set(RT.assoc(keywordsMap, keyword, constId));
 		}
         else
-            if (!isLean)
-                registerConstant(keyword, false);
+			// Re-register constant in case it could become non-lean after been
+			// registered as lean before.
+			registerConstant(keyword);
 
 	return new KeywordExpr(keyword);
 //	KeywordExpr ke = (KeywordExpr) RT.get(keywordsMap, keyword);
@@ -7494,7 +7499,7 @@ static public Object maybeResolveIn(Namespace n, Symbol sym) {
 				}
 }
 
-static Var lookupVarNoRegister(Symbol sym, boolean internNew) {
+static Var lookupVar(Symbol sym, boolean internNew, boolean register) {
 	Var var = null;
 
 	//note - ns-qualified vars in other namespaces must already exist
@@ -7533,19 +7538,19 @@ static Var lookupVarNoRegister(Symbol sym, boolean internNew) {
 				throw Util.runtimeException("Expecting var, but " + sym + " is mapped to " + o);
 				}
 			}
-	return var;
-}
-
-static Var lookupVar(Symbol sym, boolean internNew, boolean registerMacro) {
-	Var var = lookupVarNoRegister(sym, internNew);
-	if(var != null && (!var.isMacro() || registerMacro)
+	boolean registerMacro = false;
+	if(var != null && register && (!var.isMacro() || registerMacro)
 		&& (!isLeanVar(var) || RT.CURRENT_NS.deref().equals(var.ns)))
 		registerVar(var);
 	return var;
 }
 
 static Var lookupVar(Symbol sym, boolean internNew) {
-    return lookupVar(sym, internNew, true);
+	return lookupVar(sym, internNew, false);
+}
+
+static Var lookupVar(Symbol sym) {
+	return lookupVar(sym, true, false);
 }
 
 private static void registerVar(Var var) {
@@ -7798,16 +7803,16 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 
         if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("deftype"))
             || Util.equals(RT.first(form), Symbol.intern("defrecord"))) {
-                Var v = lookupVarNoRegister(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()), true);
+                Var v = lookupVar(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()));
                 v.setNotLean(true);
         }
 
         if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("defprotocol"))) {
-                Var v = lookupVarNoRegister((Symbol)RT.first(RT.next(form)), true);
+                Var v = lookupVar((Symbol)RT.first(RT.next(form)));
                 v.setNotLean(true);
                 for (ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s))
                         if (RT.first(s) instanceof ISeq) {
-                                Var mv = lookupVarNoRegister((Symbol)RT.first(RT.first(s)), true);
+                                Var mv = lookupVar((Symbol)RT.first(RT.first(s)));
                                 mv.setNotLean(true);
                         }
         }
@@ -7898,16 +7903,16 @@ static Object leanEval(Object form) {
 
 	if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("deftype"))
 		|| Util.equals(RT.first(form), Symbol.intern("defrecord"))) {
-		Var v = lookupVarNoRegister(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()), true);
+		Var v = lookupVar(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()));
 		v.setNotLean(true);
         }
 
 	if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("defprotocol"))) {
-		Var v = lookupVarNoRegister((Symbol)RT.first(RT.next(form)), true);
+		Var v = lookupVar((Symbol)RT.first(RT.next(form)));
 		v.setNotLean(true);
 		for (ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s))
 			if (RT.first(s) instanceof ISeq) {
-				Var mv = lookupVarNoRegister((Symbol)RT.first(RT.first(s)), true);
+				Var mv = lookupVar((Symbol)RT.first(RT.first(s)));
 				mv.setNotLean(true);
 				}
         }
