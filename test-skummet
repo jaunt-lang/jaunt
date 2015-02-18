@@ -1,18 +1,20 @@
-#!/bin/bash
+#!/bin/bash -e
 mvn package
 mkdir -p target-skummet
 rm -rf target-skummet/*
 rm -rf linkage-deps/clojure/core
+
+# We need to copy these classes because without them it fails miserably
 mkdir -p linkage-deps/clojure/core
 cp target/classes/clojure/core/IVecImpl.class linkage-deps/clojure/core
 cp target/classes/clojure/core/Vec.class linkage-deps/clojure/core
 cp target/classes/clojure/core/VecNode.class linkage-deps/clojure/core
-java -cp target/clojure-1.7.0-skummet-SNAPSHOT-slim.jar:linkage-deps:. clojure.main test.clj
-# java -cp /home/unlogic/.m2/repository/org/clojure/clojure/1.6.0/clojure-1.6.0.jar:. clojure.main test.clj
-# java -cp target/clojure-1.7.0-skummet-SNAPSHOT-slim.jar:. clojure.main test.clj
-mkdir -p target-skummet/clojure/lang
-cp -r target/classes/clojure/lang/* target-skummet/clojure/lang/
-cp -r target/classes/clojure/asm target-skummet/clojure/
-cp target/classes/clojure/version.properties target-skummet/clojure/
-java -cp target-skummet testskummet.bar 123456 example
+
+# java -cp target/clojure-1.7.0-skummet-SNAPSHOT-slim.jar:/home/unlogic/.m2/repository/hiccup/hiccup/1.0.4/hiccup-1.0.4.jar:/home/unlogic/.m2/repository/org/clojure/core.async/0.1.303.0-886421-alpha/core.async-0.1.303.0-886421-alpha.jar:linkage-deps:/home/unlogic/.m2/repository/org/clojure/tools.analyzer/0.1.0-beta12/tools.analyzer-0.1.0-beta12.jar:/home/unlogic/.m2/repository/org/clojure/tools.analyzer.jvm/0.1.0-beta12/tools.analyzer.jvm-0.1.0-beta12.jar:/home/unlogic/.m2/repository/org/clojure/core.memoize/0.5.6/core.memoize-0.5.6.jar:existing-deps:/home/unlogic/.m2/repository/org/clojure/core.cache/0.6.3/core.cache-0.6.3.jar:/home/unlogic/.m2/repository/org/clojure/data.priority-map/0.0.2/data.priority-map-0.0.2.jar:/home/unlogic/.m2/repository/asm/asm/3.3.1/asm-3.3.1.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test.clj
+# java -cp
+# target/clojure-1.7.0-skummet-SNAPSHOT-slim.jar:/home/unlogic/.m2/repository/hiccup/hiccup/1.0.4/hiccup-1.0.4.jar:/home/unlogic/.m2/repository/org/clojure/core.async/0.1.303.0-886421-alpha/core.async-0.1.303.0-886421-alpha.jar:linkage-deps:/home/unlogic/.m2/repository/org/clojure/tools.analyzer/0.1.0-beta12/tools.analyzer-0.1.0-beta12.jar:/home/unlogic/.m2/repository/org/clojure/tools.analyzer.jvm/0.1.0-beta12/tools.analyzer.jvm-0.1.0-beta12.jar:/home/unlogic/.m2/repository/org/clojure/core.memoize/0.5.6/core.memoize-0.5.6.jar:existing-deps:/home/unlogic/.m2/repository/org/clojure/core.cache/0.6.3/core.cache-0.6.3.jar:/home/unlogic/.m2/repository/org/clojure/data.priority-map/0.0.2/data.priority-map-0.0.2.jar:/home/unlogic/.m2/repository/asm/asm/3.3.1/asm-3.3.1.jar:target-skummet
+# testskummet.bar 123456 example
+
+java -cp target/clojure-1.7.1-skummet-SNAPSHOT-slim.jar:. clojure.main test.clj
+java -cp target/clojure-1.7.1-skummet-SNAPSHOT-slim.jar:target-skummet:existing-deps testskummet.bar 123456 example
 # java -cp testskummet/clojure-1.7.0-leanbase-SNAPSHOT.jar:target-skummet testskummet.bar 123456 example
