@@ -4239,6 +4239,7 @@ static public class ObjExpr implements Expr{
 		//with name current_ns.defname[$letname]+
 		//anonymous fns get names fn__id
 		//derived from AFn/RestFn
+		boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 //		ClassWriter cw = new ClassWriter(0);
 		ClassVisitor cv = cw;
@@ -4275,6 +4276,7 @@ static public class ObjExpr implements Expr{
 		addAnnotation(cv, classMeta);
 		//static fields for constants
 		for(int i = 0; i < constants.count(); i++)
+			if (!emitLeanCode || !(boolean)constantLeanFlags.nth(i))
 			{
 			cv.visitField(ACC_PUBLIC + ACC_FINAL
 			              + ACC_STATIC, constantName(i), constantType(i).getDescriptor(),
@@ -4590,332 +4592,22 @@ static public class ObjExpr implements Expr{
 		//end of class
 		cv.visitEnd();
 
-		bytecode = cw.toByteArray();
-		if(RT.booleanCast(COMPILE_FILES.deref()) && !RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
-                    try {
-			Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, true));
-                        compileLean(superName, interfaceNames, oneTimeUse);
-                    } finally {
-                        Var.popThreadBindings();
-                    }
-
-                }
-	}
-
-	void compileLean(String superName, String[] interfaceNames, boolean oneTimeUse) throws IOException{
-		//create bytecode for a class
-		//with name current_ns.defname[$letname]+
-		//anonymous fns get names fn__id
-		//derived from AFn/RestFn
-		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-//		ClassWriter cw = new ClassWriter(0);
-		ClassVisitor cv = cw;
-//		ClassVisitor cv = new TraceClassVisitor(new CheckClassAdapter(cw), new PrintWriter(System.out));
-		//ClassVisitor cv = new TraceClassVisitor(cw, new PrintWriter(System.out));
-		cv.visit(V1_5, ACC_PUBLIC + ACC_SUPER + ACC_FINAL, internalName, null,superName,interfaceNames);
-//		         superName != null ? superName :
-//		         (isVariadic() ? "clojure/lang/RestFn" : "clojure/lang/AFunction"), null);
-		String source = (String) SOURCE.deref();
-		int lineBefore = (Integer) LINE_BEFORE.deref();
-		int lineAfter = (Integer) LINE_AFTER.deref() + 1;
-		int columnBefore = (Integer) COLUMN_BEFORE.deref();
-		int columnAfter = (Integer) COLUMN_AFTER.deref() + 1;
-
-		if(source != null && SOURCE_PATH.deref() != null)
-			{
-			//cv.visitSource(source, null);
-			String smap = "SMAP\n" +
-			              ((source.lastIndexOf('.') > 0) ?
-			               source.substring(0, source.lastIndexOf('.'))
-			                :source)
-			                       //                      : simpleName)
-			              + ".java\n" +
-			              "Clojure\n" +
-			              "*S Clojure\n" +
-			              "*F\n" +
-			              "+ 1 " + source + "\n" +
-			              (String) SOURCE_PATH.deref() + "\n" +
-			              "*L\n" +
-			              String.format("%d#1,%d:%d\n", lineBefore, lineAfter - lineBefore, lineBefore) +
-			              "*E";
-			cv.visitSource(source, smap);
-			}
-		addAnnotation(cv, classMeta);
-		//static fields for constants
-		for(int i = 0; i < constants.count(); i++)
-                    if ((Boolean)constantLeanFlags.nth(i) == false)
-			{
-			cv.visitField(ACC_PUBLIC + ACC_FINAL
-			              + ACC_STATIC, constantName(i), constantType(i).getDescriptor(),
-			              null, null);
-			}
-
-		//static fields for lookup sites
-		for(int i = 0; i < keywordCallsites.count(); i++)
-			{
-			cv.visitField(ACC_FINAL
-			              + ACC_STATIC, siteNameStatic(i), KEYWORD_LOOKUPSITE_TYPE.getDescriptor(),
-			              null, null);
-			cv.visitField(ACC_STATIC, thunkNameStatic(i), ILOOKUP_THUNK_TYPE.getDescriptor(),
-			              null, null);
-			}
-
-//		for(int i=0;i<varCallsites.count();i++)
-//			{
-//			cv.visitField(ACC_PRIVATE + ACC_STATIC + ACC_FINAL
-//					, varCallsiteName(i), IFN_TYPE.getDescriptor(), null, null);
-//			}
-
-		//static init for constants, keywords and vars
-		GeneratorAdapter clinitgen = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC,
-		                                                  Method.getMethod("void <clinit> ()"),
-		                                                  null,
-		                                                  null,
-		                                                  cv);
-		clinitgen.visitCode();
-		clinitgen.visitLineNumber(line, clinitgen.mark());
-
-		if(constants.count() > 0)
-			{
-			emitLeanConstants(clinitgen);
-			}
-
-		if(keywordCallsites.count() > 0)
-			emitKeywordCallsites(clinitgen);
-
-		clinitgen.returnValue();
-
-		clinitgen.endMethod();
-		if(supportsMeta())
-			{
-			cv.visitField(ACC_FINAL, "__meta", IPERSISTENTMAP_TYPE.getDescriptor(), null, null);
-			}
-		//instance fields for closed-overs
-		for(ISeq s = RT.keys(closes); s != null; s = s.next())
-			{
-			LocalBinding lb = (LocalBinding) s.first();
-			if(isDeftype())
-				{
-				int access = isVolatile(lb) ? ACC_VOLATILE :
-				             isMutable(lb) ? 0 :
-				             (ACC_PUBLIC + ACC_FINAL);
-				FieldVisitor fv;
-				if(lb.getPrimitiveType() != null)
-					fv = cv.visitField(access
-							, lb.name, Type.getType(lb.getPrimitiveType()).getDescriptor(),
-								  null, null);
-				else
-				//todo - when closed-overs are fields, use more specific types here and in ctor and emitLocal?
-                                    fv = cv.visitField(access
-                                                       , lb.name, OBJECT_TYPE.getDescriptor(), null, null);
-				addAnnotation(fv, RT.meta(lb.sym));
-				}
-			else
-				{
-				//todo - only enable this non-private+writability for letfns where we need it
-				if(lb.getPrimitiveType() != null)
-					cv.visitField(0 + (isVolatile(lb) ? ACC_VOLATILE : 0)
-							, lb.name, Type.getType(lb.getPrimitiveType()).getDescriptor(),
-								  null, null);
-				else
-					cv.visitField(0 //+ (oneTimeUse ? 0 : ACC_FINAL)
-							, lb.name, OBJECT_TYPE.getDescriptor(), null, null);
+		if (emitLeanCode) {
+			byte[] leanBytecode = cw.toByteArray();
+			writeClassFile(internalName, leanBytecode);
+		} else {
+			bytecode = cw.toByteArray();
+			if (RT.booleanCast(COMPILE_FILES.deref())
+				&& !RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
+				try {
+					// Repeat compile() method but with lean code flag set.
+					Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, true));
+					compile(superName, interfaceNames, oneTimeUse);
+				} finally {
+					Var.popThreadBindings();
 				}
 			}
-
-		//static fields for callsites and thunks
-		for(int i=0;i<protocolCallsites.count();i++)
-			{
-			cv.visitField(ACC_PRIVATE + ACC_STATIC, cachedClassName(i), CLASS_TYPE.getDescriptor(), null, null);
-			}
-
- 		//ctor that takes closed-overs and inits base + fields
-		Method m = new Method("<init>", Type.VOID_TYPE, ctorTypes());
-		GeneratorAdapter ctorgen = new GeneratorAdapter(ACC_PUBLIC,
-		                                                m,
-		                                                null,
-		                                                null,
-		                                                cv);
-		Label start = ctorgen.newLabel();
-		Label end = ctorgen.newLabel();
-		ctorgen.visitCode();
-		ctorgen.visitLineNumber(line, ctorgen.mark());
-		ctorgen.visitLabel(start);
-		ctorgen.loadThis();
-                ctorgen.invokeConstructor(Type.getObjectType(superName), voidctor);
-
-		if(supportsMeta())
-			{
-			ctorgen.loadThis();
-			ctorgen.visitVarInsn(IPERSISTENTMAP_TYPE.getOpcode(Opcodes.ILOAD), 1);
-			ctorgen.putField(objtype, "__meta", IPERSISTENTMAP_TYPE);
-			}
-
-		int a = supportsMeta()?2:1;
-		for(ISeq s = RT.keys(closes); s != null; s = s.next(), ++a)
-			{
-			LocalBinding lb = (LocalBinding) s.first();
-			ctorgen.loadThis();
-			Class primc = lb.getPrimitiveType();
-			if(primc != null)
-				{
-				ctorgen.visitVarInsn(Type.getType(primc).getOpcode(Opcodes.ILOAD), a);
-				ctorgen.putField(objtype, lb.name, Type.getType(primc));
-				if(primc == Long.TYPE || primc == Double.TYPE)
-					++a;
-				}
-			else
-				{
-				ctorgen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ILOAD), a);
-				ctorgen.putField(objtype, lb.name, OBJECT_TYPE);
-				}
-			}
-
-
-		ctorgen.visitLabel(end);
-
-		ctorgen.returnValue();
-
-		ctorgen.endMethod();
-
-		if(altCtorDrops > 0)
-			{
-					//ctor that takes closed-overs and inits base + fields
-			Type[] ctorTypes = ctorTypes();
-			Type[] altCtorTypes = new Type[ctorTypes.length-altCtorDrops];
-			for(int i=0;i<altCtorTypes.length;i++)
-				altCtorTypes[i] = ctorTypes[i];
-			Method alt = new Method("<init>", Type.VOID_TYPE, altCtorTypes);
-			ctorgen = new GeneratorAdapter(ACC_PUBLIC,
-															alt,
-															null,
-															null,
-															cv);
-			ctorgen.visitCode();
-			ctorgen.loadThis();
-			ctorgen.loadArgs();
-			for(int i=0;i<altCtorDrops;i++)
-				ctorgen.visitInsn(Opcodes.ACONST_NULL);
-
-			ctorgen.invokeConstructor(objtype, new Method("<init>", Type.VOID_TYPE, ctorTypes));
-
-			ctorgen.returnValue();
-			ctorgen.endMethod();
-			}
-
-		if(supportsMeta())
-			{
-			//ctor that takes closed-overs but not meta
-			Type[] ctorTypes = ctorTypes();
-			Type[] noMetaCtorTypes = new Type[ctorTypes.length-1];
-			for(int i=1;i<ctorTypes.length;i++)
-				noMetaCtorTypes[i-1] = ctorTypes[i];
-			Method alt = new Method("<init>", Type.VOID_TYPE, noMetaCtorTypes);
-			ctorgen = new GeneratorAdapter(ACC_PUBLIC,
-															alt,
-															null,
-															null,
-															cv);
-			ctorgen.visitCode();
-			ctorgen.loadThis();
-			ctorgen.visitInsn(Opcodes.ACONST_NULL);	//null meta
-			ctorgen.loadArgs();
-			ctorgen.invokeConstructor(objtype, new Method("<init>", Type.VOID_TYPE, ctorTypes));
-
-			ctorgen.returnValue();
-			ctorgen.endMethod();
-
-			//meta()
-			Method meth = Method.getMethod("clojure.lang.IPersistentMap meta()");
-
-			GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC,
-												meth,
-												null,
-												null,
-												cv);
-			gen.visitCode();
-			gen.loadThis();
-			gen.getField(objtype,"__meta",IPERSISTENTMAP_TYPE);
-
-			gen.returnValue();
-			gen.endMethod();
-
-			//withMeta()
-			meth = Method.getMethod("clojure.lang.IObj withMeta(clojure.lang.IPersistentMap)");
-
-			gen = new GeneratorAdapter(ACC_PUBLIC,
-												meth,
-												null,
-												null,
-												cv);
-			gen.visitCode();
-			gen.newInstance(objtype);
-			gen.dup();
-			gen.loadArg(0);
-
-			for(ISeq s = RT.keys(closes); s != null; s = s.next(), ++a)
-				{
-				LocalBinding lb = (LocalBinding) s.first();
-				gen.loadThis();
-				Class primc = lb.getPrimitiveType();
-				if(primc != null)
-					{
-					gen.getField(objtype, lb.name, Type.getType(primc));
-					}
-				else
-					{
-					gen.getField(objtype, lb.name, OBJECT_TYPE);
-					}
-				}
-
-			gen.invokeConstructor(objtype, new Method("<init>", Type.VOID_TYPE, ctorTypes));
-			gen.returnValue();
-			gen.endMethod();
-			}
-
-		emitStatics(cv);
-		emitMethods(cv);
-
-		if(keywordCallsites.count() > 0)
-			{
-			Method meth = Method.getMethod("void swapThunk(int,clojure.lang.ILookupThunk)");
-
-			GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC,
-												meth,
-												null,
-												null,
-												cv);
-			gen.visitCode();
-			Label endLabel = gen.newLabel();
-
-			Label[] labels = new Label[keywordCallsites.count()];
-			for(int i = 0; i < keywordCallsites.count();i++)
-				{
-				labels[i] = gen.newLabel();
-				}
-			gen.loadArg(0);
-			gen.visitTableSwitchInsn(0,keywordCallsites.count()-1,endLabel,labels);
-
-			for(int i = 0; i < keywordCallsites.count();i++)
-				{
-				gen.mark(labels[i]);
-//				gen.loadThis();
-				gen.loadArg(1);
-				gen.putStatic(objtype, thunkNameStatic(i),ILOOKUP_THUNK_TYPE);
-				gen.goTo(endLabel);
-				}
-
-			gen.mark(endLabel);
-
-			gen.returnValue();
-			gen.endMethod();
-			}
-
-		//end of class
-		cv.visitEnd();
-
-		byte[] leanBytecode = cw.toByteArray();
-		writeClassFile(internalName, leanBytecode);
+		}
 	}
 
 	private void emitKeywordCallsites(GeneratorAdapter clinitgen){
@@ -5147,6 +4839,7 @@ static public class ObjExpr implements Expr{
 			if(value instanceof IObj && RT.count(((IObj) value).meta()) > 0)
 				{
 				Object m = elideMeta(((IObj) value).meta());
+				// Only emit meta if there is at least one value after elision.
 				if (RT.count(m) > 0)
 					{
 					gen.checkCast(IOBJ_TYPE);
@@ -5161,11 +4854,13 @@ static public class ObjExpr implements Expr{
 
 
 	void emitConstants(GeneratorAdapter clinitgen){
+		boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
 		try
 			{
 			Var.pushThreadBindings(RT.map(RT.PRINT_DUP, RT.T));
 
 			for(int i = 0; i < constants.count(); i++)
+				if (!emitLeanCode || !(boolean)constantLeanFlags.nth(i))
 				{
 				emitValue(constants.nth(i), clinitgen);
 				clinitgen.checkCast(constantType(i));
@@ -5176,22 +4871,6 @@ static public class ObjExpr implements Expr{
 			{
 			Var.popThreadBindings();
 			}
-	}
-
-    	void emitLeanConstants(GeneratorAdapter clinitgen){
-            try {
-                Var.pushThreadBindings(RT.map(RT.PRINT_DUP, RT.T));
-
-                for(int i = 0; i < constants.count(); i++)
-                    if ((Boolean)constantLeanFlags.nth(i) == false)
-                        {
-                            emitValue(constants.nth(i), clinitgen);
-                            clinitgen.checkCast(constantType(i));
-                            clinitgen.putStatic(objtype, constantName(i), constantType(i));
-                        }
-            } finally {
-                Var.popThreadBindings();
-            }
 	}
 
 	boolean isMutable(LocalBinding lb){
