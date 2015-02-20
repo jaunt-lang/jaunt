@@ -4276,7 +4276,7 @@ static public class ObjExpr implements Expr{
 		addAnnotation(cv, classMeta);
 		//static fields for constants
 		for(int i = 0; i < constants.count(); i++)
-			if (!emitLeanCode || !(boolean)constantLeanFlags.nth(i))
+			if (!emitLeanCode || !(Boolean)constantLeanFlags.nth(i))
 			{
 			cv.visitField(ACC_PUBLIC + ACC_FINAL
 			              + ACC_STATIC, constantName(i), constantType(i).getDescriptor(),
@@ -4446,7 +4446,10 @@ static public class ObjExpr implements Expr{
 				ctorgen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ILOAD), a);
 				ctorgen.putField(objtype, lb.name, OBJECT_TYPE);
 				}
-            closesExprs = closesExprs.cons(new LocalBindingExpr(lb, null));
+			// No idea why we shouldn't call this in lean mode, need to sort it
+			// out later.
+			if (!emitLeanCode)
+				closesExprs = closesExprs.cons(new LocalBindingExpr(lb, null));
 			}
 
 
@@ -4860,7 +4863,7 @@ static public class ObjExpr implements Expr{
 			Var.pushThreadBindings(RT.map(RT.PRINT_DUP, RT.T));
 
 			for(int i = 0; i < constants.count(); i++)
-				if (!emitLeanCode || !(boolean)constantLeanFlags.nth(i))
+				if (!emitLeanCode || !(Boolean)constantLeanFlags.nth(i))
 				{
 				emitValue(constants.nth(i), clinitgen);
 				clinitgen.checkCast(constantType(i));
@@ -5489,7 +5492,7 @@ public static class FnMethod extends ObjMethod{
 
 			Label end = gen.mark();
 			gen.visitLocalVariable("this", "Ljava/lang/Object;", null, loopLabel, end, 0);
-                        int argoff = fn.isStatic ? 0 : 1;
+			int argoff = fn.isStatic ? 0 : 1;
 			for(ISeq lbs = argLocals.seq(); lbs != null; lbs = lbs.next())
 				{
 				LocalBinding lb = (LocalBinding) lbs.first();
@@ -6602,9 +6605,9 @@ private static Expr analyze(C context, Object form, String name) {
 		if(fclass == Symbol.class)
 			return analyzeSymbol((Symbol) form);
 		else if(fclass == Keyword.class)
-                    return registerKeyword((Keyword) form);
+			return registerKeyword((Keyword) form);
 		else if(form instanceof Number)
-                    return NumberExpr.parse((Number) form);
+			return NumberExpr.parse((Number) form);
 		else if(fclass == String.class)
 				return new StringExpr(((String) form).intern());
 //	else if(fclass == Character.class)
@@ -6819,12 +6822,13 @@ private static Expr analyzeSeq(C context, ISeq form, String name) {
 		else if(op.equals(Symbol.intern("alter-meta!")) ||
 			op.equals(Symbol.intern("clojure.core", "alter-meta!")))
 			{
-			Object var_form = RT.first(RT.next(form));
-			if (var_form instanceof ISeq && RT.second(var_form) instanceof Symbol
-				&& isLeanVar((Symbol)RT.second(var_form)))
-				return NIL_EXPR;
-			else
-				return InvokeExpr.parse(context, form);
+				// Got to just ignore alter-meta calls in lean compilation mode.
+				Object var_form = RT.first(RT.next(form));
+				if (var_form instanceof ISeq && RT.second(var_form) instanceof Symbol
+					&& isLeanVar((Symbol)RT.second(var_form)))
+					return NIL_EXPR;
+				else
+					return InvokeExpr.parse(context, form);
 			}
 		else if((p = (IParser) specials.valAt(op)) != null)
 			return p.parse(context, form);
@@ -7241,7 +7245,7 @@ private static void registerVar(Var var, boolean topLevel) {
 		return;
 	IPersistentMap varsMap = (IPersistentMap) VARS.deref();
 	Object id = RT.get(varsMap, var);
-	if (id == null)
+	if(id == null)
 		{
 		id = registerConstant(var, isLeanVar(var));
 		VARS.set(RT.assoc(varsMap, var, id));
