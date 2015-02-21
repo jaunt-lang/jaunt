@@ -369,10 +369,7 @@ public static void loadResourceScript(Class c, String name, boolean failIfNotFou
 	InputStream ins = resourceAsStream(baseLoader(), name);
 	if(ins != null) {
 		try {
-			if (RT.booleanCast(LEAN_COMPILE.deref()))
-				LeanCompiler.load(new InputStreamReader(ins, UTF8), name, file);
-			else
-				Compiler.load(new InputStreamReader(ins, UTF8), name, file);
+			Compiler.load(new InputStreamReader(ins, UTF8), name, file);
 		}
 		finally {
 			ins.close();
@@ -400,32 +397,13 @@ static public void compile(String cljfile) throws IOException{
         InputStream ins = resourceAsStream(baseLoader(), cljfile);
 	if(ins != null) {
 		try {
-                    if (RT.booleanCast(LEAN_COMPILE.deref()))
 			LeanCompiler.compile(new InputStreamReader(ins, UTF8), cljfile,
 			                 cljfile.substring(1 + cljfile.lastIndexOf("/")));
-                    else
-			Compiler.compile(new InputStreamReader(ins, UTF8), cljfile,
-			                 cljfile.substring(1 + cljfile.lastIndexOf("/")));
 		}
 		finally {
 			ins.close();
 		}
 
-	}
-	else
-		throw new FileNotFoundException("Could not locate Clojure resource on classpath: " + cljfile);
-}
-
-static public void loadLean(String cljfile) throws IOException{
-        InputStream ins = resourceAsStream(baseLoader(), cljfile);
-	if(ins != null) {
-		try {
-			LeanCompiler.loadLean(new InputStreamReader(ins, UTF8), cljfile,
-				cljfile.substring(1 + cljfile.lastIndexOf("/")));
-		}
-		finally {
-			ins.close();
-		}
 	}
 	else
 		throw new FileNotFoundException("Could not locate Clojure resource on classpath: " + cljfile);
@@ -444,34 +422,24 @@ static public void load(String scriptbase, boolean failIfNotFound) throws IOExce
 	boolean isLean = false;
 
 	if (classURL != null)
-		try
-			{
+		try {
 			Class possiblyLeanClass = Class.forName(scriptbase.replace('/', '.') + LOADER_SUFFIX,
 				false, new DynamicClassLoader(baseLoader()));
 			possiblyLeanClass.getField("__LEAN_COMPILATION_FLAG__");
-			isLean = true;
+			// If we get here, it means the class is lean-compiled.
+			if ((System.getProperty("clojure.compile.ignore-lean-classes") != null)
+				&& (cljURL != null)) {
+				// Evaluate source instead of loading lean-compiled classes.
+				loadResourceScript(cljfile);
+				return;
 			}
+		}
 		// no such field means the namespace is not lean-compiled
 		catch (NoSuchFieldException e) { }
 
-	// Prefer evaluating clojure files over loading lean-compiled namespaces.
-	if (isLean && (cljURL != null) &&
-		(System.getProperty("clojure.compile.ignore-lean-classes") != null))
-		if (booleanCast(LEAN_COMPILE.deref()))
-			{
-			loadLean(cljfile);
-			return;
-			}
-		else
-			{
-			// load the Clojure file naturally
-			loadResourceScript(RT.class, cljfile);
-			return;
-			}
-
 	if((classURL != null &&
 	    (cljURL == null
-	     || lastModified(classURL, classfile) > lastModified(cljURL, cljfile)))
+	     || lastModified(classURL, classfile) >= lastModified(cljURL, cljfile)))
 	   || classURL == null) {
 		try {
 			Var.pushThreadBindings(

@@ -81,25 +81,6 @@
 	</configuration>
       </plugin>
       <plugin>
-	<artifactId>maven-antrun-plugin</artifactId>
-	<version>1.6</version>
-	<executions>
-	  <execution>
-	    <id>clojure-compile</id>
-	    <phase>compile</phase>
-	    <goals>
-	      <goal>run</goal>
-	    </goals>
-	    <configuration>
-	      <target>
-                <property name="maven.compile.classpath" refid="maven.compile.classpath" />
-	        <ant target="compile-clojure" />
-	      </target>
-	    </configuration>
-	  </execution>
-	</executions>
-      </plugin>
-      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>1.5</version>

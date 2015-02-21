@@ -246,8 +246,6 @@ static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
 
 static final public Var COMPILER_OPTIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                                       Symbol.intern("*compiler-options*"), null).setDynamic();
-static final public Var LEAN_VAR_PRED = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                                   Symbol.intern("*lean-var?*"), null).setDynamic();
 
 static public Object getCompilerOption(Keyword k){
 	return RT.get(COMPILER_OPTIONS.deref(),k);
