@@ -8,10 +8,22 @@
  *   You must not remove this notice, or any other, from this software.
  **/
 
-/* rich Jun 11, 2008 */
-
 package clojure.lang;
 
-public interface IReduce extends IReduceInit{
-Object reduce(IFn f) ;
+final public class Volatile implements IDeref {
+
+volatile Object val;
+
+public Volatile(Object val){
+  this.val = val;
+}
+
+public Object deref() {
+  return val;
+}
+
+public Object reset(Object newval) {
+  return this.val = newval;
+}
+
 }

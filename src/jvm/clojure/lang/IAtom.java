@@ -8,10 +8,20 @@
  *   You must not remove this notice, or any other, from this software.
  **/
 
-/* rich Jun 11, 2008 */
+/* rich Aug 2, 2009 */
 
 package clojure.lang;
 
-public interface IReduce extends IReduceInit{
-Object reduce(IFn f) ;
+public interface IAtom{
+Object swap(IFn f);
+
+Object swap(IFn f, Object arg);
+
+Object swap(IFn f, Object arg1, Object arg2);
+
+Object swap(IFn f, Object x, Object y, ISeq args);
+
+boolean compareAndSet(Object oldv, Object newv);
+
+Object reset(Object newval);
 }

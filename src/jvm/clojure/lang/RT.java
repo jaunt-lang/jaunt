@@ -457,7 +457,8 @@ static public void load(String scriptbase, boolean failIfNotFound) throws IOExce
 			loadResourceScript(RT.class, cljfile);
 	}
 	else if(!loaded && failIfNotFound)
-		throw new FileNotFoundException(String.format("Could not locate %s or %s on classpath: ", classfile, cljfile));
+		throw new FileNotFoundException(String.format("Could not locate %s or %s on classpath.%s", classfile, cljfile,
+			scriptbase.contains("_") ? " Please check that namespaces with dashes use underscores in the Clojure file name." : ""));
 }
 
 static void doInit() throws ClassNotFoundException, IOException{
@@ -505,6 +506,51 @@ static ISeq seqFrom(Object coll){
 	}
 }
 
+static public Iterator iter(Object coll){
+	if(coll instanceof Iterable)
+		return ((Iterable)coll).iterator();
+	else if(coll == null)
+		return new Iterator(){
+			public boolean hasNext(){
+				return false;
+			}
+
+			public Object next(){
+				throw new NoSuchElementException();
+			}
+
+			public void remove(){
+				throw new UnsupportedOperationException();
+			}
+		};
+	else if(coll instanceof Map){
+		return ((Map)coll).entrySet().iterator();
+	}
+	else if(coll instanceof String){
+		final String s = (String) coll;
+		return new Iterator(){
+			int i = 0;
+
+			public boolean hasNext(){
+				return i < s.length();
+			}
+
+			public Object next(){
+				return s.charAt(i++);
+			}
+
+			public void remove(){
+				throw new UnsupportedOperationException();
+			}
+		};
+	}
+  else if(coll.getClass().isArray()){
+    return ArrayIter.createFromObject(coll);
+  }
+	else
+		return iter(seq(coll));
+}
+
 static public Object seqOrElse(Object o) {
 	return seq(o) == null ? null : o;
 }
@@ -549,6 +595,8 @@ static int countFrom(Object o){
 		return ((Collection) o).size();
 	else if(o instanceof Map)
 		return ((Map) o).size();
+	else if (o instanceof Map.Entry)
+		return 2;
 	else if(o.getClass().isArray())
 		return Array.getLength(o);
 
@@ -2057,39 +2105,44 @@ static public URL getResource(ClassLoader loader, String name){
     }
 }
 
+static public Class classForName(String name, boolean load, ClassLoader loader) {
+
+	try
+		{
+		Class c = null;
+		if (!(loader instanceof DynamicClassLoader))
+			c = DynamicClassLoader.findInMemoryClass(name);
+		if (c != null)
+			return c;
+		return Class.forName(name, load, loader);
+		}
+	catch(ClassNotFoundException e)
+		{
+		throw Util.sneakyThrow(e);
+		}
+}
+
 static public Class classForName(String name) {
-
-	try
-		{
-		return Class.forName(name, true, baseLoader());
-		}
-	catch(ClassNotFoundException e)
-		{
-		throw Util.sneakyThrow(e);
-		}
+	return classForName(name, true, baseLoader());
 }
 
-static Class classForNameNonLoading(String name) {
-	try
-		{
-		return Class.forName(name, false, baseLoader());
-		}
-	catch(ClassNotFoundException e)
-		{
-		throw Util.sneakyThrow(e);
-		}
+static public Class classForNameNonLoading(String name) {
+	return classForName(name, false, baseLoader());
 }
 
-static public Class loadClassForName(String name) throws ClassNotFoundException{
+static public Class loadClassForName(String name) {
 	try
 		{
-		Class.forName(name, false, baseLoader());
+		classForNameNonLoading(name);
 		}
-	catch(ClassNotFoundException e)
+	catch(Exception e)
 		{
-		return null;
+		if (e instanceof ClassNotFoundException)
+			return null;
+		else
+			throw Util.sneakyThrow(e);
 		}
-	return Class.forName(name, true, baseLoader());
+	return classForName(name);
 }
 
 static public float aget(float[] xs, int i){

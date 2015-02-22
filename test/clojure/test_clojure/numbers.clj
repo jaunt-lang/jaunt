@@ -15,7 +15,8 @@
   (:use clojure.test
         [clojure.test.generative :exclude (is)]
         clojure.template)
-  (:require [clojure.data.generators :as gen]))
+  (:require [clojure.data.generators :as gen]
+            [clojure.test-helper :as helper]))
 
 
 ; TODO:
@@ -722,3 +723,79 @@ Math/pow overflows to Infinity."
       (assert (= a
                  (+ (* q d) r)
                  (unchecked-add (unchecked-multiply q d) r))))))
+
+(defmacro check-warn-on-box [warn? form]
+  `(do (binding [*unchecked-math* :warn-on-boxed]
+                (is (= ~warn?
+                       (boolean
+                         (re-find #"^Boxed math warning"
+                                  (helper/with-err-string-writer
+                                    (helper/eval-in-temp-ns ~form)))))))
+       (binding [*unchecked-math* true]
+                (is (false?
+                      (boolean
+                        (re-find #"^Boxed math warning"
+                                 (helper/with-err-string-writer
+                                   (helper/eval-in-temp-ns ~form)))))))
+       (binding [*unchecked-math* false]
+                (is (false?
+                      (boolean
+                        (re-find #"^Boxed math warning"
+                                 (helper/with-err-string-writer
+                                   (helper/eval-in-temp-ns ~form)))))))))
+
+(deftest warn-on-boxed
+  (check-warn-on-box true (#(inc %) 2))
+  (check-warn-on-box false (#(inc ^long %) 2))
+  (check-warn-on-box false (long-array 5))
+  (check-warn-on-box true (> (first (range 3)) 0))
+  (check-warn-on-box false (> ^long (first (range 3)) 0)))
+
+
+(deftest comparisons
+  (let [small-numbers [1 1.0 (Integer. 1) (Float. 1.0) 9/10 1N 1M]
+        big-numbers [10 10.0 (Integer. 10) (Float. 10.0) 99/10 10N 10N]]
+    (doseq [small small-numbers big big-numbers]
+      (is (< small big))
+      (is (not (< big small)))
+      (is (not (< small small)))
+      (is (< (int small) (int big)))
+      (is (not (< (int big) (int small))))
+      (is (not (< (int small) (int small))))
+      (is (< (double small) (double big)))
+      (is (not (< (double big) (double small))))
+      (is (not (< (double small) (double small))))
+      (is (<= small big))
+      (is (<= small small))
+      (is (not (<= big small)))
+      (is (<= (int small) (int big)))
+      (is (<= (int small) (int small)))
+      (is (not (<= (int big) (int small))))
+      (is (<= (double small) (double big)))
+      (is (<= (double small) (double small)))
+      (is (not (<= (double big) (double small))))
+      (is (> big small))
+      (is (not (> small big)))
+      (is (not (> small small)))
+      (is (> (int big) (int small)))
+      (is (not (> (int small) (int big))))
+      (is (not (> (int small) (int small))))
+      (is (> (double big) (double small)))
+      (is (not (> (double small) (double big))))
+      (is (not (> (double small) (double small))))
+      (is (>= big small))
+      (is (>= small small))
+      (is (not (>= small big)))
+      (is (>= (int big) (int small)))
+      (is (>= (int small) (int small)))
+      (is (not (>= (int small) (int big))))
+      (is (>= (double big) (double small)))
+      (is (>= (double small) (double small)))
+      (is (not (>= (double small) (double big)))))))
+
+(deftest test-nan-comparison
+  (are [x y] (= x y)
+       (< 1000 Double/NaN) (< 1000 (Double. Double/NaN))
+       (<= 1000 Double/NaN) (<= 1000 (Double. Double/NaN))
+       (> 1000 Double/NaN) (> 1000 (Double. Double/NaN))
+       (>= 1000 Double/NaN) (>= 1000 (Double. Double/NaN))))

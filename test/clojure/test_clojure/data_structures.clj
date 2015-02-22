@@ -36,14 +36,45 @@
 (defn- transient? [x]
   (instance? clojure.lang.ITransientCollection x))
 
-(defn gen-transient-action []
+(defn gen-transient-set-action []
   (gen/rand-nth [[#(conj! %1 %2) #(conj %1 %2) (gen/uniform -100 100)]
                  [#(disj! %1 %2) #(disj %1 %2) (gen/uniform -100 100)]
+                 [#(deref (future (conj! %1 %2))) #(conj %1 %2) (gen/uniform -100 100)]
+                 [#(deref (future (disj! %1 %2))) #(disj %1 %2) (gen/uniform -100 100)]
                  [persistent! identity]
                  [identity transient]]))
 
-(defn gen-transient-actions []
-  (gen/reps #(gen/uniform 0 100) gen-transient-action))
+(defn gen-transient-set-actions []
+  (gen/reps #(gen/uniform 0 100) gen-transient-set-action))
+
+(defn tempty? [t]
+  (= (count t) 0))
+
+(defn gen-transient-vector-action []
+  (gen/rand-nth [[#(conj! %1 %2) #(conj %1 %2) (gen/uniform -100 100)]
+                 [(fn [v _] (if (tempty? v) v (pop! v)))
+                  (fn [v _] (if (tempty? v) v (pop v)))
+                  (gen/uniform -100 100)]
+                 [#(deref (future (conj! %1 %2))) #(conj %1 %2) (gen/uniform -100 100)]
+                 [(fn [v _] (if (tempty? v) v (deref (future (pop! v)))))
+                  (fn [v _] (if (tempty? v) v (pop v)))
+                  (gen/uniform -100 100)]
+                 [persistent! identity]
+                 [identity transient]]))
+
+(defn gen-transient-vector-actions []
+  (gen/reps #(gen/uniform 0 100) gen-transient-vector-action))
+
+(defn gen-transient-map-action []
+  (gen/rand-nth [[#(assoc! %1 %2 %2) #(assoc %1 %2 %2) (gen/uniform -100 100)]
+                 [#(dissoc! %1 %2) #(dissoc %1 %2) (gen/uniform -100 100)]
+                 [#(deref (future (assoc! %1 %2 %2))) #(assoc %1 %2 %2) (gen/uniform -100 100)]
+                 [#(deref (future (dissoc! %1 %2))) #(dissoc %1 %2) (gen/uniform -100 100)]
+                 [persistent! identity]
+                 [identity transient]]))
+
+(defn gen-transient-map-actions []
+  (gen/reps #(gen/uniform 0 100) gen-transient-map-action))
 
 (defn assert-same-collection [a b]
   (assert (= (count a) (count b) (.size a) (.size b)))
@@ -68,12 +99,29 @@
 (defn to-persistent [c]
   (if (transient? c) (persistent! c) c))
 
-(defspec conj-persistent-transient
+(defspec same-output-persistent-transient-set
   identity
-  [^{:tag clojure.test-clojure.data-structures/gen-transient-actions} actions]
+  [^{:tag clojure.test-clojure.data-structures/gen-transient-set-actions} actions]
   (assert-same-collection
    (to-persistent (apply-actions #{} actions))
    (to-persistent (apply-actions #{} actions))))
+
+(defspec same-output-persistent-transient-vector
+  identity
+  [^{:tag clojure.test-clojure.data-structures/gen-transient-vector-actions} actions]
+  (assert-same-collection
+   (to-persistent (apply-actions [] actions))
+   (to-persistent (apply-actions [] actions))))
+
+(defspec same-output-persistent-transient-map
+  identity
+  [^{:tag clojure.test-clojure.data-structures/gen-transient-map-actions} actions]
+  (assert-same-collection
+   (to-persistent (apply-actions clojure.lang.PersistentArrayMap/EMPTY actions))
+   (to-persistent (apply-actions clojure.lang.PersistentArrayMap/EMPTY actions)))
+  (assert-same-collection
+   (to-persistent (apply-actions clojure.lang.PersistentHashMap/EMPTY actions))
+   (to-persistent (apply-actions clojure.lang.PersistentHashMap/EMPTY actions))))
 
 ;; *** General ***
 
@@ -1036,7 +1084,8 @@
                    (lazy-seq (cons :a
                      (lazy-seq (cons "7th" nil))))))
                  (into clojure.lang.PersistentQueue/EMPTY
-                       [-3 :a "7th"]) ]]
+                       [-3 :a "7th"])
+                 (sequence (map identity) [-3 :a "7th"]) ]]
     (doseq [c1 colls1, c2 colls1]
       (is-same-collection c1 c2)))
   (is-same-collection [-3 1 7] (vector-of :long -3 1 7)))
@@ -1109,3 +1158,8 @@
         s (into #{} unique-elem)]
     (is (= (hash s)
            (hash-unordered unique-elem)))))
+
+(deftest ireduce-reduced
+  (let [f (fn [_ a] (if (= a 5) (reduced "foo")))]
+    (is (= "foo" (.reduce ^clojure.lang.IReduce (list 1 2 3 4 5) f)))
+    (is (= "foo" (.reduce ^clojure.lang.IReduce (seq (long-array [1 2 3 4 5])) f)))))

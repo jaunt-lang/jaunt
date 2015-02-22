@@ -10,7 +10,8 @@
 ; Contributors: Stuart Halloway
 
 (ns clojure.test-clojure.sequences
-  (:use clojure.test))
+  (:use clojure.test)
+  (:import clojure.lang.IReduce))
 
 ;; *** Tests ***
 
@@ -43,6 +44,7 @@
     (is (== 4950
            (reduce + arange)
            (reduce + avec)
+           (.reduce ^IReduce avec +)
            (reduce + alist)
            (reduce + obj-array)
            (reduce + int-array)
@@ -60,6 +62,7 @@
     (is (== 4951
            (reduce + 1 arange)
            (reduce + 1 avec)
+           (.reduce ^IReduce avec + 1)
            (reduce + 1 alist)
            (reduce + 1 obj-array)
            (reduce + 1 int-array)
@@ -78,6 +81,12 @@
            (reduce #(and %1 %2) all-true)
            (reduce #(and %1 %2) true all-true)))))
 
+(deftest test-into-IReduceInit
+  (let [iri (reify clojure.lang.IReduceInit
+              (reduce [_ f start]
+                (reduce f start (range 5))))]
+    (is (= [0 1 2 3 4] (into [] iri)))))
+
 (deftest test-equality
   ; lazy sequences
   (are [x y] (= x y)
@@ -87,7 +96,9 @@
       (map inc ()) ()
       (map inc []) ()
       (map inc #{}) ()
-      (map inc {}) () ))
+      (map inc {}) ()
+      (sequence (map inc) (range 10)) (range 1 11)
+      (range 1 11) (sequence (map inc) (range 10))))
 
 
 (deftest test-lazy-seq
@@ -95,6 +106,8 @@
       (lazy-seq nil)
       (lazy-seq [])
       (lazy-seq [1 2]))
+
+  (is (not (.equals (lazy-seq [3]) (lazy-seq [3N]))))
 
   (are [x y] (= x y)
       (lazy-seq nil) ()
@@ -107,6 +120,7 @@
       (lazy-seq "") ()
       (lazy-seq (into-array [])) ()
 
+      (lazy-seq [3]) [3N]
       (lazy-seq (list 1 2)) '(1 2)
       (lazy-seq [1 2]) '(1 2)
       (lazy-seq (sorted-set 1 2)) '(1 2)
@@ -118,6 +132,7 @@
 (deftest test-seq
   (is (not (seq? (seq []))))
   (is (seq? (seq [1 2])))
+  (is (not (.equals (seq [3]) (seq [3N]))))
   
   (are [x y] (= x y)
     (seq nil) nil
@@ -130,6 +145,7 @@
     (seq "") nil
     (seq (into-array [])) nil
 
+    (seq [3]) [3N]
     (seq (list 1 2)) '(1 2)
     (seq [1 2]) '(1 2)
     (seq (sorted-set 1 2)) '(1 2)
@@ -1151,6 +1167,21 @@
   (is (= (reductions + 10 [1 2 3 4 5])
 	 [10 11 13 16 20 25])))
 
+(deftest test-reductions-obeys-reduced
+  (is (= [0 :x]
+         (reductions (constantly (reduced :x))
+                     (range))))
+  (is (= [:x]
+         (reductions (fn [acc x] x)
+                     (reduced :x)
+                     (range))))
+  (is (= [2 6 12 12]
+         (reductions (fn [acc x]
+                       (if (= x :stop)
+                         (reduced acc)
+                         (+ acc x)))
+                     [2 4 6 :stop 8 10]))))
+
 (deftest test-rand-nth-invariants
   (let [elt (rand-nth [:a :b :c :d])]
     (is (#{:a :b :c :d} elt))))
@@ -1166,3 +1197,23 @@
   (let [shuffled-seq (shuffle [1 2 3 4])]
     (is (every? #{1 2 3 4} shuffled-seq))))
 
+(deftest test-ArrayIter
+  (are [arr expected]
+    (let [iter (clojure.lang.ArrayIter/createFromObject arr)]
+      (loop [accum []]
+        (if (.hasNext iter)
+          (recur (conj accum (.next iter)))
+          (is (= expected accum)))))
+    nil []
+    (object-array ["a" "b" "c"]) ["a" "b" "c"]
+    (boolean-array [false true false]) [false true false]
+    (byte-array [1 2]) [(byte 1) (byte 2)]
+    (short-array [1 2]) [1 2]
+    (int-array [1 2]) [1 2]
+    (long-array [1 2]) [1 2]
+    (float-array [2.0 -2.5]) [2.0 -2.5]
+    (double-array [1.2 -3.5]) [1.2 -3.5]
+    (char-array [\H \i]) [\H \i]))
+
+(deftest CLJ-1633
+  (is (= ((fn [& args] (apply (fn [a & b] (apply list b)) args)) 1 2 3) '(2 3))))

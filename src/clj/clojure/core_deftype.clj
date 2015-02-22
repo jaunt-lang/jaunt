@@ -275,12 +275,22 @@
 
 (defn- validate-fields
   ""
-  [fields]
+  [fields name]
   (when-not (vector? fields)
     (throw (AssertionError. "No fields vector given.")))
   (let [specials #{'__meta '__extmap}]
     (when (some specials fields)
-      (throw (AssertionError. (str "The names in " specials " cannot be used as field names for types or records."))))))
+      (throw (AssertionError. (str "The names in " specials " cannot be used as field names for types or records.")))))
+  (let [non-syms (remove symbol? fields)]
+    (when (seq non-syms)
+      (throw (clojure.lang.Compiler$CompilerException.
+              *file*
+              (.deref clojure.lang.Compiler/LINE)
+              (.deref clojure.lang.Compiler/COLUMN)
+              (AssertionError.
+               (str "defrecord and deftype fields must be symbols, "
+                    *ns* "." name " had: "
+                    (apply str (interpose ", " non-syms)))))))))
 
 (defmacro defrecord
   "(defrecord name [fields*]  options* specs*)
@@ -351,7 +361,7 @@
    :arglists '([name [& fields] & opts+specs])}
 
   [name fields & opts+specs]
-  (validate-fields fields)
+  (validate-fields fields name)
   (let [gname name
         [interfaces methods opts] (parse-opts+specs opts+specs)
         ns-part (namespace-munge *ns*)
@@ -366,7 +376,8 @@
        ~(build-positional-factory gname classname fields)
        (defn ~(symbol (str 'map-> gname))
          ~(str "Factory function for class " classname ", taking a map of keywords to field values.")
-         ([m#] (~(symbol (str classname "/create")) m#)))
+         ([m#] (~(symbol (str classname "/create"))
+                (if (instance? clojure.lang.MapEquivalence m#) m# (into {} m#)))))
        ~classname)))
 
 (defn record?
@@ -406,7 +417,7 @@
   are optional. The only methods that can be supplied are those
   declared in the protocols/interfaces.  Note that method bodies are
   not closures, the local environment includes only the named fields,
-  and those fields can be accessed directy. Fields can be qualified
+  and those fields can be accessed directly. Fields can be qualified
   with the metadata :volatile-mutable true or :unsynchronized-mutable
   true, at which point (set! afield aval) will be supported in method
   bodies. Note well that mutable fields are extremely difficult to use
@@ -450,7 +461,7 @@
    :arglists '([name [& fields] & opts+specs])}
 
   [name fields & opts+specs]
-  (validate-fields fields)
+  (validate-fields fields name)
   (let [gname name
         [interfaces methods opts] (parse-opts+specs opts+specs)
         ns-part (namespace-munge *ns*)

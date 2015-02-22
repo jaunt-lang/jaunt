@@ -8,10 +8,15 @@
  *   You must not remove this notice, or any other, from this software.
  **/
 
-/* rich Jun 11, 2008 */
-
 package clojure.lang;
 
-public interface IReduce extends IReduceInit{
-Object reduce(IFn f) ;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface WarnBoxedMath {
+    boolean value() default true;
 }

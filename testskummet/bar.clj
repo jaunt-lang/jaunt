@@ -61,6 +61,8 @@
 ;;   FooProt
 ;;   (foofoo [x] (str "fofo" x)))
 
+(defn test-transducers []
+  (println (transduce (comp (filter odd?) (map inc)) + (range 5))))
 
 (defn -main [& args]
   (println "Value is " (my-multi 500 testskummet.foo/just-value))
@@ -69,6 +71,7 @@
   (println (rest (conj [1 2 3] 4)))
   (let [x 20, y 10]
     (println (primitive-function x y)))
+  (test-transducers)
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))
   ;; (println (hiccup.util/as-str 100 200 300))
