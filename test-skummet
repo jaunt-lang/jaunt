@@ -3,9 +3,8 @@ mvn package
 mkdir -p target-skummet
 rm -rf target-skummet/*
 
-java -cp target/clojure-1.7.1-skummet-SNAPSHOT-slim.jar:. clojure.main test.clj
-java -cp target/clojure-1.7.1-skummet-SNAPSHOT-slim.jar:target-skummet:existing-deps testskummet.bar 123456 example
-# java -cp testskummet/clojure-1.7.0-leanbase-SNAPSHOT.jar:target-skummet testskummet.bar 123456 example
+java -cp target/clojure-1.7.0-alpha5-r1-slim.jar:. clojure.main test.clj
+java -cp target/clojure-1.7.0-alpha5-r1-slim.jar:target-skummet testskummet.bar 123456 example
 
 # Pack Skummet
 rm -rf target/skummet
@@ -16,11 +15,11 @@ cp -r target/classes/clojure/asm target/skummet/clojure/
 cp -r src/clj/clojure target/skummet/
 cp target/classes/clojure/main.class target/skummet/clojure/
 cd target/skummet/
-rm -f ../clojure-1.7.1-skummet-full.jar
-zip -rq ../clojure-1.7.1-skummet-full.jar *
+rm -f ../clojure-1.7.0-alpha5-r1.jar
+zip -rq ../clojure-1.7.0-alpha5-r1.jar *
 cd ../..
 
 # Retry tests
 rm -rf target-skummet/*
-java -cp target/clojure-1.7.1-skummet-full.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test2.clj
-java -cp target/clojure-1.7.1-skummet-full.jar:target-skummet:existing-deps testskummet.bar 123456 example
+java -cp target/clojure-1.7.0-alpha5-r1.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test2.clj
+java -cp target/clojure-1.7.0-alpha5-r1.jar:target-skummet testskummet.bar 123456 example

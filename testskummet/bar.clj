@@ -69,9 +69,6 @@
   (println (foofoo "omg"))
   (set! clojure.core/*warn-on-reflection* true)
   (println "Hello world")
-
-
-
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))
   ;; (println (hiccup.util/as-str 100 200 300))
