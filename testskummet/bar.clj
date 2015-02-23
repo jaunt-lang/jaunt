@@ -55,12 +55,6 @@
   String
   (foofoo [x] (str "fofo" x)))
 
-;; (import 'testskummet.bar.FooProt)
-
-;; (extend-type String
-;;   FooProt
-;;   (foofoo [x] (str "fofo" x)))
-
 (defn test-transducers []
   (println (transduce (comp (filter odd?) (map inc)) + (range 5))))
 
@@ -72,6 +66,12 @@
   (let [x 20, y 10]
     (println (primitive-function x y)))
   (test-transducers)
+  (println (foofoo "omg"))
+  (set! clojure.core/*warn-on-reflection* true)
+  (println "Hello world")
+
+
+
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))
   ;; (println (hiccup.util/as-str 100 200 300))
@@ -82,7 +82,6 @@
   ;;   (a/put! c (first args))
   ;;   (a/go (println "answer is" (a/<! c))))
   ;; (Thread/sleep 1)
-  (println (foofoo "omg"))
   ;; (println (keep (fn [[_ v]] (if (var? v) v)) (.getMappings (find-ns 'clojure.core))))
   )
 
