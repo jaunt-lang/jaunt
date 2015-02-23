@@ -228,7 +228,9 @@ public Object set(Object val){
 			throw new IllegalStateException(String.format("Can't set!: %s from non-binding thread", sym));
 		return (b.val = val);
 		}
-	throw new IllegalStateException(String.format("Can't change/establish root binding of: %s with set", sym));
+    // Silently return null, as it should not happen in normal Clojure in the
+    // first place.
+    return null;
 }
 
 public Object doSet(Object val)  {
