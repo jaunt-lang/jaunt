@@ -3700,7 +3700,7 @@ static class InvokeExpr implements Expr{
 				}
 			}
 
-			if (fvar.equals(REFER) || fvar.equals(REQUIRE) || fvar.equals(IMPORT_VAR)) {
+			if (fvar.equals(REFER) || fvar.equals(IMPORT_VAR)) {
 				this.isNsOp = true;
 			}
 			}
