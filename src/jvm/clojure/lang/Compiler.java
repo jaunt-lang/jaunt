@@ -1111,7 +1111,7 @@ static public abstract class HostExpr implements Expr, MaybePrimitiveExpr{
 				if(Util.equals(sym,COMPILE_STUB_SYM.get()))
 					return (Class) COMPILE_STUB_CLASS.get();
 				if(sym.name.indexOf('.') > 0 || sym.name.charAt(0) == '[')
-					c = RT.classForName(sym.name);
+					c = RT.classForNameNonLoading(sym.name);
 				else
 					{
 					Object o = currentNS().getMapping(sym);
@@ -1122,7 +1122,7 @@ static public abstract class HostExpr implements Expr, MaybePrimitiveExpr{
 					else
 						{
 						try{
-						c = RT.classForName(sym.name);
+						c = RT.classForNameNonLoading(sym.name);
 						}
 						catch(Exception e){
 							// aargh
@@ -1133,7 +1133,7 @@ static public abstract class HostExpr implements Expr, MaybePrimitiveExpr{
 				}
 			}
 		else if(stringOk && form instanceof String)
-			c = RT.classForName((String) form);
+			c = RT.classForNameNonLoading((String) form);
 		return c;
 	}
 
