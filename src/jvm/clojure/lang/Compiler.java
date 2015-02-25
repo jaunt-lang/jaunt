@@ -283,7 +283,7 @@ static final public Var REFER = Var.intern(Namespace.findOrCreate(Symbol.intern(
 static final public Var REQUIRE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                              Symbol.intern("require"));
 static final public Var IMPORT_VAR = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                             Symbol.intern("import"));
+                                             Symbol.intern("import*"));
 
 static public IPersistentSet coreNonLeanVars = PersistentHashSet.create(
 	"#'clojure.core/in-ns", "#'clojure.core/refer", "#'clojure.core/load-file",
@@ -845,6 +845,10 @@ public static class ImportExpr implements Expr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
+		if (RT.booleanCast(EMIT_LEAN_CODE.deref())) {
+			NIL_EXPR.emit(C.EXPRESSION, objx, gen);
+			return;
+		}
 		gen.getStatic(RT_TYPE,"CURRENT_NS",VAR_TYPE);
 		gen.invokeVirtual(VAR_TYPE, derefMethod);
 		gen.checkCast(NS_TYPE);
@@ -3700,7 +3704,7 @@ static class InvokeExpr implements Expr{
 				}
 			}
 
-			if (fvar.equals(REFER) || fvar.equals(IMPORT_VAR)) {
+			if (fvar.equals(REFER)) {
 				this.isNsOp = true;
 			}
 			}
