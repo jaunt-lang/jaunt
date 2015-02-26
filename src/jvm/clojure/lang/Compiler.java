@@ -284,6 +284,7 @@ static final public Var REQUIRE = Var.intern(Namespace.findOrCreate(Symbol.inter
                                              Symbol.intern("require"));
 static final public Var IMPORT_VAR = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                              Symbol.intern("import*"));
+static final Keyword macroKey = Keyword.intern(null, "macro");
 
 static public IPersistentSet coreNonLeanVars = PersistentHashSet.create(
 	"#'clojure.core/in-ns", "#'clojure.core/refer", "#'clojure.core/load-file",
@@ -6903,7 +6904,8 @@ private static Expr analyzeSeq(C context, ISeq form, String name) {
 		else if(op.equals(Symbol.intern("alter-meta!")) ||
 			op.equals(Symbol.intern("clojure.core", "alter-meta!")))
 			{
-				// Got to just ignore alter-meta calls in lean compilation mode.
+				// Got to just ignore alter-meta or declare calls in lean
+				// compilation mode.
 				Object var_form = RT.first(RT.next(form));
 				if (var_form instanceof ISeq && RT.second(var_form) instanceof Symbol
 					&& RT.booleanCast(LEAN_COMPILE.deref())
@@ -7304,11 +7306,7 @@ static Var lookupVar(Symbol sym, boolean internNew, boolean register) {
 				}
 			}
 	boolean leanCompile = RT.booleanCast(LEAN_COMPILE.deref());
-	if(var != null &&
-	   (!leanCompile || (register && !var.isMacro()
-                         // &&
-						 // (!isLeanVar(var) || RT.CURRENT_NS.deref().equals(var.ns))
-                         )))
+	if(var != null && (!leanCompile || register))
 		registerVar(var);
 	return var;
 }
@@ -7538,9 +7536,17 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 	}
 
 	boolean isCompilingAMacro = false;
-	if (RT.booleanCast(LEAN_COMPILE.deref()) &&
-        (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("defmacro"))))
-		isCompilingAMacro = true;
+	if (RT.booleanCast(LEAN_COMPILE.deref()) && (form instanceof ISeq)) {
+		Object first = RT.first(form);
+		if (Util.equals(first, Symbol.intern("defmacro")))
+			isCompilingAMacro = true;
+		else if (Util.equals(first, Symbol.intern("def"))) {
+			Object second = RT.second(form);
+			if ((second instanceof Symbol) &&
+				RT.booleanCast(RT.get(((Symbol)second).meta(), macroKey)))
+				isCompilingAMacro = true;
+		}
+	}
 
 	try
 		{
@@ -7593,7 +7599,7 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 					}
 				}
 
-			if (!RT.booleanCast(IS_COMPILING_A_MACRO.deref())) {
+			if (!RT.booleanCast(IS_COMPILING_A_MACRO.deref()) && !isCompilingAMacro) {
 				try {
 					Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, true));
 					expr.emit(C.EXPRESSION, objx, gen);
