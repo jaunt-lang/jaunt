@@ -48,6 +48,10 @@
   [^long a, ^long b]
   (unchecked-add a b))
 
+(defmacro macro-in-compile-time [& body]
+  (when true
+    `(println ~(#'myfn body))))
+
 (defprotocol FooProt
   (foofoo [x]))
 
@@ -69,6 +73,7 @@
   (println (foofoo "omg"))
   (set! clojure.core/*warn-on-reflection* true)
   (println "Hello world")
+  (macro-in-compile-time 1 2 3)
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))
   ;; (println (hiccup.util/as-str 100 200 300))

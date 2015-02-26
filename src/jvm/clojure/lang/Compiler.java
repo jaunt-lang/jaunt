@@ -302,7 +302,7 @@ static private boolean isLeanVarByPredicate(Var var) {
 }
 
 static public boolean isLeanVar(Symbol sym){
-	Var v = lookupVar(sym, false);
+	Var v = lookupVar(sym, false, false);
 	return (v == null || isLeanVar(v));
 }
 
@@ -7305,8 +7305,10 @@ static Var lookupVar(Symbol sym, boolean internNew, boolean register) {
 			}
 	boolean leanCompile = RT.booleanCast(LEAN_COMPILE.deref());
 	if(var != null &&
-	   (!leanCompile || (register && !var.isMacro() &&
-						 (!isLeanVar(var) || RT.CURRENT_NS.deref().equals(var.ns)))))
+	   (!leanCompile || (register && !var.isMacro()
+                         // &&
+						 // (!isLeanVar(var) || RT.CURRENT_NS.deref().equals(var.ns))
+                         )))
 		registerVar(var);
 	return var;
 }
