@@ -1,4 +1,5 @@
 #!/bin/bash -e
+mvn clean
 mvn package
 mkdir -p target-skummet
 rm -rf target-skummet/*
