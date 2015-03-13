@@ -309,9 +309,10 @@ static public boolean isLeanVar(Symbol sym){
 
 static public boolean isLeanVar(Var var){
 	return !RT.booleanCast(coreNonLeanVars.get(var.toString())) &&
-		!var.sym.getName().startsWith("-") &&
+		!(var.sym.getName().startsWith("-") && !var.sym.getName().equals("-")
+		  && !var.sym.getName().equals("-'")) &&
 		!var.isNotLean() && !var.isDynamic() &&
-        isLeanVarByPredicate(var);
+		isLeanVarByPredicate(var);
 }
 
 static public String getNSClassname(Namespace ns) {
