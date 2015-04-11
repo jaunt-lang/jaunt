@@ -6111,10 +6111,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; var documentation ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(alter-meta! #'*agent* assoc :added "1.0")
-(alter-meta! #'in-ns assoc :added "1.0")
-(alter-meta! #'load-file assoc :added "1.0")
-
 (defmacro add-doc-and-meta {:private true} [name docstring meta]
   (let [new-meta (assoc meta :doc docstring)
         elide-meta (:elide-meta *compiler-options*)
@@ -6123,6 +6119,10 @@
                    new-meta)]
     (when (seq new-meta)
       `(alter-meta! (var ~name) merge ~new-meta))))
+
+(add-doc-and-meta load-file "" {:added "1.0"})
+(add-doc-and-meta *agent* "" {:added "1.0"})
+(add-doc-and-meta in-ns "" {:added "1.0"})
 
 (add-doc-and-meta *file*
   "The path of the file being evaluated, as a String.
@@ -6472,11 +6472,9 @@
           (let [[shift mask imap switch-type skip-check] (prep-hashes ge default tests thens)]
             `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap ~switch-type :hash-identity ~skip-check))))))))
 
-
 ;; redefine reduce with internal-reduce
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; helper files ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(alter-meta! (find-ns 'clojure.core) assoc :doc "Fundamental library of the Clojure language")
 (load "core_proxy")
 (load "core_print")
 (load "genclass")

@@ -308,8 +308,6 @@ static{
 	nv.setMacro();
 	Var v;
 	v = Var.intern(CLOJURE_NS, IN_NAMESPACE, inNamespace);
-	v.setMeta(map(DOC_KEY, "Sets *ns* to the namespace named by the symbol, creating it if needed.",
-	              arglistskw, list(vector(namesym))));
 	v = Var.intern(CLOJURE_NS, LOAD_FILE,
 	               new AFn(){
 		               public Object invoke(Object arg1) {
@@ -323,8 +321,6 @@ static{
 				               }
 		               }
 	               });
-	v.setMeta(map(DOC_KEY, "Sequentially read and evaluate the set of forms contained in the file.",
-	              arglistskw, list(vector(namesym))));
 	try {
 		doInit();
 	}
