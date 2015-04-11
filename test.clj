@@ -12,14 +12,16 @@
 
 (binding [*lean-compile* true
           *compile-path* "./target-skummet"
-          *compiler-options* {:elide-meta [:doc :file :line :added ;; :arglists
-                                           :column :static
-                                           :author :added]
+          *compiler-options* {:elide-meta [:doc :file :line :added :arglists
+                                           :inline
+                                           :column :static :author :added :dynamic]
                               :neko.init/release-build true}
           *lean-var?* (fn [x] x)]
   (push-thread-bindings {#'clojure.core/*loaded-libs* (ref (sorted-set))})
   (try
+    (clojure.lang.RT/resetID)
     (compile 'clojure.core)
+    ;; (compile 'clojure.pprint)
     ;; (compile 'clojure.reflect)
     ;; (compile 'clojure.set)
     (compile 'testskummet.bar)

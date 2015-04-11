@@ -13,7 +13,7 @@
 package clojure.lang;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-
+import clojure.asm.Type;
 
 public final class Var extends ARef implements IFn, IRef, Settable{
 
@@ -84,9 +84,12 @@ volatile Object root;
 
 volatile boolean dynamic = false;
 volatile boolean notLean = false;
+volatile boolean notSingleton = false;
 transient final AtomicBoolean threadBound;
 public final Symbol sym;
 public final Namespace ns;
+
+public Type objtype = null;
 
 //IPersistentMap _meta;
 
@@ -123,6 +126,15 @@ public Var setNotLean(boolean b){
 
 public final boolean isNotLean(){
         return notLean;
+}
+
+public Var setNotSingleton(boolean b){
+	this.notSingleton = b;
+	return this;
+}
+
+public final boolean isNotSingleton(){
+        return notSingleton;
 }
 
 public static Var intern(Namespace ns, Symbol sym, Object root){

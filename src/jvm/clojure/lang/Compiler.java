@@ -272,6 +272,7 @@ final static Var LEAN_COMPILE = Var.intern(Namespace.findOrCreate(Symbol.intern(
 static final public Var EMIT_LEAN_CODE = Var.create(false).setDynamic();
 static final public Var IS_ANALYZING_META = Var.create(false).setDynamic();
 static final public Var IS_DEFINING_LEAN_VAR = Var.create(false).setDynamic();
+static final public Var LEAN_VAR_BEING_DEFINED = Var.create(null).setDynamic();
 static final public Var IS_COMPILING_A_MACRO = Var.create(false).setDynamic();
 
 // Get handle of some Clojure vars that will be of use later.
@@ -531,7 +532,7 @@ static class DefExpr implements Expr{
 		}
 
 		if (emitLeanCode && isLeanVar(var))
-			objx.emitVarLean(gen, var);
+			NIL_EXPR.emit(C.EXPRESSION, objx, gen);
 		else
 			objx.emitVar(gen, var);
 
@@ -557,9 +558,14 @@ static class DefExpr implements Expr{
 			{
 				if (emitLeanCode && isLeanVar(var))
 					{
-						init.emit(C.EXPRESSION, objx, gen);
-						String typeStr = getNSClassname(currentNS());
-						gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+						if (var.isNotSingleton() || !(init instanceof FnExpr && (((FnExpr)init).closes().count() == 0))) {
+							init.emit(C.EXPRESSION, objx, gen);
+							String typeStr = getNSClassname(currentNS());
+							gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+						}
+                        // gen.getStatic(Type.getType(java.lang.System.class), "out", Type.getType(java.io.PrintStream.class));
+                        // gen.push("Initialized: " + var);
+                        // gen.invokeVirtual(Type.getType(java.io.PrintStream.class), Method.getMethod("void println(String)"));
 					} else {
 			gen.dup();
 			if(init instanceof FnExpr)
@@ -663,10 +669,16 @@ static class DefExpr implements Expr{
 				Var.popThreadBindings();
 			}
 			try {
-				Var.pushThreadBindings(RT.map(IS_DEFINING_LEAN_VAR, leanCompile && isLeanVar(v)));
+				Var.pushThreadBindings(RT.map(IS_DEFINING_LEAN_VAR, leanCompile && isLeanVar(v),
+											  LEAN_VAR_BEING_DEFINED, v));
+
 				initExpr = analyze(context == C.EVAL ? context : C.EXPRESSION,
 								   isStatic ? ((IObj)initForm).withMeta(staticMetaMap) : initForm,
 					v.sym.name);
+				if (initExpr instanceof FnExpr && (((FnExpr)initExpr).closes().count() == 0))
+					v.objtype = ((ObjExpr)initExpr).objtype;
+				else
+					v.setNotSingleton(true);
 			} finally {
 				Var.popThreadBindings();
 			}
@@ -3770,6 +3782,7 @@ static class InvokeExpr implements Expr{
 				Var var = ((TheVarExpr)RT.first(args)).var;
 				String typeStr = getNSClassname(var.ns);
 				gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+				return;
 				}
 			}
 		if(context == C.STATEMENT)
@@ -4416,9 +4429,25 @@ static public class ObjExpr implements Expr{
 			clinitgen.mark(endLabel);
 			}
         */
+
+		/// This is our singleton implementation
+		if (emitLeanCode && (superName.equals("clojure/lang/AFunction")
+							 || superName.equals("clojure/lang/RestFn"))
+			&& (ctorTypes().length == 0)) {
+			clinitgen.newInstance(objtype);
+			clinitgen.dup();
+			clinitgen.invokeConstructor(objtype, Method.getMethod("void <init>()"));
+			clinitgen.putStatic(objtype, "__instance", OBJECT_TYPE);
+		}
+
 		clinitgen.returnValue();
 
 		clinitgen.endMethod();
+
+		cv.visitField(ACC_PUBLIC + ACC_STATIC, "__instance", OBJECT_TYPE.getDescriptor(),
+					  null, null);
+		/// Singleton ends here
+
 		if(supportsMeta())
 			{
 			cv.visitField(ACC_FINAL, "__meta", IPERSISTENTMAP_TYPE.getDescriptor(), null, null);
@@ -5189,8 +5218,14 @@ static public class ObjExpr implements Expr{
 
 	public void emitVarLean(GeneratorAdapter gen, Var var){
             try {
-                String typeStr = getNSClassname(var.ns);
-                gen.getStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+                if (var.objtype == null || var.isNotSingleton()) {
+                    String typeStr = getNSClassname(var.ns);
+                    gen.getStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+                } else if (var.objtype.equals(Type.getType(RecurExpr.class))) {
+                    gen.getStatic(this.objtype, "__instance", OBJECT_TYPE);
+                } else {
+                    gen.getStatic(var.objtype, "__instance", OBJECT_TYPE);
+                }
             } catch (Exception e) {
                 throw new CompilerException((String) SOURCE_PATH.deref(), RT.intCast(LINE.deref()),
                                             RT.intCast(COLUMN.deref()), e);
@@ -7276,6 +7311,19 @@ static Var lookupVar(Symbol sym, boolean internNew, boolean register) {
 	Var var = null;
 
 	//note - ns-qualified vars in other namespaces must already exist
+
+	Var topVar = (Var)LEAN_VAR_BEING_DEFINED.deref();
+	if ((topVar != null && topVar.sym.equals(sym))) {
+		var = topVar;
+		var.setNotSingleton(true);
+		// ObjMethod enclosingMethod = (ObjMethod) METHOD.deref();
+		// // if (enclosingMethod != null)
+		// // 	throw new RuntimeException("Foobar: " + topVar + " --- " + enclosingMethod.objx.name.toString());
+		// String basename = (enclosingMethod != null ? enclosingMethod.objx.name
+		// 	: (munge(currentNS().name.name)) + "$" + munge(sym.name).replace(".","/"));
+		// // String typeName = "L" + basename +  + ";";
+		// var.objtype = Type.getType("L" + basename.replace(".","/") + ";");
+	} else
 	if(sym.ns != null)
 		{
 		Namespace ns = namespaceFor(sym);

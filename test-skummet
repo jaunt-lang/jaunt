@@ -4,8 +4,8 @@ mvn package
 mkdir -p target-skummet
 rm -rf target-skummet/*
 
-java -cp target/clojure-android-1.7.0-alpha5-r1-slim.jar:. clojure.main test.clj
-java -cp target/clojure-android-1.7.0-alpha5-r1-slim.jar:target-skummet testskummet.bar 123456 example
+java -cp target/clojure-1.7.0-alpha5-r3-slim.jar:. clojure.main test.clj
+java -cp target/clojure-1.7.0-alpha5-r3-slim.jar:target-skummet testskummet.bar 123456 example
 
 # Pack Skummet
 rm -rf target/skummet
@@ -16,11 +16,12 @@ cp -r target/classes/clojure/asm target/skummet/clojure/
 cp -r src/clj/clojure target/skummet/
 cp target/classes/clojure/main.class target/skummet/clojure/
 cd target/skummet/
-rm -f ../clojure-android-1.7.0-alpha5-r1.jar
-zip -rq ../clojure-android-1.7.0-alpha5-r1.jar *
+rm -f ../clojure-1.7.0-alpha5-r3.jar
+zip -rq ../clojure-1.7.0-alpha5-r3.jar *
 cd ../..
 
 # Retry tests
 rm -rf target-skummet/*
-java -cp target/clojure-android-1.7.0-alpha5-r1.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test2.clj
-java -cp target/clojure-android-1.7.0-alpha5-r1.jar:target-skummet testskummet.bar 123456 example
+java -cp target/clojure-1.7.0-alpha5-r3.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test2.clj
+rm -rf target-skummet/clojure
+java -cp target/clojure-1.7.0-alpha5-r3.jar:target-skummet testskummet.bar 123456 example

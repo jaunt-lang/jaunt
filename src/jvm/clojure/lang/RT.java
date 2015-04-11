@@ -465,6 +465,11 @@ static public int nextID(){
 	return id.getAndIncrement();
 }
 
+static public void resetID(){
+    // Don't ask
+    id = new AtomicInteger(-3);
+}
+
 // Load a library in the System ClassLoader instead of Clojure's own.
 public static void loadLibrary(String libname){
     System.loadLibrary(libname);
