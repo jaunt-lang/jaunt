@@ -4079,9 +4079,8 @@
         (when-not (exclude sym)
           (let [v (nspublics sym)]
             (if-not v
-              (println "WARNING: " (if (get (ns-interns ns) sym)
-                                     (str sym " is not public")
-                                     (str sym " does not exist")))
+              (when (get (ns-interns ns) sym)
+                (println "WARNING: " (str sym " is not public")))
               (. *ns* (refer (or (rename sym) sym) v))))))))
 
 (defn ns-refers
