@@ -6915,6 +6915,11 @@ private static Expr analyzeSeq(C context, ISeq form, String name) {
 				else
 					return InvokeExpr.parse(context, form);
 			}
+		else if(op.equals(Symbol.intern("load-data-readers")) ||
+			op.equals(Symbol.intern("clojure.core", "load-data-readers")))
+			{
+				return NIL_EXPR;
+			}
 		else if((p = (IParser) specials.valAt(op)) != null)
 			return p.parse(context, form);
 		else

@@ -85,10 +85,11 @@ public MultiFn preferMethod(Object dispatchValX, Object dispatchValY) {
 	rw.writeLock().lock();
 	try
 		{
-		if(prefers(dispatchValY, dispatchValX))
-			throw new IllegalStateException(
-					String.format("Preference conflict in multimethod '%s': %s is already preferred to %s",
-					              name, dispatchValY, dispatchValX));
+		/// Commenting this safety net speeds up things a little bit.
+		// if(prefers(dispatchValY, dispatchValX))
+		// 	throw new IllegalStateException(
+		// 			String.format("Preference conflict in multimethod '%s': %s is already preferred to %s",
+		// 			              name, dispatchValY, dispatchValX));
 		preferTable = getPreferTable().assoc(dispatchValX, RT.conj((IPersistentCollection) RT.get(getPreferTable(),
 		                                                                                     dispatchValX,
 		                                                                                     PersistentHashSet.EMPTY),
