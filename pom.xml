@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.skummet</groupId>
-  <artifactId>clojure-android</artifactId>
+  <artifactId>clojure</artifactId>
   <name>clojure</name>
   <packaging>jar</packaging>
-  <version>1.7.0-alpha5-r1</version>
+  <version>1.7.0-alpha5-r4</version>
 
   <url>https://github.com/alexander-yakushev/clojure/tree/skummet</url>
   <description>Fork of Clojure for leaner code compilation.</description>

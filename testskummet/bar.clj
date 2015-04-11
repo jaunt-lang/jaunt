@@ -109,6 +109,11 @@
 
 (defonce var-defed-once 42)
 
+(let [cnt (atom 0)]
+  (def memoized-fn (memoize (fn []
+                              (swap! cnt inc)
+                              @cnt))))
+
 (defn -main [& args]
   (assert (= (my-multi 10 20) 30) "Multimethods don't work")
   (assert (= testskummet.foo/just-value 42))
@@ -135,6 +140,7 @@
   (assert (= (recursive-fn-with-closure) 142) "Recursive functions with enclosed values work.")
   (assert (= (reflection-test "abcdef") \d) "Reflection doesn't work.")
   (assert (= var-defed-once 42) "defonce doesn't work.")
+  (assert (= (do (memoized-fn) (memoized-fn)) 1) "memoize doesn't work.")
 
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))
