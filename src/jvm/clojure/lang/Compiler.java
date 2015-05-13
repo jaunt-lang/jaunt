@@ -6997,6 +6997,23 @@ public static Object eval(Object form, boolean freshLoader) {
 		if(RT.meta(form) != null && RT.meta(form).containsKey(RT.COLUMN_KEY))
 			column = RT.meta(form).valAt(RT.COLUMN_KEY);
 		Var.pushThreadBindings(RT.map(LINE, line, COLUMN, column));
+
+		if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("deftype"))
+			|| Util.equals(RT.first(form), Symbol.intern("defrecord"))) {
+			Var v = lookupVar(Symbol.create(null, "->" + RT.first(RT.next(form)).toString()));
+			v.setNotLean(true);
+			}
+
+		if (form instanceof ISeq && Util.equals(RT.first(form), Symbol.intern("defprotocol"))) {
+			Var v = lookupVar((Symbol)RT.first(RT.next(form)));
+			v.setNotLean(true);
+			for (ISeq s = RT.next(RT.next(form)); s != null; s = RT.next(s))
+				if (RT.first(s) instanceof ISeq) {
+					Var mv = lookupVar((Symbol)RT.first(RT.first(s)));
+					mv.setNotLean(true);
+					}
+			}
+
 		try
 			{
 			form = macroexpand(form);
