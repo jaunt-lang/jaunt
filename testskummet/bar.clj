@@ -1,5 +1,6 @@
 (ns testskummet.bar
   (:use [testskummet.foo :only [myfn]])
+  (:require [clojure.java.io :as io])
   ;; (:require clojure.pprint)
   ;; (:require [hiccup.core :refer [html]]
   ;;           hiccup.util
@@ -114,6 +115,9 @@
                               (swap! cnt inc)
                               @cnt))))
 
+(defn test-as-url []
+  (= (type (io/as-url "http://google.com")) java.net.URL))
+
 (defn -main [& args]
   (assert (= (my-multi 10 20) 30) "Multimethods don't work")
   (assert (= testskummet.foo/just-value 42))
@@ -141,6 +145,7 @@
   (assert (= (reflection-test "abcdef") \d) "Reflection doesn't work.")
   (assert (= var-defed-once 42) "defonce doesn't work.")
   (assert (= (do (memoized-fn) (memoized-fn)) 1) "memoize doesn't work.")
+  (assert (test-as-url) "protocol functions don't get marked as non-lean")
 
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))
