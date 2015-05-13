@@ -292,7 +292,7 @@ static public IPersistentSet coreNonLeanVars = PersistentHashSet.create(
 	"#'clojure.core/load", "#'clojure.core/defn", "#'clojure.core/defmacro",
 	"#'clojure.core/parents", "#'clojure.core/ancestors", "#'clojure.core/pr-on",
 	"#'clojure.core/isa?", "#'clojure.core/global-hierarchy", "#'clojure.core/..",
-	"#'clojure.core/imap-cons", "#'clojure.core/instance?");
+	"#'clojure.core/imap-cons", "#'clojure.core/instance?", "#'clojure.core/require");
 
 static private boolean isLeanVarByPredicate(Var var) {
     if (!LEAN_VAR_PRED.isBound())
