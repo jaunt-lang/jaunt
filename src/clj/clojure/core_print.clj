@@ -12,6 +12,7 @@
 
 (import '(java.io Writer))
 
+(set! *warn-on-reflection* true)
 (def ^:dynamic
  ^{:doc "*print-length* controls how many items of each collection the
   printer will print. If it is bound to logical false, there is no
@@ -93,16 +94,21 @@
   (print-args o w)
   (.write w ")"))
 
-(defn- print-object [o, ^Writer w]
+(defn- print-tagged-object [o rep ^Writer w]
   (when (instance? clojure.lang.IMeta o)
     (print-meta o w))
-  (.write w "#<")
-  (let [name (.getSimpleName (class o))]
-    (when (seq name) ;; anonymous classes have a simple name of ""
-      (.write w name)
-      (.write w " ")))
-  (.write w (str o))
-  (.write w ">"))
+  (.write w "#object[")
+  (let [c (class o)]
+    (if (.isArray c)
+      (print-method (.getName c) w)
+      (.write w (.getName c))))
+  (.write w " ")
+  (.write w (format "0x%x " (System/identityHashCode o)))
+  (print-method rep w)
+  (.write w "]"))
+
+(defn- print-object [o, ^Writer w]
+  (print-tagged-object o (str o) w))
 
 (defmethod print-method Object [o, ^Writer w]
   (print-object o w))
@@ -378,17 +384,104 @@
   (print-dup (.name n) w)
   (.write w ")"))
 
+(defn- deref-as-map [^clojure.lang.IDeref o]
+  (let [pending (and (instance? clojure.lang.IPending o)
+                     (not (.isRealized ^clojure.lang.IPending o)))
+        [ex val]
+        (when-not pending
+          (try [false (deref o)]
+               (catch Throwable e
+                 [true e])))]
+    {:status
+     (cond
+      (or ex
+          (and (instance? clojure.lang.Agent o)
+               (agent-error o)))
+      :failed
+
+      pending
+      :pending
+
+      :else
+      :ready)
+
+     :val val}))
+
 (defmethod print-method clojure.lang.IDeref [o ^Writer w]
-  (print-sequential (format "#<%s@%x%s: "
-                            (.getSimpleName (class o))
-                            (System/identityHashCode o)
-                            (if (and (instance? clojure.lang.Agent o)
-                                     (agent-error o))
-                              " FAILED"
-                              ""))
-                    pr-on, "", ">", (list (if (and (instance? clojure.lang.IPending o)
-                                                   (not (.isRealized ^clojure.lang.IPending o)))
-                                            :pending
-                                            @o)), w))
+  (print-tagged-object o (deref-as-map o) w))
+
+(defmethod print-method StackTraceElement [^StackTraceElement o ^Writer w]
+  (print-method [(symbol (.getClassName o)) (symbol (.getMethodName o)) (.getFileName o) (.getLineNumber o)] w))
+
+(defn Throwable->map [^Throwable o]
+  (let [base (fn [^Throwable t]
+               (let [m {:type (class t)
+                        :message (.getLocalizedMessage t)
+                        :at (get (.getStackTrace t) 0)}
+                     data (ex-data t)]
+                 (if data
+                   (assoc m :data data)
+                   m)))
+        via (loop [via [], ^Throwable t o]
+              (if t
+                (recur (conj via t) (.getCause t))
+                via))
+        ^Throwable root (peek via)
+        m {:cause (.getLocalizedMessage root)
+           :via (vec (map base via))
+           :trace (vec (.getStackTrace ^Throwable (or root o)))}
+        data (ex-data root)]
+    (if data
+      (assoc m :data data)
+      m)))
+
+(defn- print-throwable [^Throwable o ^Writer w]
+  (.write w "#error {\n :cause ")
+  (let [{:keys [cause data via trace]} (Throwable->map o)
+        print-via #(do (.write w "{:type ")
+		               (print-method (:type %) w)
+					   (.write w "\n   :message ")
+					   (print-method (:message %) w)
+             (when-let [data (:data %)]
+               (.write w "\n   :data ")
+               (print-method data w))
+					   (.write w "\n   :at ")
+					   (print-method (:at %) w)
+					   (.write w "}"))]
+    (print-method cause w)
+    (when data
+      (.write w "\n :data ")
+      (print-method data w))
+    (when via
+      (.write w "\n :via\n [")
+      (when-let [fv (first via)]
+	    (print-via fv)
+        (doseq [v (rest via)]
+          (.write w "\n  ")
+		  (print-via v)))
+      (.write w "]"))
+    (when trace
+      (.write w "\n :trace\n [")
+      (when-let [ft (first trace)]
+        (print-method ft w)
+        (doseq [t (rest trace)]
+          (.write w "\n  ")
+          (print-method t w)))
+      (.write w "]")))
+  (.write w "}"))
+
+(defmethod print-method Throwable [^Throwable o ^Writer w]
+  (print-throwable o w))
+
+(defmethod print-method clojure.lang.TaggedLiteral [o ^Writer w]
+  (.write w "#")
+  (print-method (:tag o) w)
+  (.write w " ")
+  (print-method (:form o) w))
+
+(defmethod print-method clojure.lang.ReaderConditional [o ^Writer w]
+  (.write w "#?")
+  (when (:splicing? o) (.write w "@"))
+  (print-method (:form o) w))
 
 (def ^{:private true} print-initialized true)

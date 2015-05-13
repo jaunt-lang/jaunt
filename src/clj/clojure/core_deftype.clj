@@ -215,7 +215,8 @@
                                               (clojure.lang.MapEntry. k# v#))))
                    `(seq [this#] (seq (concat [~@(map #(list `new `clojure.lang.MapEntry (keyword %) %) base-fields)] 
                                               ~'__extmap)))
-                   `(iterator [this#] (clojure.lang.SeqIterator. (.seq this#)))
+                   `(iterator [~gs]
+                        (clojure.lang.RecordIterator. ~gs [~@(map keyword base-fields)] (RT/iter ~'__extmap)))
                    `(assoc [this# k# ~gs]
                      (condp identical? k#
                        ~@(mapcat (fn [fld]
@@ -764,7 +765,7 @@
 
 (defn- emit-impl [[p fs]]
   [p (zipmap (map #(-> % first keyword) fs)
-             (map #(cons 'fn (drop 1 %)) fs))])
+             (map #(cons `fn (drop 1 %)) fs))])
 
 (defn- emit-hinted-impl [c [p fs]]
   (let [hint (fn [specs]
@@ -776,7 +777,7 @@
                               body))
                       specs)))]
     [p (zipmap (map #(-> % first name keyword) fs)
-               (map #(cons 'fn (hint (drop 1 %))) fs))]))
+               (map #(cons `fn (hint (drop 1 %))) fs))]))
 
 (defn- emit-extend-type [c specs]
   (let [impls (parse-impls specs)]

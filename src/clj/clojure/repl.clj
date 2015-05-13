@@ -149,10 +149,11 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
                 pbr (proxy [PushbackReader] [rdr]
                       (read [] (let [i (proxy-super read)]
                                  (.append text (char i))
-                                 i)))]
+                                 i)))
+                read-opts (if (.endsWith ^String filepath "cljc") {:read-cond :allow} {})]
             (if (= :unknown *read-eval*)
               (throw (IllegalStateException. "Unable to read source while *read-eval* is :unknown."))
-              (read (PushbackReader. pbr)))
+              (read read-opts (PushbackReader. pbr)))
             (str text)))))))
 
 (defmacro source
@@ -216,6 +217,7 @@ str-or-pattern."
   [^StackTraceElement el]
   (let [file (.getFileName el)
         clojure-fn? (and file (or (.endsWith file ".clj")
+                                  (.endsWith file ".cljc")
                                   (= file "NO_SOURCE_FILE")))]
     (str (if clojure-fn?
            (demunge (.getClassName el))

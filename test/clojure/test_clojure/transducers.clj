@@ -34,22 +34,43 @@
     (fn [s] {:val s :name s})
     g))
 
+;; These $ versions are "safe" when used with possibly mixed numbers, sequences, etc
+
+(defn- inc$ [n]
+  (if (number? n) (inc n) 1))
+
+(defn- dec$ [n]
+  (if (number? n) (dec n) 1))
+
+(defn- odd?$ [n]
+  (if (number? n) (odd? n) false))
+
+(defn- pos?$ [n]
+  (if (number? n) (pos? n) false))
+
+(defn- empty?$ [s]
+  (if (instance? clojure.lang.Seqable s) (empty? s) false))
+
 (def gen-mapfn
-  (pickfn inc dec))
+  (pickfn inc$ dec$))
+
+(def gen-mapcatfn
+  (pickfn vector
+          #(if (instance? clojure.lang.Seqable %) (partition-all 3 %) (vector %))))
 
 (def gen-predfn
-  (pickfn odd? even? pos? zero? empty? sequential?))
+  (pickfn odd?$ pos?$ empty?$ sequential?))
 
 (def gen-indexedfn
   (pickfn (fn [index item] index)
           (fn [index item] item)
-          (fn [index item] (+ index item))))
+          (fn [index item] (if (number? item) (+ index item) index))))
 
 (def gen-take (fbind (literal gen/s-pos-int) take))
 (def gen-drop (fbind (literal gen/pos-int) drop))
 (def gen-drop-while (fbind gen-predfn drop-while))
 (def gen-map (fbind gen-mapfn map))
-(def gen-mapcat (fbind gen-mapfn mapcat))
+(def gen-mapcat (fbind gen-mapcatfn mapcat))
 (def gen-filter (fbind gen-predfn filter))
 (def gen-remove (fbind gen-predfn remove))
 (def gen-keep (fbind gen-predfn keep))
@@ -60,9 +81,9 @@
 (def gen-keep-indexed (fbind gen-indexedfn keep-indexed))
 (def gen-map-indexed (fbind gen-indexedfn map-indexed))
 (def gen-replace (fbind (literal (gen/return (hash-map (range 100) (range 1 100)))) replace))
-(def gen-distinct (gen/return {:desc "distinct" :seq (partial distinct) :xf (distinct)}))
-(def gen-dedupe (gen/return {:desc "dedupe" :seq (partial dedupe) :xf (dedupe)}))
-(def gen-interpose (fbind gen/s-pos-int interpose))
+(def gen-distinct (gen/return {:desc 'distinct :seq (partial distinct) :xf (distinct)}))
+(def gen-dedupe (gen/return {:desc 'dedupe :seq (partial dedupe) :xf (dedupe)}))
+(def gen-interpose (fbind (literal gen/s-pos-int) interpose))
 
 (def gen-action
   (gen/one-of [gen-take gen-drop gen-map gen-mapcat
@@ -73,7 +94,7 @@
                gen-distinct gen-dedupe gen-interpose]))
 
 (def gen-actions
-  (gen/vector gen-action))
+  (gen/vector gen-action 1 5))
 
 (def gen-coll
   (gen/vector gen/int))
@@ -94,14 +115,13 @@
   [coll actions]
   (into [] (apply comp (map :xf actions)) coll))
 
+(defn apply-as-xf-eduction
+  [coll actions]
+  (into [] (eduction (apply comp (map :xf actions)) coll)))
+
 (defn apply-as-xf-transduce
   [coll actions]
   (transduce (apply comp (map :xf actions)) conj coll))
-
-(defn- possible-exception? [ex]
-       (or (instance? IllegalArgumentException ex)
-           (instance? ClassCastException ex)
-           (instance? NullPointerException ex)))
 
 (defmacro return-exc [& forms]
   `(try ~@forms (catch Throwable e# e#)))
@@ -111,12 +131,14 @@
   (let [s (return-exc (apply-as-seq coll actions))
         xs (return-exc (apply-as-xf-seq coll actions))
         xi (return-exc (apply-as-xf-into coll actions))
+        xe (return-exc (apply-as-xf-eduction coll actions))
         xt (return-exc (apply-as-xf-transduce coll actions))]
     {:coll    coll
      :actions (concat '(->> coll) (map :desc actions))
      :s       s
      :xs      xs
      :xi      xi
+     :xe      xe
      :xt      xt}))
 
 (def result-gen
@@ -125,13 +147,12 @@
     (gen/tuple gen-coll gen-actions)))
 
 (defn result-good?
-  [{:keys [s xs xi xt]}]
-  (or ((every-pred possible-exception?) s xs xi xt)
-      (= s xs xi xt)))
+  [{:keys [s xs xi xe xt]}]
+  (= s xs xi xe xt))
 
 (deftest seq-and-transducer
   (let [res (chk/quick-check
-              100000
+              200000
               (prop/for-all* [result-gen] result-good?))]
     (when-not (:result res)
       (is
@@ -298,6 +319,39 @@
   (is (= [[0]] (transduce (comp (take 1) (partition-all 3) (take 1)) conj [] (range 15))))
   (is (= [1] (transduce (take 1) conj (seq (long-array [1 2 3 4]))))))
 
+(deftest test-sequence-multi-xform
+  (is (= [11 12 13 14] (sequence (map +) [1 2 3 4] (repeat 10))))
+  (is (= [11 12 13 14] (sequence (map +) (repeat 10) [1 2 3 4])))
+  (is (= [31 32 33 34] (sequence (map +) (repeat 10) (repeat 20) [1 2 3 4]))))
+
+(deftest test-eduction
+  (testing "one xform"
+    (is (= [1 2 3 4 5]
+           (eduction (map inc) (range 5)))))
+  (testing "multiple xforms"
+    (is (= ["2" "4"]
+           (eduction (map inc) (filter even?) (map str) (range 5)))))
+  (testing "materialize at the end"
+    (is (= [1 1 1 1 2 2 2 3 3 4]
+          (->> (range 5)
+            (eduction (mapcat range) (map inc))
+            sort)))
+    (is (= [1 1 2 1 2 3 1 2 3 4]
+          (vec (->> (range 5)
+                 (eduction (mapcat range) (map inc))
+                 to-array))))
+    (is (= {1 4, 2 3, 3 2, 4 1}
+          (->> (range 5)
+            (eduction (mapcat range) (map inc))
+            frequencies)))
+    (is (= ["drib" "god" "hsif" "kravdraa" "tac"]
+          (->> ["cat" "dog" "fish" "bird" "aardvark"]
+            (eduction (map clojure.string/reverse))
+            (sort-by first)))))
+  (testing "expanding transducer with nils"
+           (is (= '(1 2 3 nil 4 5 6 nil)
+                  (eduction cat [[1 2 3 nil] [4 5 6 nil]])))))
+
 (deftest test-eduction-completion
   (testing "eduction completes inner xformed reducing fn"
     (is (= [[0 1 2] [3 4 5] [6 7]]
@@ -315,7 +369,7 @@
       (is (= ["1" "2" "3" "4" "5"] res)))))
 
 (deftest test-distinct
-  (are [out in] (= out (sequence (distinct in)))
+  (are [out in] (= out (sequence (distinct in)) (sequence (distinct) in))
        [] []
        (range 10) (range 10)
        [0] (repeat 10 0)

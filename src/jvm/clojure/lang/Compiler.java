@@ -440,7 +440,7 @@ static Symbol resolveSymbol(Symbol sym){
 	if(sym.ns != null)
 		{
 		Namespace ns = namespaceFor(sym);
-		if(ns == null || ns.name.name == sym.ns)
+		if(ns == null || (ns.name.name == null ? sym.ns == null : ns.name.name.equals(sym.ns)))
 			return sym;
 		return Symbol.intern(ns.name.name, sym.name);
 		}
@@ -464,6 +464,7 @@ static class DefExpr implements Expr{
 	public final Expr meta;
 	public final boolean initProvided;
 	public final boolean isDynamic;
+	public final boolean shadowsCoreMapping;
 	public final String source;
 	public final int line;
 	public final int column;
@@ -472,8 +473,9 @@ static class DefExpr implements Expr{
 	final static Method setMetaMethod = Method.getMethod("void setMeta(clojure.lang.IPersistentMap)");
 	final static Method setDynamicMethod = Method.getMethod("clojure.lang.Var setDynamic(boolean)");
 	final static Method symintern = Method.getMethod("clojure.lang.Symbol intern(String, String)");
+	final static Method internVar = Method.getMethod("clojure.lang.Var refer(clojure.lang.Symbol, clojure.lang.Var)");
 
-	public DefExpr(String source, int line, int column, Var var, Expr init, Expr meta, boolean initProvided, boolean isDynamic){
+	public DefExpr(String source, int line, int column, Var var, Expr init, Expr meta, boolean initProvided, boolean isDynamic, boolean shadowsCoreMapping){
 		this.source = source;
 		this.line = line;
 		this.column = column;
@@ -481,6 +483,7 @@ static class DefExpr implements Expr{
 		this.init = init;
 		this.meta = meta;
 		this.isDynamic = isDynamic;
+		this.shadowsCoreMapping = shadowsCoreMapping;
 		this.initProvided = initProvided;
 	}
 
@@ -535,6 +538,17 @@ static class DefExpr implements Expr{
 			NIL_EXPR.emit(C.EXPRESSION, objx, gen);
 		else
 			objx.emitVar(gen, var);
+
+		if (shadowsCoreMapping)
+		{
+			gen.dup();
+			gen.getField(VAR_TYPE, "ns", NS_TYPE);
+			gen.swap();
+			gen.dup();
+			gen.getField(VAR_TYPE, "sym", SYMBOL_TYPE);
+			gen.swap();
+			gen.invokeVirtual(NS_TYPE, internVar);
+		}
 
 		if(isDynamic)
 			{
@@ -609,11 +623,13 @@ static class DefExpr implements Expr{
 			Var v = lookupVar(sym, true);
 			if(v == null)
 				throw Util.runtimeException("Can't refer to qualified var that doesn't exist");
+			boolean shadowsCoreMapping = false;
 			if(!v.ns.equals(currentNS()))
 				{
 				if(sym.ns == null)
 					{
 					v = currentNS().intern(sym);
+					shadowsCoreMapping = true;
 					registerVar(v);
 					}
 //					throw Util.runtimeException("Name conflict, can't def " + sym + " because namespace: " + currentNS().name +
@@ -683,7 +699,7 @@ static class DefExpr implements Expr{
 				Var.popThreadBindings();
 			}
 			return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
-				v, initExpr, meta, RT.count(form) == 3, isDynamic);
+				v, initExpr, meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
 		}
 	}
 }
@@ -1280,10 +1296,10 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 	}
 
 	public void emitUnboxed(C context, ObjExpr objx, GeneratorAdapter gen){
-		gen.visitLineNumber(line, gen.mark());
 		if(targetClass != null && field != null)
 			{
 			target.emit(C.EXPRESSION, objx, gen);
+			gen.visitLineNumber(line, gen.mark());
 			gen.checkCast(getType(targetClass));
 			gen.getField(getType(targetClass), fieldName, Type.getType(field.getType()));
 			}
@@ -1292,10 +1308,10 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		gen.visitLineNumber(line, gen.mark());
 		if(targetClass != null && field != null)
 			{
 			target.emit(C.EXPRESSION, objx, gen);
+			gen.visitLineNumber(line, gen.mark());
 			gen.checkCast(getType(targetClass));
 			gen.getField(getType(targetClass), fieldName, Type.getType(field.getType()));
 			//if(context != C.STATEMENT)
@@ -1308,6 +1324,7 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 		else
 			{
 			target.emit(C.EXPRESSION, objx, gen);
+			gen.visitLineNumber(line, gen.mark());
 			gen.push(fieldName);
 			gen.push(requireField);
 			gen.invokeStatic(REFLECTOR_TYPE, invokeNoArgInstanceMember);
@@ -1330,12 +1347,12 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 
 	public void emitAssign(C context, ObjExpr objx, GeneratorAdapter gen,
 	                       Expr val){
-		gen.visitLineNumber(line, gen.mark());
 		if(targetClass != null && field != null)
 			{
 			target.emit(C.EXPRESSION, objx, gen);
 			gen.checkCast(Type.getType(targetClass));
 			val.emit(C.EXPRESSION, objx, gen);
+			gen.visitLineNumber(line, gen.mark());
 			gen.dupX1();
 			HostExpr.emitUnboxArg(objx, gen, field.getType());
 			gen.putField(Type.getType(targetClass), fieldName, Type.getType(field.getType()));
@@ -1345,6 +1362,7 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 			target.emit(C.EXPRESSION, objx, gen);
 			gen.push(fieldName);
 			val.emit(C.EXPRESSION, objx, gen);
+			gen.visitLineNumber(line, gen.mark());
 			gen.invokeStatic(REFLECTOR_TYPE, setInstanceFieldMethod);
 			}
 		if(context == C.STATEMENT)
@@ -1425,8 +1443,8 @@ static class StaticFieldExpr extends FieldExpr implements AssignableExpr{
 
 	public void emitAssign(C context, ObjExpr objx, GeneratorAdapter gen,
 	                       Expr val){
-		gen.visitLineNumber(line, gen.mark());
 		val.emit(C.EXPRESSION, objx, gen);
+		gen.visitLineNumber(line, gen.mark());
 		gen.dup();
 		HostExpr.emitUnboxArg(objx, gen, field.getType());
 		gen.putStatic(Type.getType(c), fieldName, Type.getType(field.getType()));
@@ -1647,7 +1665,6 @@ static class InstanceMethodExpr extends MethodExpr{
 	}
 
 	public void emitUnboxed(C context, ObjExpr objx, GeneratorAdapter gen){
-		gen.visitLineNumber(line, gen.mark());
 		if(method != null)
 			{
 			Type type = Type.getType(method.getDeclaringClass());
@@ -1655,6 +1672,7 @@ static class InstanceMethodExpr extends MethodExpr{
 			//if(!method.getDeclaringClass().isInterface())
 			gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
+			gen.visitLineNumber(line, gen.mark());
 			if(context == C.RETURN)
 				{
 				ObjMethod method = (ObjMethod) METHOD.deref();
@@ -1671,7 +1689,6 @@ static class InstanceMethodExpr extends MethodExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		gen.visitLineNumber(line, gen.mark());
 		if(method != null)
 			{
 			Type type = Type.getType(method.getDeclaringClass());
@@ -1679,6 +1696,7 @@ static class InstanceMethodExpr extends MethodExpr{
 			//if(!method.getDeclaringClass().isInterface())
 			gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
+			gen.visitLineNumber(line, gen.mark());
 			if(context == C.RETURN)
 				{
 				ObjMethod method = (ObjMethod) METHOD.deref();
@@ -1697,6 +1715,7 @@ static class InstanceMethodExpr extends MethodExpr{
 			target.emit(C.EXPRESSION, objx, gen);
 			gen.push(methodName);
 			emitArgsAsArray(args, objx, gen);
+			gen.visitLineNumber(line, gen.mark());
 			if(context == C.RETURN)
 				{
 				ObjMethod method = (ObjMethod) METHOD.deref();
@@ -1842,10 +1861,10 @@ static class StaticMethodExpr extends MethodExpr{
 	}
 
 	public void emitUnboxed(C context, ObjExpr objx, GeneratorAdapter gen){
-		gen.visitLineNumber(line, gen.mark());
 		if(method != null)
 			{
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
+			gen.visitLineNumber(line, gen.mark());
 			//Type type = Type.getObjectType(className.replace('.', '/'));
 			if(context == C.RETURN)
 				{
@@ -1875,10 +1894,10 @@ static class StaticMethodExpr extends MethodExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		gen.visitLineNumber(line, gen.mark());
 		if(method != null)
 			{
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
+			gen.visitLineNumber(line, gen.mark());
 			//Type type = Type.getObjectType(className.replace('.', '/'));
 			if(context == C.RETURN)
 				{
@@ -1904,10 +1923,12 @@ static class StaticMethodExpr extends MethodExpr{
 			}
 		else
 			{
+			gen.visitLineNumber(line, gen.mark());
 			gen.push(c.getName());
 			gen.invokeStatic(RT_TYPE, forNameMethod);
 			gen.push(methodName);
 			emitArgsAsArray(args, objx, gen);
+			gen.visitLineNumber(line, gen.mark());
 			if(context == C.RETURN)
 				{
 				ObjMethod method = (ObjMethod) METHOD.deref();
@@ -2547,7 +2568,7 @@ static String getTypeStringForArgs(IPersistentVector args){
 		{
 		Expr arg = (Expr) args.nth(i);
 		if (i > 0) sb.append(", ");
-		sb.append(arg.hasJavaClass() ? arg.getJavaClass().getName() : "unknown");
+		sb.append((arg.hasJavaClass() && arg.getJavaClass() != null) ? arg.getJavaClass().getName() : "unknown");
 		}
 	return sb.toString();
 }
@@ -3188,7 +3209,7 @@ public static class MapExpr implements Expr{
 				throw new IllegalArgumentException("Duplicate constant keys in map");
 			if(valsConstant)
 				{
-				IPersistentMap m = PersistentHashMap.EMPTY;
+				IPersistentMap m = PersistentArrayMap.EMPTY;
 				for(int i=0;i<keyvals.length();i+= 2)
 					{
 					m = m.assoc(((LiteralExpr)keyvals.nth(i)).val(), ((LiteralExpr)keyvals.nth(i+1)).val());
@@ -3373,6 +3394,7 @@ static class KeywordInvokeExpr implements Expr{
         gen.getStatic(objx.objtype, objx.thunkNameStatic(siteIndex),ObjExpr.ILOOKUP_THUNK_TYPE);
         gen.dup();  //thunk, thunk
         target.emit(C.EXPRESSION, objx, gen); //thunk,thunk,target
+        gen.visitLineNumber(line, gen.mark());
         gen.dupX2();                          //target,thunk,thunk,target
         gen.invokeInterface(ObjExpr.ILOOKUP_THUNK_TYPE, Method.getMethod("Object get(Object)")); //target,thunk,result
         gen.dupX2();                          //result,target,thunk,result
@@ -3763,9 +3785,9 @@ static class InvokeExpr implements Expr{
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
 		boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
-		gen.visitLineNumber(line, gen.mark());
 		if(isProtocol)
 			{
+			gen.visitLineNumber(line, gen.mark());
 			emitProto(context,objx,gen);
 			}
 
@@ -3775,6 +3797,7 @@ static class InvokeExpr implements Expr{
 		else
 			{
 			fexpr.emit(C.EXPRESSION, objx, gen);
+			gen.visitLineNumber(line, gen.mark());
 			gen.checkCast(IFN_TYPE);
 			emitArgsAndCall(0, context,objx,gen);
 			if (emitLeanCode && isAlterVarRoot)
@@ -3851,6 +3874,7 @@ static class InvokeExpr implements Expr{
 				}
 			MethodExpr.emitArgsAsArray(restArgs, objx, gen);
 			}
+		gen.visitLineNumber(line, gen.mark());
 
 		if(context == C.RETURN)
 			{
@@ -7478,12 +7502,28 @@ public static Object load(Reader rdr) {
 	return load(rdr, null, "NO_SOURCE_FILE");
 }
 
+static void consumeWhitespaces(LineNumberingPushbackReader pushbackReader) {
+	int ch = LispReader.read1(pushbackReader);
+	while(LispReader.isWhitespace(ch))
+		ch = LispReader.read1(pushbackReader);
+	LispReader.unread(pushbackReader, ch);
+}
+
+private static final Object OPTS_COND_ALLOWED = RT.mapUniqueKeys(LispReader.OPT_READ_COND, LispReader.COND_ALLOW);
+private static Object readerOpts(String sourceName) {
+    if(sourceName != null && sourceName.endsWith(".cljc"))
+        return OPTS_COND_ALLOWED;
+    else
+        return null;
+}
+
 public static Object load(Reader rdr, String sourcePath, String sourceName) {
 	Object EOF = new Object();
 	Object ret = null;
 	LineNumberingPushbackReader pushbackReader =
 			(rdr instanceof LineNumberingPushbackReader) ? (LineNumberingPushbackReader) rdr :
 			new LineNumberingPushbackReader(rdr);
+	consumeWhitespaces(pushbackReader);
 	Var.pushThreadBindings(
 			RT.mapUniqueKeys(LOADER, RT.makeClassLoader(),
 			       SOURCE_PATH, sourcePath,
@@ -7503,11 +7543,13 @@ public static Object load(Reader rdr, String sourcePath, String sourceName) {
 			       ,RT.DATA_READERS, RT.DATA_READERS.deref()
                         ));
 
+	Object readerOpts = readerOpts(sourceName);
 	try
 		{
-		for(Object r = LispReader.read(pushbackReader, false, EOF, false); r != EOF;
-		    r = LispReader.read(pushbackReader, false, EOF, false))
+		for(Object r = LispReader.read(pushbackReader, false, EOF, false, readerOpts); r != EOF;
+			r = LispReader.read(pushbackReader, false, EOF, false, readerOpts))
 			{
+			consumeWhitespaces(pushbackReader);
 			LINE_AFTER.set(pushbackReader.getLineNumber());
 			COLUMN_AFTER.set(pushbackReader.getColumnNumber());
 			ret = eval(r,false);
@@ -7780,8 +7822,9 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 		                                            cv);
 		gen.visitCode();
 
-		for(Object r = LispReader.read(pushbackReader, false, EOF, false); r != EOF;
-		    r = LispReader.read(pushbackReader, false, EOF, false))
+		Object readerOpts = readerOpts(sourceName);
+		for(Object r = LispReader.read(pushbackReader, false, EOF, false, readerOpts); r != EOF;
+			r = LispReader.read(pushbackReader, false, EOF, false, readerOpts))
 			{
 				LINE_AFTER.set(pushbackReader.getLineNumber());
 				COLUMN_AFTER.set(pushbackReader.getColumnNumber());

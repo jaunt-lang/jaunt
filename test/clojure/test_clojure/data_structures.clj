@@ -464,6 +464,7 @@
 
       (find {:a 1} :a) [:a 1]
       (find {:a 1} :b) nil
+      (find {nil 1} nil) [nil 1]
 
       (find {:a 1 :b 2} :a) [:a 1]
       (find {:a 1 :b 2} :b) [:b 2]
@@ -483,6 +484,7 @@
       (contains? {:a 1} :a) true
       (contains? {:a 1} :b) false
       (contains? {:a 1} nil) false
+      (contains? {nil 1} nil) true
 
       (contains? {:a 1 :b 2} :a) true
       (contains? {:a 1 :b 2} :b) true
@@ -576,6 +578,7 @@
       ; (class {:a 1}) => clojure.lang.PersistentArrayMap
       (keys {}) nil
       (keys {:a 1}) '(:a)
+      (keys {nil 1}) '(nil)
       (diff (keys {:a 1 :b 2}) '(:a :b)) nil              ; (keys {:a 1 :b 2}) '(:a :b)
 
       ; (class (sorted-map :a 1)) => clojure.lang.PersistentTreeMap
@@ -586,7 +589,11 @@
       ; (class (hash-map :a 1)) => clojure.lang.PersistentHashMap
       (keys (hash-map)) nil
       (keys (hash-map :a 1)) '(:a)
-      (diff (keys (hash-map :a 1 :b 2)) '(:a :b)) nil ))  ; (keys (hash-map :a 1 :b 2)) '(:a :b)
+      (diff (keys (hash-map :a 1 :b 2)) '(:a :b)) nil )   ; (keys (hash-map :a 1 :b 2)) '(:a :b)
+
+  (let [m {:a 1 :b 2}
+        k (keys m)]
+    (is (= {:hi :there} (meta (with-meta k {:hi :there}))))))
 
 
 (deftest test-vals
@@ -600,6 +607,7 @@
       ; (class {:a 1}) => clojure.lang.PersistentArrayMap
       (vals {}) nil
       (vals {:a 1}) '(1)
+      (vals {nil 1}) '(1)
       (diff (vals {:a 1 :b 2}) '(1 2)) nil              ; (vals {:a 1 :b 2}) '(1 2)
 
       ; (class (sorted-map :a 1)) => clojure.lang.PersistentTreeMap
@@ -610,7 +618,11 @@
       ; (class (hash-map :a 1)) => clojure.lang.PersistentHashMap
       (vals (hash-map)) nil
       (vals (hash-map :a 1)) '(1)
-      (diff (vals (hash-map :a 1 :b 2)) '(1 2)) nil ))  ; (vals (hash-map :a 1 :b 2)) '(1 2)
+      (diff (vals (hash-map :a 1 :b 2)) '(1 2)) nil )   ; (vals (hash-map :a 1 :b 2)) '(1 2)
+
+  (let [m {:a 1 :b 2}
+        v (vals m)]
+    (is (= {:hi :there} (meta (with-meta v {:hi :there}))))))
 
 
 (deftest test-key
@@ -655,6 +667,7 @@
          (get m :a) 1
          (get m :e) nil
          (get m :e 0) 0
+         (get m nil) {:h 5}
          (get m :b 0) 2
          (get m :f 0) nil
 
@@ -1055,6 +1068,7 @@
        [4] (assoc [] 0 4)
        [5 -7] (assoc [] 0 5 1 -7)
        {:a 1} (assoc {} :a 1)
+       {nil 1} (assoc {} nil 1)
        {:a 2 :b -2} (assoc {} :b -2 :a 2))
   (is (thrown? IllegalArgumentException (assoc [] 0 5 1)))
   (is (thrown? IllegalArgumentException (assoc {} :b -2 :a))))
@@ -1163,3 +1177,101 @@
   (let [f (fn [_ a] (if (= a 5) (reduced "foo")))]
     (is (= "foo" (.reduce ^clojure.lang.IReduce (list 1 2 3 4 5) f)))
     (is (= "foo" (.reduce ^clojure.lang.IReduce (seq (long-array [1 2 3 4 5])) f)))))
+
+(defn seq-iter-match
+  [^clojure.lang.Seqable seqable ^Iterable iterable]
+  (if (nil? iterable)
+    (when (not (nil? (seq seqable)))
+      (throw (ex-info "Null iterable but seq has elements"
+                      {:pos 0 :seqable seqable :iterable iterable})))
+    (let [i (.iterator iterable)]
+      (loop [s (seq seqable)
+             n 0]
+        (if (seq s)
+          (do
+            (when-not (.hasNext i)
+              (throw (ex-info "Iterator exhausted before seq"
+                              {:pos n :seqable seqable :iterable iterable})))
+              (when-not (= (.next i) (first s))
+                (throw (ex-info "Iterator and seq did not match"
+                                {:pos n :seqable seqable :iterable iterable})))
+                (recur (rest s) (inc n)))
+          (when (.hasNext i)
+            (throw (ex-info "Seq exhausted before iterator"
+                            {:pos n :seqable seqable :iterable iterable}))))))))
+
+(deftest test-seq-iter-match
+  (let [maps (mapcat #(vector (apply array-map %)
+                              (apply hash-map %)
+                              (apply sorted-map %))
+                     [[] [nil 1] [nil 1 2 3] [1 2 3 4]])]
+    (doseq [m maps]
+      (seq-iter-match m m)
+      (seq-iter-match (keys m) (keys m))
+      (seq-iter-match (vals m) (vals m))
+      (seq-iter-match (rest (keys m)) (rest (keys m)))
+      (seq-iter-match (rest (vals m)) (rest (vals m))))))
+
+(defn gen-map
+  []
+  (gen/hash-map (rand-nth cgen/ednable-scalars) (rand-nth cgen/ednable-scalars)))
+
+(defspec seq-and-iter-match-for-maps
+  identity
+  [^{:tag clojure.test-clojure.data-structures/gen-map} m]
+  (seq-iter-match m m))
+
+(defn gen-set
+  []
+  (gen/set (rand-nth cgen/ednable-scalars)))
+
+(defspec seq-and-iter-match-for-sets
+  identity
+  [^{:tag clojure.test-clojure.data-structures/gen-set} s]
+  (seq-iter-match s s))
+
+(defn gen-queue
+  []
+  (into clojure.lang.PersistentQueue/EMPTY
+        (gen/vec (rand-nth cgen/ednable-scalars))))
+
+(defspec seq-and-iter-match-for-queues
+  identity
+  [^{:tag clojure.test-clojure.data-structures/gen-queue} q]
+  (seq-iter-match q q))
+
+(defrecord Rec [a b])
+
+(defn gen-record
+  []
+  (let [r (->Rec (gen/int) (gen/int))]
+       (gen/one-of r
+                   (merge r (gen-map)))))
+
+(defspec seq-and-iter-match-for-records
+         identity
+         [^{:tag clojure.test-clojure.data-structures/gen-record} r]
+         (seq-iter-match r r))
+
+(defspec seq-and-iter-match-for-keys
+         identity
+         [^{:tag clojure.test-clojure.data-structures/gen-map} m]
+         (seq-iter-match (keys m) (keys m)))
+
+(defspec seq-and-iter-match-for-vals
+         identity
+         [^{:tag clojure.test-clojure.data-structures/gen-map} m]
+         (seq-iter-match (vals m) (vals m)))
+
+(defstruct test-struct :a :b)
+
+(defn gen-struct
+  []
+  (let [s (struct test-struct (gen/int) (gen/int))]
+    (gen/one-of s
+                (assoc s (rand-nth cgen/ednable-scalars) (rand-nth cgen/ednable-scalars)))))
+
+(defspec seq-and-iter-match-for-structs
+         identity
+         [^{:tag clojure.test-clojure.data-structures/gen-struct} s]
+         (seq-iter-match s s))
