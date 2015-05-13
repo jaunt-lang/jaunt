@@ -5,7 +5,7 @@
   <artifactId>clojure</artifactId>
   <name>clojure</name>
   <packaging>jar</packaging>
-  <version>1.7.0-alpha5-r6</version>
+  <version>1.7.0-beta3-r1</version>
 
   <url>https://github.com/alexander-yakushev/clojure/tree/skummet</url>
   <description>Fork of Clojure for leaner code compilation.</description>
