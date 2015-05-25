@@ -6762,7 +6762,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; clojure version number ;;;;;;;;;;;;;;;;;;;;;;
 
 (def ^:dynamic *clojure-version*
-  {:major 1, :minor 7, :incremental 0, :qualifier "alpha5-skummet-r1"})
+  {:major 1, :minor 7, :incremental 0, :qualifier "beta3-skummet-r1"})
 
 (defn
   clojure-version 
