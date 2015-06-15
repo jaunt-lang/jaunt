@@ -408,7 +408,7 @@
                                         ;add methods matching supers', if no fn -> call super
     (let [all-mm (non-private-methods super)
           mm (if overrides-methods
-               (filter #(override-mm (.getName (second %))) all-mm)
+               (reduce1 (fn [mm [key val]] (if (override-mm (.getName val)) (assoc mm key val) mm)) {} all-mm)
                all-mm)]
       (doseq [^java.lang.reflect.Method meth (vals mm)]
              (emit-forwarding-method (.getName meth) (.getParameterTypes meth) (.getReturnType meth) false
