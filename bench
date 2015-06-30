@@ -1,0 +1,12 @@
+#!/bin/bash
+if [ $1 ] ; then
+    TIMES=$1
+else
+    TIMES=10
+fi
+
+time for i in `seq $TIMES`
+do
+    java -cp target/clojure-1.7.0-RC1-r3.jar:target-skummet testskummet.hello 123456 example
+done
+
