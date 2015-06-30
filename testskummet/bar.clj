@@ -30,7 +30,7 @@
 (defn ordinary-function [z]
   (method-using-function (myfn z)))
 
-(def function-call-in-def (str @(atom [17 19 21])))
+(def function-call-in-def (count @(atom [17 19 21])))
 
 (alter-meta! #'simple-constant assoc :nonono 3)
 
@@ -118,6 +118,20 @@
 (defn test-as-url []
   (= (type (io/as-url "http://google.com")) java.net.URL))
 
+(defn test-spit-and-slurp []
+  (let [tmp (java.io.File/createTempFile "skummet-slurp-test" nil)
+        data "test skummet"]
+    (spit tmp data)
+    (assert (= (slurp tmp) data) "spit and slurp don't work")))
+
+(def ^:dynamic *dynamic-var* 1)
+
+(defn test-dynamic-vars []
+  (assert (= *dynamic-var* 1))
+  (binding [*dynamic-var* 2]
+    (assert (= *dynamic-var* 2) "dynamic vars don't work"))
+  (assert (= *dynamic-var* 1)))
+
 (defn -main [& args]
   (assert (= (my-multi 10 20) 30) "Multimethods don't work")
   (assert (= testskummet.foo/just-value 42))
@@ -127,9 +141,7 @@
   (println "Testing ordinary function:" (ordinary-function args))
   (assert (= (rest (conj [1 2 3] 4)) '(2 3 4)))
   (let [x 20, y 10]
-    (println "Testing primitive functions:" (primitive-function x y))
-    ;; (assert (= (primitive-function x y) 30) "Primitive functions don't work")
-    )
+    (assert (= (primitive-function x y) 30) "Primitive functions don't work"))
   (assert (= (test-transducers) 6) "Transducers don't work")
   (assert (= (foofoo "test") 4) "Protocols don't work")
   (assert (= (recursive 5) 120) "Recursive functions don't work")
@@ -146,6 +158,8 @@
   (assert (= var-defed-once 42) "defonce doesn't work.")
   (assert (= (do (memoized-fn) (memoized-fn)) 1) "memoize doesn't work.")
   (assert (test-as-url) "protocol functions don't get marked as non-lean")
+  (test-spit-and-slurp)
+  (test-dynamic-vars)
 
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))

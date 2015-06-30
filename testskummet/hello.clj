@@ -3,4 +3,4 @@
    :overrides-methods ()))
 
 (defn -main [& args]
-  (println "Helllooooo!"))
+  (.println ^java.io.PrintStream System/out "Helllooooo!"))
