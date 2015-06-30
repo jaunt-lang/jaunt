@@ -2,7 +2,6 @@
 # http://proguard.sourceforge.net/index.html#manual/usage.html
 
 -injars target-skummet/
-# -injars target/skummet/
 -injars target/skummet/(!**.clj)
 # clojure-android-1.7.0-alpha5-r1.jar
 -libraryjars <java.home>/lib/rt.jar
@@ -67,6 +66,10 @@
 }
 -keep public class testskummet.bar__init
 
+-keepclassmembers class **.R$* {
+    public static java.lang.Object __LEAN_COMPILATION_FLAG__;
+}
+
 -keep public class clojure.lang.Fn
 -keep public class **__init
 
@@ -78,3 +81,6 @@
 # -whyareyoukeeping class clojure.core__init {
 #     public static java.lang.Object promise;
 # }
+
+-whyareyoukeeping class clojure.core$process_annotation
+
