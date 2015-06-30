@@ -243,6 +243,7 @@ static final public Var ADD_ANNOTATIONS = Var.intern(Namespace.findOrCreate(Symb
 
 static final public Keyword disableLocalsClearingKey = Keyword.intern("disable-locals-clearing");
 static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
+static final public boolean verboseOutput;
 
 static final public Var COMPILER_OPTIONS;
 
@@ -340,6 +341,8 @@ static public String getNSClassname(Namespace ns) {
 
         COMPILER_OPTIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                 Symbol.intern("*compiler-options*"), compilerOptions).setDynamic();
+
+        verboseOutput = Boolean.parseBoolean(System.getProperty("clojure.compiler.verbose-output"));
     }
 
     static Object elideMeta(Object m){
@@ -535,7 +538,7 @@ static class DefExpr implements Expr{
 		}
 
 		if (emitLeanCode && isLeanVar(var))
-			NIL_EXPR.emit(C.EXPRESSION, objx, gen);
+			NOP_EXPR.emit(context, objx, gen);
 		else
 			objx.emitVar(gen, var);
 
@@ -592,8 +595,8 @@ static class DefExpr implements Expr{
 				}
 			}
 
-		if(context == C.STATEMENT)
-			gen.pop();
+		// if(context == C.STATEMENT)
+		// 	gen.pop();
 	}
 
 	public boolean hasJavaClass(){
@@ -876,7 +879,7 @@ public static class ImportExpr implements Expr{
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
 		if (RT.booleanCast(EMIT_LEAN_CODE.deref())) {
-			NIL_EXPR.emit(C.EXPRESSION, objx, gen);
+			NOP_EXPR.emit(context, objx, gen);
 			return;
 		}
 		gen.getStatic(RT_TYPE,"CURRENT_NS",VAR_TYPE);
@@ -2039,10 +2042,15 @@ static class ConstantExpr extends LiteralExpr{
 	//this won't work for static compilation...
 	public final Object v;
 	public final int id;
+	public final boolean isClass;
 
 	public ConstantExpr(Object v){
 		this.v = v;
-		this.id = registerConstant(v);
+		isClass = (v instanceof Class);
+		if (isClass)
+			this.id = registerConstant(v, true);
+		else
+			this.id = registerConstant(v);
 //		this.id = RT.nextID();
 //		DynamicClassLoader loader = (DynamicClassLoader) LOADER.get();
 //		loader.registerQuotedVal(id, v);
@@ -2053,7 +2061,11 @@ static class ConstantExpr extends LiteralExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		objx.emitConstant(gen, id);
+		if (RT.booleanCast(EMIT_LEAN_CODE.deref()) && isClass) {
+			gen.visitLdcInsn(Type.getType((Class)v));
+		} else {
+			objx.emitConstant(gen, id);
+		}
 
 		if(context == C.STATEMENT)
 			{
@@ -2127,6 +2139,15 @@ static class NilExpr extends LiteralExpr{
 }
 
 final static NilExpr NIL_EXPR = new NilExpr();
+
+static class NopExpr extends NilExpr{
+	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
+		if(context == C.RETURN || context == C.EXPRESSION)
+			gen.visitInsn(Opcodes.ACONST_NULL);
+	}
+}
+
+final static NopExpr NOP_EXPR = new NopExpr();
 
 static class BooleanExpr extends LiteralExpr{
 	public final boolean val;
@@ -4775,6 +4796,7 @@ static public class ObjExpr implements Expr{
 
 	void emitValue(Object value, GeneratorAdapter gen){
 		boolean partial = true;
+		boolean emitLeanCode = RT.booleanCast(EMIT_LEAN_CODE.deref());
 		//System.out.println(value.getClass().toString());
 
 		if(value == null)
@@ -4830,8 +4852,12 @@ static public class ObjExpr implements Expr{
 				}
 			else
 				{
-				gen.push(destubClassName(cc.getName()));
-				gen.invokeStatic(RT_TYPE, Method.getMethod("Class classForName(String)"));
+				if (emitLeanCode) {
+					gen.visitLdcInsn(Type.getType(cc));
+				} else {
+					gen.push(destubClassName(cc.getName()));
+					gen.invokeStatic(RT_TYPE, Method.getMethod("Class classForName(String)"));
+				}
 				}
 			}
 		else if(value instanceof Symbol)
@@ -7684,7 +7710,8 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 			}
 		else
 			{
-			System.out.println("compiling: " + form + " --- " + RT.CURRENT_NS.deref());
+			if (verboseOutput)
+				System.out.println("Compiling: " + form + " --- " + RT.CURRENT_NS.deref());
 			Expr expr = analyze(C.EVAL, form);
 			objx.keywords = (IPersistentMap) KEYWORDS.deref();
 			objx.vars = (IPersistentMap) VARS.deref();
@@ -7715,7 +7742,7 @@ static void compile1(GeneratorAdapter gen, ObjExpr objx, Object form) {
 			if (!RT.booleanCast(IS_COMPILING_A_MACRO.deref()) && !isCompilingAMacro) {
 				try {
 					Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, true));
-					expr.emit(C.EXPRESSION, objx, gen);
+					expr.emit(C.STATEMENT, objx, gen);
 				} finally {
 					Var.popThreadBindings();
 				}
@@ -7927,10 +7954,7 @@ public static Object compile(Reader rdr, String sourcePath, String sourceName) t
 		for(int n = 0;n<initN;n++)
 			clinitgen.invokeStatic(objx.objtype, Method.getMethod("void __init" + n + "()"));
 
-		clinitgen.push(objx.internalName.replace('/','.'));
-		clinitgen.invokeStatic(RT_TYPE, Method.getMethod("Class classForName(String)"));
-		clinitgen.invokeVirtual(CLASS_TYPE,Method.getMethod("ClassLoader getClassLoader()"));
-		clinitgen.invokeStatic(Type.getType(Compiler.class), Method.getMethod("void pushNSandLoader(ClassLoader)"));
+		clinitgen.invokeStatic(Type.getType(Compiler.class), Method.getMethod("void pushNS()"));
 		clinitgen.mark(startTry);
 		clinitgen.invokeStatic(objx.objtype, Method.getMethod("void load()"));
 		clinitgen.mark(endTry);
