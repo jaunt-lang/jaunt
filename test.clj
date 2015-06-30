@@ -1,8 +1,6 @@
 (clojure.core/refer-clojure)
 
-(def not-lean-vars #{ ;; "#'neko.context/context" "#'neko.resource/package-name"
-                     ;; "#'neko.threading/ui-thread" "#'neko.threading/handler"
-                     ;; "#'neko.-utils/keyword->static-field" "#'neko.-utils/keyword->setter"
+(def not-lean-vars #{;; "#'neko.-utils/keyword->static-field" "#'neko.-utils/keyword->setter"
                      ;; "#'neko.ui.traits/get-display-metrics"
                      })
 
@@ -13,7 +11,7 @@
 (binding [*lean-compile* true
           *compile-path* "./target-skummet"
           *compiler-options* {:elide-meta [:doc :file :line :added :arglists
-                                           :inline
+                                           :inline :declared :private
                                            :column :static :author :added :dynamic]
                               :neko.init/release-build true}
           *lean-var?* (fn [x] x)]
@@ -21,12 +19,6 @@
   (try
     (clojure.lang.RT/resetID)
     (compile 'clojure.core)
-    ;; (compile 'clojure.pprint)
-    ;; (compile 'clojure.reflect)
-    ;; (compile 'clojure.set)
     (compile 'testskummet.bar)
-    (finally (pop-thread-bindings)))
-
-  ;; (clojure.lang.Compiler/compile (io/reader "testskummet/foo.clj") "testskummet/foo.clj" "testskummet/foo.clj" )
-  ;; (clojure.lang.Compiler/compile (io/reader "testskummet/bar.clj") "testskummet/bar.clj" "testskummet/bar.clj" )
-  )
+    (compile 'testskummet.hello)
+    (finally (pop-thread-bindings))))
