@@ -110,6 +110,129 @@
 (defn- print-object [o, ^Writer w]
   (print-tagged-object o (str o) w))
 
+(def ^{:tag String 
+       :doc "Returns escape string for char or nil if none"
+       :added "1.0"}
+  char-escape-string
+  {\newline "\\n"
+   \tab  "\\t"
+   \return "\\r"
+   \" "\\\""
+   \\  "\\\\"
+   \formfeed "\\f"
+   \backspace "\\b"})
+
+(defn- print-map [m print-one w]
+  (print-sequential 
+   "{"
+   (fn [e  ^Writer w]
+     (do (print-one (key e) w) (.append w \space) (print-one (val e) w)))
+   ", "
+   "}"
+   (seq m) w))
+
+(def ^{:tag String
+       :doc "Returns name string for char or nil if none"
+       :added "1.0"} 
+  char-name-string
+  {\newline "newline"
+   \tab "tab"
+   \space "space"
+   \backspace "backspace"
+   \formfeed "formfeed"
+   \return "return"})
+
+(defn Throwable->map [^Throwable o]
+  (let [base (fn [^Throwable t]
+               (let [m {:type (class t)
+                        :message (.getLocalizedMessage t)
+                        :at (get (.getStackTrace t) 0)}
+                     data (ex-data t)]
+                 (if data
+                   (assoc m :data data)
+                   m)))
+        via (loop [via [], ^Throwable t o]
+              (if t
+                (recur (conj via t) (.getCause t))
+                via))
+        ^Throwable root (peek via)
+        m {:cause (.getLocalizedMessage root)
+           :via (vec (map base via))
+           :trace (vec (.getStackTrace ^Throwable (or root o)))}
+        data (ex-data root)]
+    (if data
+      (assoc m :data data)
+      m)))
+
+(defn- print-throwable [^Throwable o ^Writer w]
+  (.write w "#error {\n :cause ")
+  (let [{:keys [cause data via trace]} (Throwable->map o)
+        print-via #(do (.write w "{:type ")
+                       (print-method (:type %) w)
+                       (.write w "\n   :message ")
+                       (print-method (:message %) w)
+                       (when-let [data (:data %)]
+                         (.write w "\n   :data ")
+                         (print-method data w))
+                       (.write w "\n   :at ")
+                       (print-method (:at %) w)
+                       (.write w "}"))]
+    (print-method cause w)
+    (when data
+      (.write w "\n :data ")
+      (print-method data w))
+    (when via
+      (.write w "\n :via\n [")
+      (when-let [fv (first via)]
+        (print-via fv)
+        (doseq [v (rest via)]
+          (.write w "\n  ")
+          (print-via v)))
+      (.write w "]"))
+    (when trace
+      (.write w "\n :trace\n [")
+      (when-let [ft (first trace)]
+        (print-method ft w)
+        (doseq [t (rest trace)]
+          (.write w "\n  ")
+          (print-method t w)))
+      (.write w "]")))
+  (.write w "}"))
+
+(defn- deref-as-map [^clojure.lang.IDeref o]
+  (let [pending (and (instance? clojure.lang.IPending o)
+                     (not (.isRealized ^clojure.lang.IPending o)))
+        [ex val]
+        (when-not pending
+          (try [false (deref o)]
+               (catch Throwable e
+                 [true e])))]
+    {:status
+     (cond
+       (or ex
+           (and (instance? clojure.lang.Agent o)
+                (agent-error o)))
+       :failed
+
+       pending
+       :pending
+
+       :else
+       :ready)
+
+     :val val}))
+
+(def primitives-classnames
+  {Float/TYPE "Float/TYPE"
+   Integer/TYPE "Integer/TYPE"
+   Long/TYPE "Long/TYPE"
+   Boolean/TYPE "Boolean/TYPE"
+   Character/TYPE "Character/TYPE"
+   Double/TYPE "Double/TYPE"
+   Byte/TYPE "Byte/TYPE"
+   Short/TYPE "Short/TYPE"})
+
+(defn init-printing []
 (defmethod print-method Object [o, ^Writer w]
   (print-object o w))
 
@@ -176,17 +299,6 @@
 
 (prefer-method print-dup clojure.lang.IPersistentCollection java.util.Collection)
 
-(def ^{:tag String 
-       :doc "Returns escape string for char or nil if none"
-       :added "1.0"}
-  char-escape-string
-    {\newline "\\n"
-     \tab  "\\t"
-     \return "\\r"
-     \" "\\\""
-     \\  "\\\\"
-     \formfeed "\\f"
-     \backspace "\\b"})
 
 (defmethod print-method String [^String s, ^Writer w]
   (if (or *print-dup* *print-readably*)
@@ -204,15 +316,6 @@
 (defmethod print-method clojure.lang.IPersistentVector [v, ^Writer w]
   (print-meta v w)
   (print-sequential "[" pr-on " " "]" v w))
-
-(defn- print-map [m print-one w]
-  (print-sequential 
-   "{"
-   (fn [e  ^Writer w]
-     (do (print-one (key e) w) (.append w \space) (print-one (val e) w)))
-   ", "
-   "}"
-   (seq m) w))
 
 (defmethod print-method clojure.lang.IPersistentMap [m, ^Writer w]
   (print-meta m w)
@@ -290,17 +393,6 @@
   (print-meta s w)
   (print-sequential "#{" pr-on " " "}" (seq s) w))
 
-(def ^{:tag String
-       :doc "Returns name string for char or nil if none"
-       :added "1.0"} 
- char-name-string
-   {\newline "newline"
-    \tab "tab"
-    \space "space"
-    \backspace "backspace"
-    \formfeed "formfeed"
-    \return "return"})
-
 (defmethod print-method java.lang.Character [^Character c, ^Writer w]
   (if (or *print-dup* *print-readably*)
     (do (.append w \\)
@@ -319,16 +411,6 @@
 (defmethod print-dup clojure.lang.PersistentHashSet [o w] (print-method o w))
 (defmethod print-dup clojure.lang.PersistentVector [o w] (print-method o w))
 (defmethod print-dup clojure.lang.LazilyPersistentVector [o w] (print-method o w))
-
-(def primitives-classnames
-  {Float/TYPE "Float/TYPE"
-   Integer/TYPE "Integer/TYPE"
-   Long/TYPE "Long/TYPE"
-   Boolean/TYPE "Boolean/TYPE"
-   Character/TYPE "Character/TYPE"
-   Double/TYPE "Double/TYPE"
-   Byte/TYPE "Byte/TYPE"
-   Short/TYPE "Short/TYPE"})
 
 (defmethod print-method Class [^Class c, ^Writer w]
   (.write w (.getName c)))
@@ -384,91 +466,11 @@
   (print-dup (.name n) w)
   (.write w ")"))
 
-(defn- deref-as-map [^clojure.lang.IDeref o]
-  (let [pending (and (instance? clojure.lang.IPending o)
-                     (not (.isRealized ^clojure.lang.IPending o)))
-        [ex val]
-        (when-not pending
-          (try [false (deref o)]
-               (catch Throwable e
-                 [true e])))]
-    {:status
-     (cond
-      (or ex
-          (and (instance? clojure.lang.Agent o)
-               (agent-error o)))
-      :failed
-
-      pending
-      :pending
-
-      :else
-      :ready)
-
-     :val val}))
-
 (defmethod print-method clojure.lang.IDeref [o ^Writer w]
   (print-tagged-object o (deref-as-map o) w))
 
 (defmethod print-method StackTraceElement [^StackTraceElement o ^Writer w]
   (print-method [(symbol (.getClassName o)) (symbol (.getMethodName o)) (.getFileName o) (.getLineNumber o)] w))
-
-(defn Throwable->map [^Throwable o]
-  (let [base (fn [^Throwable t]
-               (let [m {:type (class t)
-                        :message (.getLocalizedMessage t)
-                        :at (get (.getStackTrace t) 0)}
-                     data (ex-data t)]
-                 (if data
-                   (assoc m :data data)
-                   m)))
-        via (loop [via [], ^Throwable t o]
-              (if t
-                (recur (conj via t) (.getCause t))
-                via))
-        ^Throwable root (peek via)
-        m {:cause (.getLocalizedMessage root)
-           :via (vec (map base via))
-           :trace (vec (.getStackTrace ^Throwable (or root o)))}
-        data (ex-data root)]
-    (if data
-      (assoc m :data data)
-      m)))
-
-(defn- print-throwable [^Throwable o ^Writer w]
-  (.write w "#error {\n :cause ")
-  (let [{:keys [cause data via trace]} (Throwable->map o)
-        print-via #(do (.write w "{:type ")
-		               (print-method (:type %) w)
-					   (.write w "\n   :message ")
-					   (print-method (:message %) w)
-             (when-let [data (:data %)]
-               (.write w "\n   :data ")
-               (print-method data w))
-					   (.write w "\n   :at ")
-					   (print-method (:at %) w)
-					   (.write w "}"))]
-    (print-method cause w)
-    (when data
-      (.write w "\n :data ")
-      (print-method data w))
-    (when via
-      (.write w "\n :via\n [")
-      (when-let [fv (first via)]
-	    (print-via fv)
-        (doseq [v (rest via)]
-          (.write w "\n  ")
-		  (print-via v)))
-      (.write w "]"))
-    (when trace
-      (.write w "\n :trace\n [")
-      (when-let [ft (first trace)]
-        (print-method ft w)
-        (doseq [t (rest trace)]
-          (.write w "\n  ")
-          (print-method t w)))
-      (.write w "]")))
-  (.write w "}"))
 
 (defmethod print-method Throwable [^Throwable o ^Writer w]
   (print-throwable o w))
@@ -485,3 +487,4 @@
   (print-method (:form o) w))
 
 (def ^{:private true} print-initialized true)
+)

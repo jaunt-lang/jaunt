@@ -3541,10 +3541,14 @@
                            (if (keyword? t) t (class x)))))
 (defmulti print-dup (fn [x writer] (class x)))
 
+(declare init-printing)
+
 (defn pr-on
   {:private true
    :static true}
   [x w]
+  (when-not print-initialized
+    (init-printing))
   (if *print-dup*
     (print-dup x w)
     (print-method x w))
