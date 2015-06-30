@@ -37,6 +37,8 @@ static public String getNSClassname(Namespace ns) {
 
 static final public Var COMPILE_STUB_SYM = Var.create(null).setDynamic();
 static final public Var COMPILE_STUB_CLASS = Var.create(null).setDynamic();
+static final public Var COMPILE_FILES = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+                                                   Symbol.intern("*compile-files*"), Boolean.FALSE).setDynamic();
     
 static Symbol resolveSymbol(Symbol sym){
 	//already qualified or classname?
