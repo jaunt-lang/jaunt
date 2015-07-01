@@ -8,6 +8,6 @@ fi
 time for i in `seq $TIMES`
 do
     # java -cp packed.jar testskummet.hello
-    java -cp target/clojure-1.7.0-RC1-r3.jar:target-skummet testskummet.hello
+    java -cp target/clojure-1.7.0-RC1-r4.jar:target-skummet testskummet.hello
 done
 

@@ -245,7 +245,7 @@ final public Object deref(){
 	TBox b = getThreadBinding();
 	if(b != null)
 		return b.val;
-    if (!hasRoot() && !isDynamic()) {
+    if (!hasRoot() && !isDynamic() && !RT.ignoreLeanClasses) {
         Object leanValue = derefLean();
         if (leanValue != null)
             return leanValue;

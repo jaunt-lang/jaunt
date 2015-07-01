@@ -4,28 +4,28 @@ mvn package
 mkdir -p target-skummet
 rm -rf target-skummet/*
 
-java -cp target/clojure-1.7.0-RC1-r3-slim.jar:. clojure.main test.clj
-#java -cp target/clojure-1.7.0-RC1-r3-slim.jar:. -Dclojure.compiler.verbose-output=true clojure.main test.clj
-java -cp target/clojure-1.7.0-RC1-r3-slim.jar:target-skummet testskummet.bar 123456 example
+java -cp target/clojure-1.7.0-RC1-r4-slim.jar:. clojure.main test.clj
+#java -cp target/clojure-1.7.0-RC1-r4-slim.jar:. -Dclojure.compiler.verbose-output=true clojure.main test.clj
+java -cp target/clojure-1.7.0-RC1-r4-slim.jar:target-skummet testskummet.bar 123456 example
 
 # Pack Skummet
 rm -rf target/skummet
 mkdir -p target/skummet
 cp -r target-skummet/clojure target/skummet/
 cp -r target/classes/clojure/lang target/skummet/clojure/
-rm -rf target/skummet/clojure/lang/Compiler*
-cp -f precompiled/clojure/lang/* target/skummet/clojure/lang/
+# rm -rf target/skummet/clojure/lang/Compiler*
+# cp -f precompiled/clojure/lang/* target/skummet/clojure/lang/
 cp -r target/classes/clojure/asm target/skummet/clojure/
 cp -r target/classes/clojure/java/api/ target/skummet/clojure/java/
 cp -r src/clj/clojure target/skummet/
 cp target/classes/clojure/main.class target/skummet/clojure/
 cd target/skummet/
-rm -f ../clojure-1.7.0-RC1-r3.jar
-zip -rq ../clojure-1.7.0-RC1-r3.jar *
+rm -f ../clojure-1.7.0-RC1-r4.jar
+zip -rq ../clojure-1.7.0-RC1-r4.jar *
 cd ../..
 
 # Retry tests
-# rm -rf target-skummet/*
-# java -cp target/clojure-1.7.0-RC1-r3.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test2.clj
+rm -rf target-skummet/*
+java -cp target/clojure-1.7.0-RC1-r4.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test2.clj
 rm -rf target-skummet/clojure
-java -cp target/clojure-1.7.0-RC1-r3.jar:target-skummet testskummet.bar 123456 example
+java -cp target/clojure-1.7.0-RC1-r4.jar:target-skummet testskummet.bar 123456 example

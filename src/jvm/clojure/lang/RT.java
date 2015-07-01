@@ -242,6 +242,10 @@ final static IFn inNamespace = new AFn(){
 	}
 };
 
+// This flag should be set to true when Skummet is in "compilation" mode and
+// boostraps from Clojure files.
+static public boolean ignoreLeanClasses = false;
+
 final static IFn bootNamespace = new AFn(){
 	public Object invoke(Object __form, Object __env,Object arg1) {
 		Symbol nsname = (Symbol) arg1;
@@ -307,6 +311,8 @@ static{
 	MATH_CONTEXT.setTag(Symbol.intern("java.math.MathContext"));
 	Var nv = Var.intern(CLOJURE_NS, NAMESPACE, bootNamespace);
 	nv.setMacro();
+    String ignoreProp = System.getProperty("clojure.compile.ignore-lean-classes");
+    ignoreLeanClasses = (ignoreProp != null && ignoreProp.equals("true"));
 	Var v;
 	v = Var.intern(CLOJURE_NS, IN_NAMESPACE, inNamespace);
 	v = Var.intern(CLOJURE_NS, LOAD_FILE,
@@ -427,8 +433,7 @@ static public void load(String scriptbase, boolean failIfNotFound) throws IOExce
 				false, new DynamicClassLoader(baseLoader()));
 			possiblyLeanClass.getField("__LEAN_COMPILATION_FLAG__");
 			// If we get here, it means the class is lean-compiled.
-			if ((System.getProperty("clojure.compile.ignore-lean-classes") != null)
-				&& (cljURL != null)) {
+			if (ignoreLeanClasses && (cljURL != null)) {
 				// Evaluate source instead of loading lean-compiled classes.
 				loadResourceScript(scriptfile);
 				return;
