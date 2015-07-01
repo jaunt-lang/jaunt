@@ -274,6 +274,7 @@ static final public Var EMIT_LEAN_CODE = Var.create(false).setDynamic();
 static final public Var IS_ANALYZING_META = Var.create(false).setDynamic();
 static final public Var IS_DEFINING_LEAN_VAR = Var.create(false).setDynamic();
 static final public Var LEAN_VAR_BEING_DEFINED = Var.create(null).setDynamic();
+static final public Var FN_TYPE_MAP = Var.create(null).setDynamic();
 static final public Var IS_COMPILING_A_MACRO = Var.create(false).setDynamic();
 
 // Get handle of some Clojure vars that will be of use later.
@@ -690,6 +691,11 @@ static class DefExpr implements Expr{
 			try {
 				Var.pushThreadBindings(RT.map(IS_DEFINING_LEAN_VAR, leanCompile && isLeanVar(v),
 											  LEAN_VAR_BEING_DEFINED, v));
+
+				IPersistentMap locals = (IPersistentMap)LOCAL_ENV.deref();
+				if (locals != null && locals.count() > 0) {
+					v.setNotSingleton(true);
+				}
 
 				initExpr = analyze(context == C.EVAL ? context : C.EXPRESSION,
 								   isStatic ? ((IObj)initForm).withMeta(staticMetaMap) : initForm,
@@ -4058,15 +4064,22 @@ static public class FnExpr extends ObjExpr{
 		                  : (munge(currentNS().name.name))) + "$";
 
 		Symbol nm = null;
+		String varName;
 
 		if(RT.second(form) instanceof Symbol) {
 			nm = (Symbol) RT.second(form);
 			name = nm.name + "__" + RT.nextID();
+			varName = nm.name;
 		} else {
-			if(name == null)
+			if(name == null) {
 				name = "fn__" + RT.nextID();
-			else if (enclosingMethod != null)
-				name += "__" + RT.nextID();
+				varName = name;
+			} else {
+				varName = name;
+				if (enclosingMethod != null) {
+					name += "__" + RT.nextID();
+				}
+            }
 		}
 
 		String simpleName = munge(name).replace(".", "_DOT_");
@@ -4077,6 +4090,10 @@ static public class FnExpr extends ObjExpr{
 		ArrayList<String> prims = new ArrayList();
 		try
 			{
+				PersistentHashMap fnTypeMap = (PersistentHashMap)FN_TYPE_MAP.deref();
+				if (fnTypeMap == null)
+					fnTypeMap = PersistentHashMap.EMPTY;
+				varName = "#'" + currentNS().name.name + "/" + varName;
 			Var.pushThreadBindings(
 					RT.mapUniqueKeys(CONSTANTS, PersistentVector.EMPTY,
 					       CONSTANT_LEAN_FLAGS, PersistentVector.EMPTY,
@@ -4086,6 +4103,7 @@ static public class FnExpr extends ObjExpr{
 					       KEYWORD_CALLSITES, PersistentVector.EMPTY,
 					       PROTOCOL_CALLSITES, PersistentVector.EMPTY,
 					       VAR_CALLSITES, emptyVarCallSites(),
+						  FN_TYPE_MAP, RT.assoc(fnTypeMap, varName, fn.objtype),
                                                NO_RECUR, null
 					));
 
@@ -5271,8 +5289,6 @@ static public class ObjExpr implements Expr{
                 if (var.objtype == null || var.isNotSingleton()) {
                     String typeStr = getNSClassname(var.ns);
                     gen.getStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
-                } else if (var.objtype.equals(Type.getType(RecurExpr.class))) {
-                    gen.getStatic(this.objtype, "__instance", OBJECT_TYPE);
                 } else {
                     gen.getStatic(var.objtype, "__instance", OBJECT_TYPE);
                 }
@@ -7380,16 +7396,14 @@ static Var lookupVar(Symbol sym, boolean internNew, boolean register) {
 	//note - ns-qualified vars in other namespaces must already exist
 
 	Var topVar = (Var)LEAN_VAR_BEING_DEFINED.deref();
-	if ((topVar != null && topVar.sym.equals(sym))) {
+	if (topVar != null && topVar.sym.equals(sym) && currentNS().equals(topVar.ns)) {
 		var = topVar;
-		var.setNotSingleton(true);
-		// ObjMethod enclosingMethod = (ObjMethod) METHOD.deref();
-		// // if (enclosingMethod != null)
-		// // 	throw new RuntimeException("Foobar: " + topVar + " --- " + enclosingMethod.objx.name.toString());
-		// String basename = (enclosingMethod != null ? enclosingMethod.objx.name
-		// 	: (munge(currentNS().name.name)) + "$" + munge(sym.name).replace(".","/"));
-		// // String typeName = "L" + basename +  + ";";
-		// var.objtype = Type.getType("L" + basename.replace(".","/") + ";");
+		PersistentHashMap fnTypeMap = (PersistentHashMap)FN_TYPE_MAP.deref();
+		var.objtype = (Type)RT.get(fnTypeMap, var.toString());
+		if (var.objtype == null) {
+			throw new CompilerException((String) SOURCE_PATH.deref(), lineDeref(), columnDeref(),
+                                        new RuntimeException("Could not find type for recursive function: " + var));
+		}
 	} else
 	if(sym.ns != null)
 		{
