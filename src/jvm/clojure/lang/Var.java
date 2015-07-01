@@ -213,10 +213,43 @@ final public Object get(){
 	return deref();
 }
 
+final public Object derefLean() {
+    String nsName = Compiler.munge(this.ns.name.name);
+
+    // First try to find a singleton
+    try {
+        String varClassName = nsName + "$" + Compiler.munge(sym.name);
+        Object val = Class.forName(varClassName).getField("__instance").get(null);
+        System.out.println("WARNING: skummet resolved a lean singleton var " + this);
+        bindRoot(val);
+        // // Set macro flag from IFn to Var
+        // if (val instanceof IFn && ((IFn)val).isMacro()) {
+        //     this.setMacro();
+        // }
+        return val;
+    } catch (ReflectiveOperationException ex) { }
+
+    // Now try a non-singleton inside-namespace field
+    try {
+        String varFieldName = Compiler.munge(sym.name);
+        Object val = Class.forName(nsName + "__init").getField(varFieldName).get(null);
+        System.out.println("WARNING: skummet resolved a lean non-singleton var " + this);
+        bindRoot(val);
+        return val;
+    } catch (ReflectiveOperationException ex) { }
+
+    return null;
+}
+
 final public Object deref(){
 	TBox b = getThreadBinding();
 	if(b != null)
 		return b.val;
+    if (!hasRoot() && !isDynamic()) {
+        Object leanValue = derefLean();
+        if (leanValue != null)
+            return leanValue;
+    }
 	return root;
 }
 

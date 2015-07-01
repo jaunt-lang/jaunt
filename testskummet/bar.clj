@@ -132,6 +132,12 @@
     (assert (= *dynamic-var* 2) "dynamic vars don't work"))
   (assert (= *dynamic-var* 1)))
 
+(defn test-locating-lean-vars []
+  (let [v1 (clojure.lang.RT/var "testskummet.bar" "test-as-url")
+        v2 (clojure.lang.RT/var "testskummet.bar" "recursive-fn-with-closure")]
+    (assert (= (.invoke v1) true) "Locating lean singleton vars doesn't work")
+    (assert (= (.invoke v2 10) 52) "Locating lean non-singleton vars doesn't work")))
+
 (defn -main [& args]
   (assert (= (my-multi 10 20) 30) "Multimethods don't work")
   (assert (= testskummet.foo/just-value 42))
@@ -160,6 +166,7 @@
   (assert (test-as-url) "protocol functions don't get marked as non-lean")
   (test-spit-and-slurp)
   (test-dynamic-vars)
+  (test-locating-lean-vars)
 
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))
