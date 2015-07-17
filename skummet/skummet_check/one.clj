@@ -1,12 +1,11 @@
-(ns testskummet.bar
-  (:use [testskummet.foo :only [myfn]])
+(ns skummet-check.one
+  (:use [skummet-check.two :only [myfn]])
   (:require [clojure.java.io :as io])
   ;; (:require clojure.pprint)
   ;; (:require [hiccup.core :refer [html]]
   ;;           hiccup.util
   ;;           ;; [clojure.core.async :as a]
   ;;           )
-  ;; (:require testskummet.classify)
   (:import
    (java.io Reader InputStream InputStreamReader PushbackReader
             BufferedReader File OutputStream
@@ -82,8 +81,8 @@
   (transduce (comp (filter odd?) (map inc)) + (range 5)))
 
 (defn test-alter-var-root []
-  (alter-var-root #'testskummet.foo/just-value + 100)
-  testskummet.foo/just-value)
+  (alter-var-root #'skummet-check.two/just-value + 100)
+  skummet-check.two/just-value)
 
 (defn recursive [i]
   (if (= i 0)
@@ -133,14 +132,16 @@
   (assert (= *dynamic-var* 1)))
 
 (defn test-locating-lean-vars []
-  (let [v1 (clojure.lang.RT/var "testskummet.bar" "test-as-url")
-        v2 (clojure.lang.RT/var "testskummet.bar" "recursive-fn-with-closure")]
+  (let [v1 (clojure.lang.RT/var "skummet-check.one" "test-as-url")
+        v2 (clojure.lang.RT/var "skummet-check.one" "recursive-fn-with-closure")]
     (assert (= (.invoke v1) true) "Locating lean singleton vars doesn't work")
     (assert (= (.invoke v2 10) 52) "Locating lean non-singleton vars doesn't work")))
 
+(gen-class :name TestClass)
+
 (defn -main [& args]
   (assert (= (my-multi 10 20) 30) "Multimethods don't work")
-  (assert (= testskummet.foo/just-value 42))
+  (assert (= skummet-check.two/just-value 42))
   (assert (= (test-alter-var-root) 142) "alter-var-root doesn't work")
   (assert (= inside-var 40) "Internal vars don't work")
   (assert (= (fun-inside-let 42) 342) "defn inside let don't work")

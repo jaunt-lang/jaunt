@@ -1,4 +1,4 @@
-(ns testskummet.hello
+(ns skummet-check.hello
   (:gen-class
    :overrides-methods ()))
 

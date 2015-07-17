@@ -1,4 +1,7 @@
 #!/bin/bash
+ARTIFACT=clojure
+VERSION=1.7.0-RC1-r4
+
 if [ $1 ] ; then
     TIMES=$1
 else
@@ -8,6 +11,6 @@ fi
 time for i in `seq $TIMES`
 do
     # java -cp packed.jar testskummet.hello
-    java -cp target/clojure-1.7.0-RC1-r4.jar:target-skummet testskummet.hello
+    java -cp package/$ARTIFACT-$VERSION.jar:target testskummet.hello
 done
 

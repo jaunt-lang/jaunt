@@ -1,4 +1,4 @@
-(ns testskummet.foo)
+(ns skummet-check.two)
 
 (def just-value 42)
 

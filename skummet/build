@@ -1,0 +1,36 @@
+#!/bin/bash -e
+ARTIFACT=clojure
+VERSION=1.7.0-RC1-r4
+
+# Build simple Clojure jars first
+(cd ../; mvn clean)
+(cd ../; mvn package)
+mkdir -p target
+rm -rf target/*
+
+# Build Skummet classes
+java -cp ../target/$ARTIFACT-$VERSION-slim.jar:. clojure.main build-skummet.clj
+#java -cp target/clojure-1.7.0-RC1-r4-slim.jar:. -Dclojure.compiler.verbose-output=true clojure.main test.clj
+java -cp ../target/$ARTIFACT-$VERSION-slim.jar:target skummet_check.one 123456 example
+
+# Package Skummet
+rm -rf package
+mkdir -p package
+cp -r target/clojure package/
+cp -r ../target/classes/clojure/lang/ package/clojure
+# rm -rf target/skummet/clojure/lang/Compiler*
+# cp -f precompiled/clojure/lang/* target/skummet/clojure/lang/
+cp -r ../target/classes/clojure/asm package/clojure/
+cp -r ../target/classes/clojure/java/api/ package/clojure/java/
+cp -r ../src/clj/clojure package/
+cp ../target/classes/clojure/main.class package/clojure/
+cd package
+rm -f $ARTIFACT-$VERSION.jar
+zip -rq $ARTIFACT-$VERSION.jar *
+cd ..
+
+# Retry tests
+rm -rf target/*
+java -cp package/$ARTIFACT-$VERSION.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test-skummet.clj
+rm -rf target/clojure
+java -cp package/$ARTIFACT-$VERSION.jar:target skummet_check.one 123456 example
