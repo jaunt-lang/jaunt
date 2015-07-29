@@ -578,30 +578,31 @@ static class DefExpr implements Expr{
                 }
 				}
 			}
-		if(initProvided)
-			{
-				if (emitLeanCode && isLeanVar(var))
-					{
-						if (var.isNotSingleton() || !(init instanceof FnExpr && (((FnExpr)init).closes().count() == 0))) {
-							init.emit(C.EXPRESSION, objx, gen);
-							String typeStr = getNSClassname(currentNS());
-							gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
-						}
-                        // gen.getStatic(Type.getType(java.lang.System.class), "out", Type.getType(java.io.PrintStream.class));
-                        // gen.push("Initialized: " + var);
-                        // gen.invokeVirtual(Type.getType(java.io.PrintStream.class), Method.getMethod("void println(String)"));
-					} else {
-			gen.dup();
-			if(init instanceof FnExpr)
-				{
-				((FnExpr)init).emitForDefn(objx, gen);
-				}
-			else
+		if(initProvided) {
+		    try {
+			Var.pushThreadBindings(RT.map(STRICT_TAGS, isStrict));
+			if (emitLeanCode && isLeanVar(var)) {
+			    if (var.isNotSingleton() || !(init instanceof FnExpr && (((FnExpr)init).closes().count() == 0))) {
 				init.emit(C.EXPRESSION, objx, gen);
-			gen.invokeVirtual(VAR_TYPE, bindRootMethod);
-				}
+				String typeStr = getNSClassname(currentNS());
+				gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+			    }
+			    // gen.getStatic(Type.getType(java.lang.System.class), "out", Type.getType(java.io.PrintStream.class));
+			    // gen.push("Initialized: " + var);
+			    // gen.invokeVirtual(Type.getType(java.io.PrintStream.class), Method.getMethod("void println(String)"));
+			} else {
+			    gen.dup();
+			    if(init instanceof FnExpr) {
+				((FnExpr)init).emitForDefn(objx, gen);
+			    } else {
+				init.emit(C.EXPRESSION, objx, gen);
+			    }
+			    gen.invokeVirtual(VAR_TYPE, bindRootMethod);
 			}
-
+		    } finally {
+			Var.popThreadBindings();
+		    }
+		}
 		// if(context == C.STATEMENT)
 		// 	gen.pop();
 	}
