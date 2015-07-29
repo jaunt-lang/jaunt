@@ -421,9 +421,11 @@ interface Expr{
 
 	Class getJavaClass() ;
 
+  // akm
   boolean isActuallyTagged();
 }
 
+  // akm remove casts when unnecessary
 public static abstract class UntypedExpr implements Expr{
 
 	public Class getJavaClass(){
@@ -6517,6 +6519,8 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 			else
 				{
 				bi.init.emit(C.EXPRESSION, objx, gen);
+                                // akm if it was inferred, don't emit a checkcast
+                                // akm if it was tagged manually, emit it
 				gen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ISTORE), bi.binding.idx);
 				}
 			bindingLabels.put(bi, gen.mark());
@@ -6557,6 +6561,7 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 				gen.visitLocalVariable(lname, Type.getDescriptor(primc), null, bindingLabels.get(bi), end,
 				                       bi.binding.idx);
 			else
+                          // akm if this local should be strict, emit a real type instead
 				gen.visitLocalVariable(lname, "Ljava/lang/Object;", null, bindingLabels.get(bi), end, bi.binding.idx);
 			}
 	}
