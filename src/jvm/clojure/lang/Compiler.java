@@ -279,7 +279,7 @@ static final public Var FN_TYPE_MAP = Var.create(null).setDynamic();
 static final public Var IS_COMPILING_A_MACRO = Var.create(false).setDynamic();
 
 // Set if and only if a wrapping DefExpr is tagged with {:strict true} 
-static final public var STRICT_TAGS = Var.create(false).setDynamic();
+static final public Var STRICT_TAGS = Var.create(false).setDynamic();
     
 // Get handle of some Clojure vars that will be of use later.
 static final public Var ALTER_VAR_ROOT = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
