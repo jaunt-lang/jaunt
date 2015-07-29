@@ -422,7 +422,7 @@ interface Expr{
 	Class getJavaClass() ;
 
   // akm
-  boolean isTypeHinted();
+  boolean needsCast();
 }
 
   // akm remove casts when unnecessary
@@ -435,6 +435,10 @@ public static abstract class UntypedExpr implements Expr{
 	public boolean hasJavaClass(){
 		return false;
 	}
+
+  public boolean needsCast(){
+    return false;
+  }
 }
 
 interface IParser{
@@ -619,6 +623,10 @@ static class DefExpr implements Expr{
 		return Var.class;
 	}
 
+  public boolean needsCast(){
+    return false;
+  }
+
 	static class Parser implements IParser{
 		public Expr parse(C context, Object form) {
 			//(def x) or (def x initexpr) or (def x "docstring" initexpr)
@@ -750,6 +758,10 @@ public static class AssignExpr implements Expr{
 		return val.getJavaClass();
 	}
 
+  public boolean needsCast() {
+    return true;
+  }
+
 	static class Parser implements IParser{
 		public Expr parse(C context, Object frm) {
 			ISeq form = (ISeq) frm;
@@ -798,6 +810,10 @@ public static class VarExpr implements Expr, AssignableExpr{
 		return HostExpr.tagToClass(tag);
 	}
 
+  public boolean needsCast() {
+    return true;
+  }
+
 	public Object evalAssign(Expr val) {
 		return var.set(val.eval());
 	}
@@ -836,6 +852,10 @@ public static class TheVarExpr implements Expr{
 	public Class getJavaClass() {
 		return Var.class;
 	}
+
+  public boolean needsCast() {
+    return false;
+  }
 
 	static class Parser implements IParser{
 		public Expr parse(C context, Object form) {
