@@ -91,6 +91,7 @@ static final String COMPILE_STUB_PREFIX = "compile__stub";
 static final Keyword protocolKey = Keyword.intern(null, "protocol");
 static final Keyword onKey = Keyword.intern(null, "on");
 static Keyword dynamicKey = Keyword.intern("dynamic");
+static Keyword strictKey = Keyword.intern("strict"); 
 
 static final Symbol NS = Symbol.intern("ns");
 static final Symbol IN_NS = Symbol.intern("in-ns");
@@ -472,6 +473,7 @@ static class DefExpr implements Expr{
 	public final Expr meta;
 	public final boolean initProvided;
 	public final boolean isDynamic;
+        public final boolean isStrict;
 	public final boolean shadowsCoreMapping;
 	public final String source;
 	public final int line;
@@ -483,7 +485,7 @@ static class DefExpr implements Expr{
 	final static Method symintern = Method.getMethod("clojure.lang.Symbol intern(String, String)");
 	final static Method internVar = Method.getMethod("clojure.lang.Var refer(clojure.lang.Symbol, clojure.lang.Var)");
 
-	public DefExpr(String source, int line, int column, Var var, Expr init, Expr meta, boolean initProvided, boolean isDynamic, boolean shadowsCoreMapping){
+	public DefExpr(String source, int line, int column, Var var, Expr init, Expr meta, boolean initProvided, boolean isDynamic, boolean shadowsCoreMapping, boolean isStrict){
 		this.source = source;
 		this.line = line;
 		this.column = column;
@@ -491,6 +493,7 @@ static class DefExpr implements Expr{
 		this.init = init;
 		this.meta = meta;
 		this.isDynamic = isDynamic;
+		this.isStrict = isStrict;
 		this.shadowsCoreMapping = shadowsCoreMapping;
 		this.initProvided = initProvided;
 	}
@@ -576,30 +579,31 @@ static class DefExpr implements Expr{
                 }
 				}
 			}
-		if(initProvided)
-			{
-				if (emitLeanCode && isLeanVar(var))
-					{
-						if (var.isNotSingleton() || !(init instanceof FnExpr && (((FnExpr)init).closes().count() == 0))) {
-							init.emit(C.EXPRESSION, objx, gen);
-							String typeStr = getNSClassname(currentNS());
-							gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
-						}
-                        // gen.getStatic(Type.getType(java.lang.System.class), "out", Type.getType(java.io.PrintStream.class));
-                        // gen.push("Initialized: " + var);
-                        // gen.invokeVirtual(Type.getType(java.io.PrintStream.class), Method.getMethod("void println(String)"));
-					} else {
-			gen.dup();
-			if(init instanceof FnExpr)
-				{
-				((FnExpr)init).emitForDefn(objx, gen);
-				}
-			else
+		if(initProvided) {
+		    try {
+			Var.pushThreadBindings(RT.map(STRICT_TAGS, isStrict));
+			if (emitLeanCode && isLeanVar(var)) {
+			    if (var.isNotSingleton() || !(init instanceof FnExpr && (((FnExpr)init).closes().count() == 0))) {
 				init.emit(C.EXPRESSION, objx, gen);
-			gen.invokeVirtual(VAR_TYPE, bindRootMethod);
-				}
+				String typeStr = getNSClassname(currentNS());
+				gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+			    }
+			    // gen.getStatic(Type.getType(java.lang.System.class), "out", Type.getType(java.io.PrintStream.class));
+			    // gen.push("Initialized: " + var);
+			    // gen.invokeVirtual(Type.getType(java.io.PrintStream.class), Method.getMethod("void println(String)"));
+			} else {
+			    gen.dup();
+			    if(init instanceof FnExpr) {
+				((FnExpr)init).emitForDefn(objx, gen);
+			    } else {
+				init.emit(C.EXPRESSION, objx, gen);
+			    }
+			    gen.invokeVirtual(VAR_TYPE, bindRootMethod);
 			}
-
+		    } finally {
+			Var.popThreadBindings();
+		    }
+		}
 		// if(context == C.STATEMENT)
 		// 	gen.pop();
 	}
@@ -645,6 +649,7 @@ static class DefExpr implements Expr{
 				else
 					throw Util.runtimeException("Can't create defs outside of current ns");
 				}
+			boolean isStrict = RT.booleanCast(RT.get(mm,strictKey));
 			boolean isDynamic = RT.booleanCast(RT.get(mm,dynamicKey));
 			if(isDynamic)
 			   v.setDynamic();
@@ -712,7 +717,7 @@ static class DefExpr implements Expr{
 				Var.popThreadBindings();
 			}
 			return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
-				v, initExpr, meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
+				v, initExpr, meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping, isStrict);
 		}
 	}
 }
