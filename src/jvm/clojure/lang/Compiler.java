@@ -1687,7 +1687,8 @@ static class InstanceMethodExpr extends MethodExpr{
 			Type type = Type.getType(method.getDeclaringClass());
 			target.emit(C.EXPRESSION, objx, gen);
 			//if(!method.getDeclaringClass().isInterface())
-			gen.checkCast(type);
+			if(target.tag != null || !RT.booleanCast(STRICT_TAGS.deref()))
+					gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
 			gen.visitLineNumber(line, gen.mark());
 			if(context == C.RETURN)
@@ -1711,7 +1712,8 @@ static class InstanceMethodExpr extends MethodExpr{
 			Type type = Type.getType(method.getDeclaringClass());
 			target.emit(C.EXPRESSION, objx, gen);
 			//if(!method.getDeclaringClass().isInterface())
-			gen.checkCast(type);
+			if(target.tag != null || !RT.booleanCast(STRICT_TAGS.deref()))
+				gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
 			gen.visitLineNumber(line, gen.mark());
 			if(context == C.RETURN)
