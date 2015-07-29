@@ -422,7 +422,7 @@ interface Expr{
 	Class getJavaClass() ;
 
   // akm
-  boolean isActuallyTagged();
+  boolean isTypeHinted();
 }
 
   // akm remove casts when unnecessary
