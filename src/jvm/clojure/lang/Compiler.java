@@ -270,6 +270,10 @@ static final public Var LEAN_VAR_PRED = Var.intern(Namespace.findOrCreate(Symbol
 final static Var LEAN_COMPILE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                            Symbol.intern("*lean-compile*"), null).setDynamic();
 
+// Set if and only if a wrapping DefExpr is tagged with {:strict true}
+static final public Var STRICT_TAGS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+																								 Symbol.intern("*strict-tags*"), null).setDynamic();
+
 static final public Var EMIT_LEAN_CODE = Var.create(false).setDynamic();
 static final public Var IS_ANALYZING_META = Var.create(false).setDynamic();
 static final public Var IS_DEFINING_LEAN_VAR = Var.create(false).setDynamic();
@@ -7580,6 +7584,7 @@ public static Object load(Reader rdr, String sourcePath, String sourceName) {
 			       COLUMN_AFTER, pushbackReader.getColumnNumber()
 			       ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()
 					,RT.WARN_ON_REFLECTION, RT.WARN_ON_REFLECTION.deref()
+							,STRICT_TAGS, false
 			       ,RT.DATA_READERS, RT.DATA_READERS.deref()
                         ));
 
