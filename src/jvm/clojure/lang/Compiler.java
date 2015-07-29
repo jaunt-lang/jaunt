@@ -20,6 +20,7 @@ import clojure.asm.commons.Method;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -402,7 +403,11 @@ static final public Var CLEAR_ROOT = Var.create(null).setDynamic();
 //LocalBinding -> Set<LocalBindingExpr>
 static final public Var CLEAR_SITES = Var.create(null).setDynamic();
 
-    public enum C{
+	private static boolean compatibleType(Symbol tag, Class c) {
+		return tag == null || HostExpr.tagToClass(tag).isAssignableFrom(c);
+	}
+
+	public enum C{
 	STATEMENT,  //value ignored
 	EXPRESSION, //value required
 	RETURN,      //tail position relative to enclosing recur frame
@@ -897,6 +902,10 @@ public static class KeywordExpr extends LiteralExpr{
 	public Class getJavaClass() {
 		return Keyword.class;
 	}
+
+  public boolean needsCast() {
+    return false;
+  }
 }
 
 public static class ImportExpr implements Expr{
@@ -937,6 +946,10 @@ public static class ImportExpr implements Expr{
 	public Class getJavaClass() {
 		throw new IllegalArgumentException("ImportExpr has no Java class");
 	}
+
+  public boolean needsCast(){
+    return false;
+  }
 
 	static class Parser implements IParser{
 		public Expr parse(C context, Object form) {
@@ -1382,6 +1395,8 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 		return tag != null ? HostExpr.tagToClass(tag) : field.getType();
 	}
 
+	public boolean needsCast() {return !compatibleType(tag, field.getType());}
+
 	public Object evalAssign(Expr val) {
 		return Reflector.setInstanceField(target.eval(), fieldName, val.eval());
 	}
@@ -1476,6 +1491,10 @@ static class StaticFieldExpr extends FieldExpr implements AssignableExpr{
 		//Class c = Class.forName(className);
 		//java.lang.reflect.Field field = c.getField(fieldName);
 		return tag != null ? HostExpr.tagToClass(tag) : field.getType();
+	}
+
+	public boolean needsCast() {
+		return !compatibleType(tag, field.getType());
 	}
 
 	public Object evalAssign(Expr val) {
@@ -1776,6 +1795,10 @@ static class InstanceMethodExpr extends MethodExpr{
 
 	public Class getJavaClass() {
 		return tag != null ? HostExpr.tagToClass(tag) : method.getReturnType();
+	}
+
+	public boolean needsCast() {
+		return !compatibleTypes(tag, method.getReturnType());
 	}
 }
 
