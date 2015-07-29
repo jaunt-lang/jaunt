@@ -420,6 +420,8 @@ interface Expr{
 	boolean hasJavaClass() ;
 
 	Class getJavaClass() ;
+
+  boolean isActuallyTagged();
 }
 
 public static abstract class UntypedExpr implements Expr{
