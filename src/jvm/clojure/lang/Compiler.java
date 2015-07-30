@@ -6744,7 +6744,10 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 				String localClass;
 				final Symbol tag = bi.binding.tag;
 				if (strictMode() && tag != null) {
-					localClass = "L" + Type.getType(HostExpr.tagToClass(tag)).getInternalName() + ";";
+					final Class c = HostExpr.tagToClass(tag);
+					localClass = Type.getType(c).getInternalName();
+					if (!c.isArray())
+						localClass = "L" + localClass + ";";
 				}
 				else
 					localClass = "Ljava/lang/Object;";
