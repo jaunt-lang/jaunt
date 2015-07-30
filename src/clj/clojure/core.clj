@@ -45,6 +45,50 @@
  fn (fn* fn [&form &env & decl] 
          (.withMeta ^clojure.lang.IObj (cons 'fn* decl) 
                     (.meta ^clojure.lang.IMeta &form))))
+(def
+  ^{:private true
+    :static  true
+    :tag     'boolean
+    :strict  true}
+  >1?
+  (fn [n]
+    (clojure.lang.Numbers/gt n 1)))
+
+(def
+  ^{:private true
+    :static  true
+    :tag     'boolean
+    :strict  true}
+  >0?
+  (fn [n]
+    (clojure.lang.Numbers/gt n 0)))
+
+(def
+  ^{:private true
+    :static  true
+    :tag     'boolean
+    :strict  true}
+  =0?
+  (fn [n]
+    (clojure.lang.Numbers/equiv n 0)))
+
+(def
+  ^{:private true
+    :static  true
+    :tag     'boolean
+    :strict  true}
+  =1?
+  (fn [n]
+    (clojure.lang.Numbers/equiv n 1)))
+
+(def
+  ^{:private true
+    :static  true
+    :tag     'boolean
+    :strict  true}
+  =2?
+  (fn [n]
+    (clojure.lang.Numbers/equiv n 2)))
 
 (def
  ^{:arglists '([coll])
@@ -929,8 +973,6 @@
              (fn [a b] `(. clojure.lang.Numbers (~op ~a ~b)))
              `(. clojure.lang.Numbers (~op ~x ~y)) more))))))
 
-(defn ^:private >1? [n] (clojure.lang.Numbers/gt n 1))
-(defn ^:private >0? [n] (clojure.lang.Numbers/gt n 0))
 
 (defn +'
   "Returns the sum of nums. (+) returns 0. Supports arbitrary precision.
