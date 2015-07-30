@@ -6611,7 +6611,10 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 	                                       NO_RECUR, null));
 
 								}
-							LocalBinding lb = registerLocal(sym, tagOf(sym), init,false);
+								Symbol tag = tagOf(sym);
+								if (strictMode() && tag == null && init.hasJavaClass() && !init.getJavaClass().isPrimitive())
+									tag = Symbol.intern(init.getJavaClass().getName());
+								LocalBinding lb = registerLocal(sym, tag, init,false);
 							BindingInit bi = new BindingInit(lb, init);
 							bindingInits = bindingInits.cons(bi);
 							if(isLoop)
