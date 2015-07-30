@@ -1572,18 +1572,19 @@ static abstract class MethodExpr extends HostExpr{
 			try
 				{
 				final Class primc = maybePrimitiveType(e);
-				if(primc == parameterTypes[i])
+					final Class parameterType = parameterTypes[i];
+					if(primc == parameterType)
 					{
 					final MaybePrimitiveExpr pe = (MaybePrimitiveExpr) e;
 					pe.emitUnboxed(C.EXPRESSION, objx, gen);
 					}
-				else if(primc == int.class && parameterTypes[i] == long.class)
+				else if(primc == int.class && parameterType == long.class)
 					{
 					final MaybePrimitiveExpr pe = (MaybePrimitiveExpr) e;
 					pe.emitUnboxed(C.EXPRESSION, objx, gen);
 					gen.visitInsn(I2L);
 					}
-				else if(primc == long.class && parameterTypes[i] == int.class)
+				else if(primc == long.class && parameterType == int.class)
 					{
 					final MaybePrimitiveExpr pe = (MaybePrimitiveExpr) e;
 					pe.emitUnboxed(C.EXPRESSION, objx, gen);
@@ -1592,13 +1593,13 @@ static abstract class MethodExpr extends HostExpr{
 					else
 						gen.invokeStatic(RT_TYPE, Method.getMethod("int intCast(long)"));
 					}
-				else if(primc == float.class && parameterTypes[i] == double.class)
+				else if(primc == float.class && parameterType == double.class)
 					{
 					final MaybePrimitiveExpr pe = (MaybePrimitiveExpr) e;
 					pe.emitUnboxed(C.EXPRESSION, objx, gen);
 					gen.visitInsn(F2D);
 					}
-				else if(primc == double.class && parameterTypes[i] == float.class)
+				else if(primc == double.class && parameterType == float.class)
 					{
 					final MaybePrimitiveExpr pe = (MaybePrimitiveExpr) e;
 					pe.emitUnboxed(C.EXPRESSION, objx, gen);
@@ -1607,8 +1608,8 @@ static abstract class MethodExpr extends HostExpr{
 				else
 					{
 					e.emit(C.EXPRESSION, objx, gen);
-					if (!strictMode() || parameterTypes[i].isPrimitive() || e.needsCast())
-						HostExpr.emitUnboxArg(objx, gen, parameterTypes[i]);
+					if (!strictMode() || parameterType.isPrimitive() || e.needsCast() || !compatibleType(parameterType, e.hasJavaClass() ? e.getJavaClass() : Object.class))
+						HostExpr.emitUnboxArg(objx, gen, parameterType);
 					}
 				}
 			catch(Exception e1)
@@ -4068,11 +4069,7 @@ static class InvokeExpr implements Expr{
 	}
 
     public boolean needsCast() {
-			if (this.fexpr instanceof VarExpr && ((VarExpr)this.fexpr).var.sym.equals(Symbol.intern("as-buffer")))
-			{
-				System.out.println("compiling as-buffer, tag=" + tag);
-			}
-	return compatibleType(tag, Object.class);
+			return !compatibleType(tag, Object.class);
     }
 
 	static public Expr parse(C context, ISeq form) {
