@@ -20,7 +20,6 @@ import clojure.asm.commons.Method;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -405,6 +404,13 @@ static final public Var CLEAR_SITES = Var.create(null).setDynamic();
 
 	private static boolean compatibleType(Object tag, Class c) {
 		return tag == null || HostExpr.tagToClass(tag).isAssignableFrom(c);
+	}
+
+	private static void maybeCastTo(ObjExpr objx, GeneratorAdapter gen, Expr e, Class<?> type) {
+		if (!strictMode() || type.isPrimitive() || e.needsCast() || !compatibleType(type, e.hasJavaClass() ? e.getJavaClass() : Object.class))
+    {
+      HostExpr.emitUnboxArg(objx, gen, type);
+    }
 	}
 
 	public enum C{
@@ -1408,12 +1414,14 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 		if(targetClass != null && field != null)
 			{
 			target.emit(C.EXPRESSION, objx, gen);
-			gen.checkCast(Type.getType(targetClass));
+			if (!strictMode() || target.needsCast())
+				gen.checkCast(Type.getType(targetClass));
 			val.emit(C.EXPRESSION, objx, gen);
 			gen.visitLineNumber(line, gen.mark());
 			gen.dupX1();
-			HostExpr.emitUnboxArg(objx, gen, field.getType());
-			gen.putField(Type.getType(targetClass), fieldName, Type.getType(field.getType()));
+			final Class<?> fieldType = field.getType();
+				maybeCastTo(objx, gen, val, fieldType);
+				gen.putField(Type.getType(targetClass), fieldName, Type.getType(fieldType));
 			}
 		else
 			{
@@ -1426,6 +1434,7 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 		if(context == C.STATEMENT)
 			gen.pop();
 	}
+
 }
 
 static class StaticFieldExpr extends FieldExpr implements AssignableExpr{
@@ -1608,8 +1617,7 @@ static abstract class MethodExpr extends HostExpr{
 				else
 					{
 					e.emit(C.EXPRESSION, objx, gen);
-					if (!strictMode() || parameterType.isPrimitive() || e.needsCast() || !compatibleType(parameterType, e.hasJavaClass() ? e.getJavaClass() : Object.class))
-						HostExpr.emitUnboxArg(objx, gen, parameterType);
+					maybeCastTo(objx, gen, e, parameterType);
 					}
 				}
 			catch(Exception e1)
