@@ -1978,10 +1978,21 @@ static class InstanceMethodExpr extends MethodExpr{
 				ObjMethod method = (ObjMethod) METHOD.deref();
 				method.emitClearLocals(gen);
 				}
-			Type type = Type.getType(c);
-			Method m = new Method(methodName, Type.getReturnType(method), Type.getArgumentTypes(method));
-			gen.invokeStatic(type, m);
-			//if(context != C.STATEMENT || method.getReturnType() == Void.TYPE)
+				Object ops = RT.get(Intrinsics.ops, method.toString());
+				if(ops != null)
+				{
+					if(ops instanceof Object[])
+					{
+						for(Object op : (Object[])ops)
+							gen.visitInsn((Integer) op);
+					}
+					else
+						gen.visitInsn((Integer) ops);
+				} else {
+					Type type = Type.getType(c);
+					Method m = new Method(methodName, Type.getReturnType(method), Type.getArgumentTypes(method));
+					gen.invokeStatic(type, m);
+				}
 			Class retClass = method.getReturnType();
 			if(context == C.STATEMENT)
 				{
