@@ -715,7 +715,8 @@ static class DefExpr implements Expr{
 			}
 			try {
 				Var.pushThreadBindings(RT.map(IS_DEFINING_LEAN_VAR, leanCompile && isLeanVar(v),
-											  LEAN_VAR_BEING_DEFINED, v));
+											  LEAN_VAR_BEING_DEFINED, v,
+								STRICT_TAGS, isStrict));
 
 				IPersistentMap locals = (IPersistentMap)LOCAL_ENV.deref();
 				if (locals != null && locals.count() > 0) {
@@ -1730,7 +1731,7 @@ static class InstanceMethodExpr extends MethodExpr{
 			Type type = Type.getType(method.getDeclaringClass());
 			target.emit(C.EXPRESSION, objx, gen);
 			//if(!method.getDeclaringClass().isInterface())
-			if(target.tag != null || !RT.booleanCast(STRICT_TAGS.deref()))
+			if(!RT.booleanCast(STRICT_TAGS.deref()) || target.needsCast())
 					gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
 			gen.visitLineNumber(line, gen.mark());
@@ -1755,7 +1756,7 @@ static class InstanceMethodExpr extends MethodExpr{
 			Type type = Type.getType(method.getDeclaringClass());
 			target.emit(C.EXPRESSION, objx, gen);
 			//if(!method.getDeclaringClass().isInterface())
-			if(target.tag != null || !RT.booleanCast(STRICT_TAGS.deref()))
+			if(!RT.booleanCast(STRICT_TAGS.deref()) || target.needsCast())
 				gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
 			gen.visitLineNumber(line, gen.mark());
@@ -2918,7 +2919,7 @@ public static class MetaExpr implements Expr{
 	}
 
     public boolean needsCast() {
-	return expr.needsCast() || expr.hasJavaClass() && !compatibleType(expr.getJavaClass(), IOBJ_TYPE); 
+	return expr.needsCast() || expr.hasJavaClass() && !expr.getJavaClass().isAssignableFrom(IObj.class);
     }
 }
 
@@ -4061,7 +4062,7 @@ static class InvokeExpr implements Expr{
 	}
 
     public boolean needsCast() {
-	return compatibleType(tag, Object.class);
+	return compatibleType((Symbol)tag, Object.class);
     }
 
 	static public Expr parse(C context, ISeq form) {
@@ -5315,7 +5316,7 @@ static public class ObjExpr implements Expr{
 
     public boolean needsCast() {
 	return (compiledClass != null) ? true
-			: (tag != null) ? compatibleType(tag, this.getJavaClass())
+			: (tag != null) ? compatibleType((Symbol)tag, this.getJavaClass())
 			: false;
     }
 
@@ -6664,8 +6665,13 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 			else
 				{
 				bi.init.emit(C.EXPRESSION, objx, gen);
-                                // akm if it was inferred, don't emit a checkcast
-                                // akm if it was tagged manually, emit it
+					final Symbol tag = bi.binding.tag;
+					final boolean strict = RT.booleanCast(STRICT_TAGS.deref()) && tag != null;
+					if (strict) {
+						if (bi.init.needsCast() || !bi.init.hasJavaClass() || !compatibleType(tag, bi.init.getJavaClass())) {
+							gen.checkCast(getType(HostExpr.tagToClass(tag)));
+						}
+					}
 				gen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ISTORE), bi.binding.idx);
 				}
 			bindingLabels.put(bi, gen.mark());
@@ -6706,8 +6712,16 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 				gen.visitLocalVariable(lname, Type.getDescriptor(primc), null, bindingLabels.get(bi), end,
 				                       bi.binding.idx);
 			else
-                          // akm if this local should be strict, emit a real type instead
-				gen.visitLocalVariable(lname, "Ljava/lang/Object;", null, bindingLabels.get(bi), end, bi.binding.idx);
+			{
+				String localClass;
+				final Symbol tag = bi.binding.tag;
+				if (RT.booleanCast(STRICT_TAGS.deref()) && tag != null) {
+					localClass = "L" + Type.getType(HostExpr.tagToClass(tag)).getInternalName() + ";";
+				}
+				else
+					localClass = "Ljava/lang/Object;";
+				gen.visitLocalVariable(lname, localClass, null, bindingLabels.get(bi), end, bi.binding.idx);
+			}
 			}
 	}
 
@@ -8965,7 +8979,7 @@ static public class MethodParamExpr implements Expr, MaybePrimitiveExpr{
 	}
 
     public boolean needsCast() {
-	return !Util.isPrimitive(c) && c != Object.TYPE;
+	return !Util.isPrimitive(c) && c != Object.class;
     }
 
 	public boolean canEmitPrimitive(){
@@ -9045,7 +9059,7 @@ public static class CaseExpr implements Expr, MaybePrimitiveExpr{
 	}
 
     public boolean needsCast() {
-	return returnType != Object.TYPE;
+	return returnType != Object.class;
     }
 
 	public Object eval() {
