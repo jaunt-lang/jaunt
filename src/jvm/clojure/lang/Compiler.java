@@ -6287,7 +6287,14 @@ public static class LocalBindingExpr implements Expr, MaybePrimitiveExpr, Assign
 	}
 
     public boolean needsCast() {
-	return tag != null;
+			if (tag == null)
+				return false;
+			final Class c = HostExpr.tagToClass(b.tag);
+			if (compatibleType(tag, c))
+				return false;
+			if (c.isPrimitive())
+				return false;
+			return true;
     }
 }
 
