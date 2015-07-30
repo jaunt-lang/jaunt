@@ -1384,7 +1384,9 @@
 (defn identity
   "Returns its argument."
   {:added "1.0"
-   :static true}
+   :static true
+   :inline-arities =1?
+   :inline (fn [x] x)}
   [x] x)
 
 ;;Collection stuff
