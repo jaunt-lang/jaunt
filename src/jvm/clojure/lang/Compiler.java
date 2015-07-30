@@ -2916,6 +2916,10 @@ public static class MetaExpr implements Expr{
 	public Class getJavaClass() {
 		return expr.getJavaClass();
 	}
+
+    public boolean needsCast() {
+	return expr.needsCast() || expr.hasJavaClass() && !compatibleType(expr.getJavaClass(), IOBJ_TYPE); 
+    }
 }
 
 public static class IfExpr implements Expr, MaybePrimitiveExpr{
@@ -3022,6 +3026,10 @@ public static class IfExpr implements Expr, MaybePrimitiveExpr{
 			return thenClass;
 		return elseExpr.getJavaClass();
 	}
+
+    public boolean needsCast() {
+	return thenExpr.needsCast() || elseExpr.needsCast();
+    }
 
 	static class Parser implements IParser{
 		public Expr parse(C context, Object frm) {
@@ -3212,6 +3220,10 @@ public static class EmptyExpr implements Expr{
 				else
 					throw new UnsupportedOperationException("Unknown Collection type");
 	}
+
+    public boolean needsCast() {
+	return false;
+    }
 }
 
 public static class ListExpr implements Expr{
@@ -3244,6 +3256,10 @@ public static class ListExpr implements Expr{
 	public Class getJavaClass() {
 		return IPersistentList.class;
 	}
+
+    public boolean needsCast() {
+	return false;
+    }
 
 }
 
@@ -3299,6 +3315,9 @@ public static class MapExpr implements Expr{
 		return IPersistentMap.class;
 	}
 
+    public boolean needsCast() {
+	return false;
+    }
 
 	static public Expr parse(C context, IPersistentMap form) {
 		IPersistentVector keyvals = PersistentVector.EMPTY;
@@ -3385,6 +3404,9 @@ public static class SetExpr implements Expr{
 		return IPersistentSet.class;
 	}
 
+    public boolean needsCast() {
+	return false;
+    }
 
 	static public Expr parse(C context, IPersistentSet form) {
 		IPersistentVector keys = PersistentVector.EMPTY;
@@ -3448,6 +3470,10 @@ public static class VectorExpr implements Expr{
 	public Class getJavaClass() {
 		return IPersistentVector.class;
 	}
+
+    public boolean needsCast() {
+	return false;
+    }
 
 	static public Expr parse(C context, IPersistentVector form) {
 		boolean constant = true;
@@ -3556,6 +3582,10 @@ static class KeywordInvokeExpr implements Expr{
 	public Class getJavaClass() {
 		return HostExpr.tagToClass(tag);
 	}
+    
+    public boolean needsCast() {
+	return tag != null;
+    }
 
 }
 //static class KeywordSiteInvokeExpr implements Expr{
@@ -3652,6 +3682,9 @@ public static class InstanceOfExpr implements Expr, MaybePrimitiveExpr{
 		return Boolean.TYPE;
 	}
 
+    public boolean needsCast() {
+	return false;
+    }
 }
 
 static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
@@ -3698,6 +3731,10 @@ static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
 	public Class getJavaClass() {
 		return tag != null ? HostExpr.tagToClass(tag) : retClass;
 	}
+
+    public boolean needsCast() {
+	return compatibleType(tag, Object.class);
+    }
 
 	public boolean canEmitPrimitive(){
 		return retClass.isPrimitive();
@@ -4022,6 +4059,10 @@ static class InvokeExpr implements Expr{
 	public Class getJavaClass() {
 		return HostExpr.tagToClass(tag);
 	}
+
+    public boolean needsCast() {
+	return compatibleType(tag, Object.class);
+    }
 
 	static public Expr parse(C context, ISeq form) {
 		if(context != C.EVAL)
@@ -5272,6 +5313,12 @@ static public class ObjExpr implements Expr{
 			: IFn.class;
 	}
 
+    public boolean needsCast() {
+	return (compiledClass != null) ? true
+			: (tag != null) ? compatibleType(tag, this.getJavaClass())
+			: false;
+    }
+
 	public void emitAssignLocal(GeneratorAdapter gen, LocalBinding lb,Expr val){
 		if(!isMutable(lb))
 			throw new IllegalArgumentException("Cannot assign to non-mutable: " + lb.name);
@@ -6212,7 +6259,9 @@ public static class LocalBindingExpr implements Expr, MaybePrimitiveExpr, Assign
 		return b.getJavaClass();
 	}
 
-
+    public boolean needsCast() {
+	return tag != null;
+    }
 }
 
 public static class BodyExpr implements Expr, MaybePrimitiveExpr{
@@ -6288,6 +6337,10 @@ public static class BodyExpr implements Expr, MaybePrimitiveExpr{
 	public Class getJavaClass() {
 		return lastExpr().getJavaClass();
 	}
+
+    public boolean needsCast() {
+	return ((Expr) exprs.nth(exprs.count() - 1)).needsCast();
+    }
 
 	private Expr lastExpr(){
 		return (Expr) exprs.nth(exprs.count() - 1);
@@ -6435,6 +6488,10 @@ public static class LetFnExpr implements Expr{
 	public Class getJavaClass() {
 		return body.getJavaClass();
 	}
+
+    public boolean needsCast() {
+	return body.needsCast();
+    }
 }
 
 public static class LetExpr implements Expr, MaybePrimitiveExpr{
@@ -6662,6 +6719,10 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 		return body.getJavaClass();
 	}
 
+    public boolean needsCast() {
+	return body.needsCast();
+    }
+
 	public boolean canEmitPrimitive(){
 		return body instanceof MaybePrimitiveExpr && ((MaybePrimitiveExpr)body).canEmitPrimitive();
 	}
@@ -6768,6 +6829,10 @@ public static class RecurExpr implements Expr, MaybePrimitiveExpr{
 	public Class getJavaClass() {
 		return RECUR_CLASS;
 	}
+
+    public boolean needsCast() {
+	throw new UnsupportedOperationException("Can't take the value of recur");
+    }
 
 	static class Parser implements IParser{
 		public Expr parse(C context, Object frm) {
@@ -8899,6 +8964,10 @@ static public class MethodParamExpr implements Expr, MaybePrimitiveExpr{
 		return c;
 	}
 
+    public boolean needsCast() {
+	return !Util.isPrimitive(c) && c != Object.TYPE;
+    }
+
 	public boolean canEmitPrimitive(){
 		return Util.isPrimitive(c);
 	}
@@ -8974,6 +9043,10 @@ public static class CaseExpr implements Expr, MaybePrimitiveExpr{
 	public Class getJavaClass(){
 	    return returnType;
 	}
+
+    public boolean needsCast() {
+	return returnType != Object.TYPE;
+    }
 
 	public Object eval() {
 		throw new UnsupportedOperationException("Can't eval case");
