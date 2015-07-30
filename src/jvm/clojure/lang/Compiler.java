@@ -403,7 +403,7 @@ static final public Var CLEAR_ROOT = Var.create(null).setDynamic();
 //LocalBinding -> Set<LocalBindingExpr>
 static final public Var CLEAR_SITES = Var.create(null).setDynamic();
 
-	private static boolean compatibleType(Symbol tag, Class c) {
+	private static boolean compatibleType(Object tag, Class c) {
 		return tag == null || HostExpr.tagToClass(tag).isAssignableFrom(c);
 	}
 
@@ -1367,7 +1367,8 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 			{
 			target.emit(C.EXPRESSION, objx, gen);
 			gen.visitLineNumber(line, gen.mark());
-			gen.checkCast(getType(targetClass));
+			if (!strictMode() || target.needsCast())
+				gen.checkCast(getType(targetClass));
 			gen.getField(getType(targetClass), fieldName, Type.getType(field.getType()));
 			//if(context != C.STATEMENT)
 			HostExpr.emitBoxReturn(objx, gen, field.getType());
@@ -1606,7 +1607,8 @@ static abstract class MethodExpr extends HostExpr{
 				else
 					{
 					e.emit(C.EXPRESSION, objx, gen);
-					HostExpr.emitUnboxArg(objx, gen, parameterTypes[i]);
+					if (!strictMode() || parameterTypes[i].isPrimitive() || e.needsCast())
+						HostExpr.emitUnboxArg(objx, gen, parameterTypes[i]);
 					}
 				}
 			catch(Exception e1)
@@ -1731,7 +1733,7 @@ static class InstanceMethodExpr extends MethodExpr{
 			Type type = Type.getType(method.getDeclaringClass());
 			target.emit(C.EXPRESSION, objx, gen);
 			//if(!method.getDeclaringClass().isInterface())
-			if(!RT.booleanCast(STRICT_TAGS.deref()) || target.needsCast())
+			if(!strictMode() || target.needsCast())
 					gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
 			gen.visitLineNumber(line, gen.mark());
@@ -1756,7 +1758,7 @@ static class InstanceMethodExpr extends MethodExpr{
 			Type type = Type.getType(method.getDeclaringClass());
 			target.emit(C.EXPRESSION, objx, gen);
 			//if(!method.getDeclaringClass().isInterface())
-			if(!RT.booleanCast(STRICT_TAGS.deref()) || target.needsCast())
+			if(!strictMode() || target.needsCast())
 				gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
 			gen.visitLineNumber(line, gen.mark());
@@ -1803,8 +1805,12 @@ static class InstanceMethodExpr extends MethodExpr{
 	}
 }
 
+	private static boolean strictMode() {
+		return RT.booleanCast(STRICT_TAGS.deref());
+	}
 
-static class StaticMethodExpr extends MethodExpr{
+
+	static class StaticMethodExpr extends MethodExpr{
 	//final String className;
 	public final Class c;
 	public final String methodName;
@@ -4062,7 +4068,11 @@ static class InvokeExpr implements Expr{
 	}
 
     public boolean needsCast() {
-	return compatibleType((Symbol)tag, Object.class);
+			if (this.fexpr instanceof VarExpr && ((VarExpr)this.fexpr).var.sym.equals(Symbol.intern("as-buffer")))
+			{
+				System.out.println("compiling as-buffer, tag=" + tag);
+			}
+	return compatibleType(tag, Object.class);
     }
 
 	static public Expr parse(C context, ISeq form) {
@@ -5316,7 +5326,7 @@ static public class ObjExpr implements Expr{
 
     public boolean needsCast() {
 	return (compiledClass != null) ? true
-			: (tag != null) ? compatibleType((Symbol)tag, this.getJavaClass())
+			: (tag != null) ? compatibleType(tag, this.getJavaClass())
 			: false;
     }
 
@@ -6666,8 +6676,7 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 				{
 				bi.init.emit(C.EXPRESSION, objx, gen);
 					final Symbol tag = bi.binding.tag;
-					final boolean strict = RT.booleanCast(STRICT_TAGS.deref()) && tag != null;
-					if (strict) {
+					if (strictMode() && tag != null) {
 						if (bi.init.needsCast() || !bi.init.hasJavaClass() || !compatibleType(tag, bi.init.getJavaClass())) {
 							gen.checkCast(getType(HostExpr.tagToClass(tag)));
 						}
@@ -6715,7 +6724,7 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 			{
 				String localClass;
 				final Symbol tag = bi.binding.tag;
-				if (RT.booleanCast(STRICT_TAGS.deref()) && tag != null) {
+				if (strictMode() && tag != null) {
 					localClass = "L" + Type.getType(HostExpr.tagToClass(tag)).getInternalName() + ";";
 				}
 				else
