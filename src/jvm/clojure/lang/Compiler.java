@@ -1798,7 +1798,7 @@ static class InstanceMethodExpr extends MethodExpr{
 	}
 
 	public boolean needsCast() {
-		return !compatibleTypes(tag, method.getReturnType());
+		return !compatibleType(tag, method.getReturnType());
 	}
 }
 
@@ -2013,6 +2013,11 @@ static class StaticMethodExpr extends MethodExpr{
 	public Class getJavaClass() {
 		return tag != null ? HostExpr.tagToClass(tag) : method.getReturnType();
 	}
+
+	@Override
+	public boolean needsCast() {
+		return !compatibleType(tag, method.getReturnType());
+	}
 }
 
 static class UnresolvedVarExpr implements Expr{
@@ -2029,6 +2034,11 @@ static class UnresolvedVarExpr implements Expr{
 	public Class getJavaClass() {
 		throw new IllegalArgumentException(
 				"UnresolvedVarExpr has no Java class");
+	}
+
+	@Override
+	public boolean needsCast() {
+		return false;
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
@@ -2075,6 +2085,11 @@ static class NumberExpr extends LiteralExpr implements MaybePrimitiveExpr{
 			return long.class;
 		else
 			throw new IllegalStateException("Unsupported Number type: " + n.getClass().getName());
+	}
+
+	@Override
+	public boolean needsCast() {
+		return false;
 	}
 
 	public boolean canEmitPrimitive(){
@@ -2159,6 +2174,11 @@ static class ConstantExpr extends LiteralExpr{
 		//throw new IllegalArgumentException("Has no Java class");
 	}
 
+	@Override
+	public boolean needsCast() {
+		return false;
+	}
+
 	static class Parser implements IParser{
 		public Expr parse(C context, Object form){
 			Object v = RT.second(form);
@@ -2198,6 +2218,11 @@ static class NilExpr extends LiteralExpr{
 
 	public Class getJavaClass() {
 		return null;
+	}
+
+	@Override
+	public boolean needsCast() {
+		return false;
 	}
 }
 
@@ -2242,6 +2267,11 @@ static class BooleanExpr extends LiteralExpr{
 	public Class getJavaClass() {
 		return Boolean.class;
 	}
+
+	@Override
+	public boolean needsCast() {
+		return false;
+	}
 }
 
 final static BooleanExpr TRUE_EXPR = new BooleanExpr(true);
@@ -2269,6 +2299,11 @@ static class StringExpr extends LiteralExpr{
 
 	public Class getJavaClass() {
 		return String.class;
+	}
+
+	@Override
+	public boolean needsCast() {
+		return false;
 	}
 }
 
@@ -2436,6 +2471,11 @@ public static class TryExpr implements Expr{
 
 	public Class getJavaClass() {
 		return tryExpr.getJavaClass();
+	}
+
+	@Override
+	public boolean needsCast() {
+		return false;
 	}
 
 	static class Parser implements IParser{
@@ -2811,6 +2851,11 @@ public static class NewExpr implements Expr{
 
 	public Class getJavaClass() {
 		return c;
+	}
+
+	@Override
+	public boolean needsCast() {
+		return false;
 	}
 
 	static class Parser implements IParser{
