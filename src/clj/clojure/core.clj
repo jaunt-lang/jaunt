@@ -350,12 +350,15 @@
   ^{:arglists '([coll])
     :doc "Return the last item in coll, in linear time"
     :added "1.0"
-    :static true}
+    :static true
+    :strict true}
   last
   (fn [s]
-    (if (next s)
-      (recur (next s))
-      (first s))))
+    (loop [^clojure.lang.ISeq s s]
+      (let [n (next s)]
+        (if n
+          (recur n)
+          (first s))))))
 
 (def 
   ^{:arglists '([coll])
