@@ -158,7 +158,6 @@
     :static true
     :inline (fn [x]
               (list 'first (list 'first x)))}
-    :static true}
   ffirst
   (fn [x]
     (first (first x))))
