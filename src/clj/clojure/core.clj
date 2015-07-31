@@ -26,7 +26,7 @@
     :added "1.0"
     :static true}
   cons
-  (fn* fn [x seq]
+  (fn* [x seq]
     (. clojure.lang.RT (cons x seq))))
 
 ;during bootstrap we don't have destructuring let, loop or fn, will redefine later
@@ -34,22 +34,23 @@
   ^{:macro true
     :added "1.0"}
   let
-  (fn* fn [&form &env & decl]
+  (fn* [&form &env & decl]
     (cons 'let* decl)))
 
 (def
   ^{:macro true
     :added "1.0"}
   loop
-  (fn* fn [&form &env & decl]
+  (fn* [&form &env & decl]
     (cons 'loop* decl)))
 
 (def
- ^{:macro true
-   :added "1.0"}
- fn (fn* fn [&form &env & decl] 
-         (.withMeta ^clojure.lang.IObj (cons 'fn* decl) 
-                    (.meta ^clojure.lang.IMeta &form))))
+  ^{:macro true
+    :added "1.0"}
+  fn
+  (fn* [&form &env & decl] 
+    (.withMeta ^clojure.lang.IObj (cons 'fn* decl) 
+               (.meta ^clojure.lang.IMeta &form))))
 (def
   ^{:private true
     :static  true
