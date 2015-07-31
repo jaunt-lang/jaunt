@@ -6287,12 +6287,18 @@ public static class LocalBindingExpr implements Expr, MaybePrimitiveExpr, Assign
 	}
 
     public boolean needsCast() {
-			if (tag == null)
+			final Symbol tag = b.tag;
+			if (tag == null) {
 				return false;
-			final Class c = HostExpr.tagToClass(b.tag);
+			}
+			final Class c = HostExpr.tagToClass(tag);
+			if (c.isPrimitive()) {
+				return false;
+			}
+
+			if (b.isArg || b.init == null) // we haven't figured out how to pre-cast method args
+				return true;
 			if (compatibleType(tag, c))
-				return false;
-			if (c.isPrimitive())
 				return false;
 			return true;
     }
@@ -6700,10 +6706,11 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 				}
 			else
 				{
-				bi.init.emit(C.EXPRESSION, objx, gen);
+					bi.init.emit(C.EXPRESSION, objx, gen);
+					final Expr binit = bi.binding.init;
 					final Symbol tag = bi.binding.tag;
 					if (strictMode() && tag != null) {
-						if (bi.init.needsCast() || !bi.init.hasJavaClass() || !compatibleType(tag, bi.init.getJavaClass())) {
+						if (binit.needsCast() || !binit.hasJavaClass() || !compatibleType(tag, binit.getJavaClass())) {
 							gen.checkCast(getType(HostExpr.tagToClass(tag)));
 						}
 					}
