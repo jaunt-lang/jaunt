@@ -3350,7 +3350,9 @@
 (defn transient 
   "Returns a new, transient version of the collection, in constant time."
   {:added "1.1"
-   :static true}
+   :static true
+   :inline (fn [e]
+             `(.asTransient ~(as e clojure.lang.ITransientCollection)))}
   [^clojure.lang.IEditableCollection coll] 
   (.asTransient coll))
 
