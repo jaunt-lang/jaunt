@@ -3370,11 +3370,16 @@
   "Adds x to the transient collection, and return coll. The 'addition'
   may happen at different 'places' depending on the concrete type."
   {:added "1.1"
-   :static true}
+   :static true
+   :inline-arities #{1 2}
+   :inline (fn
+             ([x] x)
+             ([ce xe]
+              `(.conj ~(as ce clojure.lang.ITransientCollection) ~xe)))}
   ([] (transient []))
   ([coll] coll)
   ([^clojure.lang.ITransientCollection coll x]
-     (.conj coll x)))
+   (.conj coll x)))
 
 (defn assoc!
   "When applied to a transient map, adds mapping of key(s) to
