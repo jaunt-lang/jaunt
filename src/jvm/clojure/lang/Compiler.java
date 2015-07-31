@@ -407,7 +407,7 @@ static final public Var CLEAR_SITES = Var.create(null).setDynamic();
 	}
 
 	private static void maybeCastTo(ObjExpr objx, GeneratorAdapter gen, Expr e, Class<?> type) {
-		if (!strictMode() || type.isPrimitive() || e.needsCast() || !compatibleType(type, e.hasJavaClass() ? e.getJavaClass() : Object.class))
+		if (!strictMode() || type.isPrimitive() || e.needsCast(objx) || !compatibleType(type, e.hasJavaClass() ? e.getJavaClass() : Object.class))
     {
       HostExpr.emitUnboxArg(objx, gen, type);
     }
@@ -433,7 +433,7 @@ interface Expr{
 	Class getJavaClass() ;
 
   // akm
-  boolean needsCast();
+  boolean needsCast(ObjExpr objx);
 }
 
   // akm remove casts when unnecessary
@@ -447,7 +447,7 @@ public static abstract class UntypedExpr implements Expr{
 		return false;
 	}
 
-  public boolean needsCast(){
+  public boolean needsCast(ObjExpr objx){
     return false;
   }
 }
@@ -634,7 +634,7 @@ static class DefExpr implements Expr{
 		return Var.class;
 	}
 
-  public boolean needsCast(){
+  public boolean needsCast(ObjExpr objx){
     return false;
   }
 
@@ -770,7 +770,7 @@ public static class AssignExpr implements Expr{
 		return val.getJavaClass();
 	}
 
-  public boolean needsCast() {
+  public boolean needsCast(ObjExpr objx) {
     return true;
   }
 
@@ -822,7 +822,7 @@ public static class VarExpr implements Expr, AssignableExpr{
 		return HostExpr.tagToClass(tag);
 	}
 
-  public boolean needsCast() {
+  public boolean needsCast(ObjExpr objx) {
     return true;
   }
 
@@ -865,7 +865,7 @@ public static class TheVarExpr implements Expr{
 		return Var.class;
 	}
 
-  public boolean needsCast() {
+  public boolean needsCast(ObjExpr objx) {
     return false;
   }
 
@@ -910,7 +910,7 @@ public static class KeywordExpr extends LiteralExpr{
 		return Keyword.class;
 	}
 
-  public boolean needsCast() {
+  public boolean needsCast(ObjExpr objx) {
     return false;
   }
 }
@@ -954,7 +954,7 @@ public static class ImportExpr implements Expr{
 		throw new IllegalArgumentException("ImportExpr has no Java class");
 	}
 
-  public boolean needsCast(){
+  public boolean needsCast(ObjExpr objx){
     return false;
   }
 
@@ -1373,7 +1373,7 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 			{
 			target.emit(C.EXPRESSION, objx, gen);
 			gen.visitLineNumber(line, gen.mark());
-			if (!strictMode() || target.needsCast())
+			if (!strictMode() || target.needsCast(objx))
 				gen.checkCast(getType(targetClass));
 			gen.getField(getType(targetClass), fieldName, Type.getType(field.getType()));
 			//if(context != C.STATEMENT)
@@ -1403,7 +1403,7 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 		return tag != null ? HostExpr.tagToClass(tag) : field.getType();
 	}
 
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		if (field == null)
 			return tag != null;
 		return !compatibleType(tag, field.getType());
@@ -1418,7 +1418,7 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 		if(targetClass != null && field != null)
 			{
 			target.emit(C.EXPRESSION, objx, gen);
-			if (!strictMode() || target.needsCast())
+			if (!strictMode() || target.needsCast(objx))
 				gen.checkCast(Type.getType(targetClass));
 			val.emit(C.EXPRESSION, objx, gen);
 			gen.visitLineNumber(line, gen.mark());
@@ -1508,7 +1508,7 @@ static class StaticFieldExpr extends FieldExpr implements AssignableExpr{
 		return tag != null ? HostExpr.tagToClass(tag) : field.getType();
 	}
 
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return !compatibleType(tag, field.getType());
 	}
 
@@ -1746,7 +1746,7 @@ static class InstanceMethodExpr extends MethodExpr{
 			Type type = Type.getType(method.getDeclaringClass());
 			target.emit(C.EXPRESSION, objx, gen);
 			//if(!method.getDeclaringClass().isInterface())
-			if(!strictMode() || target.needsCast())
+			if(!strictMode() || target.needsCast(objx))
 					gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
 			gen.visitLineNumber(line, gen.mark());
@@ -1771,7 +1771,7 @@ static class InstanceMethodExpr extends MethodExpr{
 			Type type = Type.getType(method.getDeclaringClass());
 			target.emit(C.EXPRESSION, objx, gen);
 			//if(!method.getDeclaringClass().isInterface())
-			if(!strictMode() || target.needsCast())
+			if(!strictMode() || target.needsCast(objx))
 				gen.checkCast(type);
 			MethodExpr.emitTypedArgs(objx, gen, method.getParameterTypes(), args);
 			gen.visitLineNumber(line, gen.mark());
@@ -1813,7 +1813,7 @@ static class InstanceMethodExpr extends MethodExpr{
 		return tag != null ? HostExpr.tagToClass(tag) : method.getReturnType();
 	}
 
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return !compatibleType(tag, method.getReturnType());
 	}
 }
@@ -2046,7 +2046,7 @@ static class InstanceMethodExpr extends MethodExpr{
 	}
 
 	@Override
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return !compatibleType(tag, method.getReturnType());
 	}
 }
@@ -2068,7 +2068,7 @@ static class UnresolvedVarExpr implements Expr{
 	}
 
 	@Override
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return false;
 	}
 
@@ -2119,7 +2119,7 @@ static class NumberExpr extends LiteralExpr implements MaybePrimitiveExpr{
 	}
 
 	@Override
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return false;
 	}
 
@@ -2206,7 +2206,7 @@ static class ConstantExpr extends LiteralExpr{
 	}
 
 	@Override
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return false;
 	}
 
@@ -2252,7 +2252,7 @@ static class NilExpr extends LiteralExpr{
 	}
 
 	@Override
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return false;
 	}
 }
@@ -2300,7 +2300,7 @@ static class BooleanExpr extends LiteralExpr{
 	}
 
 	@Override
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return false;
 	}
 }
@@ -2333,7 +2333,7 @@ static class StringExpr extends LiteralExpr{
 	}
 
 	@Override
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return false;
 	}
 }
@@ -2505,7 +2505,7 @@ public static class TryExpr implements Expr{
 	}
 
 	@Override
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return false;
 	}
 
@@ -2885,7 +2885,7 @@ public static class NewExpr implements Expr{
 	}
 
 	@Override
-	public boolean needsCast() {
+	public boolean needsCast(ObjExpr objx) {
 		return false;
 	}
 
@@ -2948,8 +2948,8 @@ public static class MetaExpr implements Expr{
 		return expr.getJavaClass();
 	}
 
-    public boolean needsCast() {
-	return expr.needsCast() || expr.hasJavaClass() && !expr.getJavaClass().isAssignableFrom(IObj.class);
+    public boolean needsCast(ObjExpr objx) {
+	return expr.needsCast(objx) || expr.hasJavaClass() && !expr.getJavaClass().isAssignableFrom(IObj.class);
     }
 }
 
@@ -3058,8 +3058,8 @@ public static class IfExpr implements Expr, MaybePrimitiveExpr{
 		return elseExpr.getJavaClass();
 	}
 
-    public boolean needsCast() {
-	return thenExpr.needsCast() || elseExpr.needsCast();
+    public boolean needsCast(ObjExpr objx) {
+	return thenExpr.needsCast(objx) || elseExpr.needsCast(objx);
     }
 
 	static class Parser implements IParser{
@@ -3252,7 +3252,7 @@ public static class EmptyExpr implements Expr{
 					throw new UnsupportedOperationException("Unknown Collection type");
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return false;
     }
 }
@@ -3288,7 +3288,7 @@ public static class ListExpr implements Expr{
 		return IPersistentList.class;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return false;
     }
 
@@ -3346,7 +3346,7 @@ public static class MapExpr implements Expr{
 		return IPersistentMap.class;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return false;
     }
 
@@ -3435,7 +3435,7 @@ public static class SetExpr implements Expr{
 		return IPersistentSet.class;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return false;
     }
 
@@ -3502,7 +3502,7 @@ public static class VectorExpr implements Expr{
 		return IPersistentVector.class;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return false;
     }
 
@@ -3614,7 +3614,7 @@ static class KeywordInvokeExpr implements Expr{
 		return HostExpr.tagToClass(tag);
 	}
     
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return tag != null;
     }
 
@@ -3713,7 +3713,7 @@ public static class InstanceOfExpr implements Expr, MaybePrimitiveExpr{
 		return Boolean.TYPE;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return false;
     }
 }
@@ -3763,7 +3763,7 @@ static class StaticInvokeExpr implements Expr, MaybePrimitiveExpr{
 		return tag != null ? HostExpr.tagToClass(tag) : retClass;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return compatibleType(tag, Object.class);
     }
 
@@ -4091,7 +4091,7 @@ static class InvokeExpr implements Expr{
 		return HostExpr.tagToClass(tag);
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 			return !compatibleType(tag, Object.class);
     }
 
@@ -5344,7 +5344,7 @@ static public class ObjExpr implements Expr{
 			: IFn.class;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return (compiledClass != null) ? true
 			: (tag != null) ? compatibleType(tag, this.getJavaClass())
 			: false;
@@ -6290,21 +6290,21 @@ public static class LocalBindingExpr implements Expr, MaybePrimitiveExpr, Assign
 		return b.getJavaClass();
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 			final Symbol tag = b.tag;
 			if (tag == null) {
 				return false;
 			}
-			final Class c = HostExpr.tagToClass(tag);
+			Class c = HostExpr.tagToClass(tag);
 			if (c.isPrimitive()) {
 				return false;
 			}
 
+			if (objx.closes.containsKey(b))
+				c = Object.class; // closed-over locals are always Object
 			if (b.isArg || b.init == null) // we haven't figured out how to pre-cast method args
 				return true;
-			if (compatibleType(tag, c))
-				return false;
-			return true;
+			return !compatibleType(tag, c);
     }
 }
 
@@ -6382,8 +6382,8 @@ public static class BodyExpr implements Expr, MaybePrimitiveExpr{
 		return lastExpr().getJavaClass();
 	}
 
-    public boolean needsCast() {
-	return ((Expr) exprs.nth(exprs.count() - 1)).needsCast();
+    public boolean needsCast(ObjExpr objx) {
+	return ((Expr) exprs.nth(exprs.count() - 1)).needsCast(objx);
     }
 
 	private Expr lastExpr(){
@@ -6533,8 +6533,8 @@ public static class LetFnExpr implements Expr{
 		return body.getJavaClass();
 	}
 
-    public boolean needsCast() {
-	return body.needsCast();
+    public boolean needsCast(ObjExpr objx) {
+	return body.needsCast(objx);
     }
 }
 
@@ -6718,7 +6718,7 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 					final Expr binit = bi.binding.init;
 					final Symbol tag = bi.binding.tag;
 					if (strictMode() && tag != null) {
-						if (binit.needsCast() || !binit.hasJavaClass() || !compatibleType(tag, binit.getJavaClass())) {
+						if (binit.needsCast(objx) || !binit.hasJavaClass() || !compatibleType(tag, binit.getJavaClass())) {
 							gen.checkCast(getType(HostExpr.tagToClass(tag)));
 						}
 					}
@@ -6786,8 +6786,8 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 		return body.getJavaClass();
 	}
 
-    public boolean needsCast() {
-	return body.needsCast();
+    public boolean needsCast(ObjExpr objx) {
+	return body.needsCast(objx);
     }
 
 	public boolean canEmitPrimitive(){
@@ -6897,7 +6897,7 @@ public static class RecurExpr implements Expr, MaybePrimitiveExpr{
 		return RECUR_CLASS;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	throw new UnsupportedOperationException("Can't take the value of recur");
     }
 
@@ -9031,7 +9031,7 @@ static public class MethodParamExpr implements Expr, MaybePrimitiveExpr{
 		return c;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return !Util.isPrimitive(c) && c != Object.class;
     }
 
@@ -9111,7 +9111,7 @@ public static class CaseExpr implements Expr, MaybePrimitiveExpr{
 	    return returnType;
 	}
 
-    public boolean needsCast() {
+    public boolean needsCast(ObjExpr objx) {
 	return returnType != Object.class;
     }
 
