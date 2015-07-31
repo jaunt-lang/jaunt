@@ -6629,8 +6629,12 @@ public static class LetExpr implements Expr, MaybePrimitiveExpr{
 
 								}
 								Symbol tag = tagOf(sym);
-								if (strictMode() && tag == null && init.hasJavaClass() && !init.getJavaClass().isPrimitive())
-									tag = Symbol.intern(init.getJavaClass().getName());
+
+								if (strictMode() && tag == null && init.hasJavaClass()) {
+									final Class initClass = init.getJavaClass();
+									if (initClass != null && !initClass.isPrimitive())
+										tag = Symbol.intern(initClass.getName());
+								}
 								LocalBinding lb = registerLocal(sym, tag, init,false);
 							BindingInit bi = new BindingInit(lb, init);
 							bindingInits = bindingInits.cons(bi);
