@@ -3408,13 +3408,26 @@
 (defn dissoc!
   "Returns a transient map that doesn't contain a mapping for key(s)."
   {:added "1.1"
-   :static true}
+   :static true
+   :strict true
+   :inline-arities >1?
+   :inline (fn
+             ([me ke]
+              `(.without ~(as me clojure.lang.ITransientMap) ~ke))
+             ([me ke & kes]
+              (let [de `(.without ~(as me clojure.lang.ITransientMap) ~ke)]
+                (if kes
+                  (list* `dissoc! de kes)
+                  de))))}
   ([^clojure.lang.ITransientMap map key] (.without map key))
   ([^clojure.lang.ITransientMap map key & ks]
-   (let [ret (.without map key)]
-     (if ks
-       (recur ret (first ks) (next ks))
-       ret))))
+   (loop [^clojure.lang.ITransientAssociative map map
+          key key
+          ^clojure.lang.ISeq ks ks]
+     (let [ret (.without map key)]
+       (if ks
+         (recur ret (first ks) (next ks))
+         ret)))))
 
 (defn pop!
   "Removes the last item from a transient vector. If
