@@ -271,19 +271,30 @@
     val(s). When applied to a vector, returns a new vector that
     contains val at index. Note - index must be <= (count vector)."
     :added "1.0"
-    :static true}
+    :static true
+    :strict true
+    :inline-arities >2?
+    :inline (fn [me ke ve & kves]
+              (let [aex (rt (list 'assoc me ke ve))]
+                (if kves
+                  (list* 'assoc aex kves)
+                  aex)))}
   assoc
   (fn
     ([map key val]
      (. clojure.lang.RT (assoc map key val)))
     ([map key val & kvs]
-     (let [ret (. clojure.lang.RT (assoc map key val))]
-       (if kvs
-         (if (next kvs)
-           (recur ret (first kvs) (second kvs) (nnext kvs))
-           (throw (IllegalArgumentException.
-                   "assoc expects even number of arguments after map/vector, found odd number")))
-         ret)))))
+     (loop [^clojure.lang.IPersistentMap map map
+            key key
+            val val
+            ^clojure.lang.ISeq kvs kvs]
+       (let [ret (. clojure.lang.RT (assoc map key val))]
+         (if kvs
+           (if (next kvs)
+             (recur ret (first kvs) (second kvs) (nnext kvs))
+             (throw (IllegalArgumentException.
+                     "assoc expects even number of arguments after map/vector, found odd number")))
+           ret))))))
 
 ;;;;;;;;;;;;;;;;; metadata ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def
