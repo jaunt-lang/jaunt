@@ -623,7 +623,8 @@
   {:tag Boolean
    :added "1.6"
    :static true}
-  [x] (not (nil? x)))
+  [x]
+  (not (nil? x)))
 
 (defn str
   "With no args, returns the empty string. With one arg x, returns
