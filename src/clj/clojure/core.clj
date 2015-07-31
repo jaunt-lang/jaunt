@@ -14,10 +14,11 @@
 (def unquote-splicing)
 
 (def
- ^{:arglists '([& items])
-   :doc "Creates a new list containing the items."
-   :added "1.0"}
-  list (. clojure.lang.PersistentList creator))
+  ^{:arglists '([& items])
+    :doc "Creates a new list containing the items."
+    :added "1.0"}
+  list
+  (. clojure.lang.PersistentList creator))
 
 (def
  ^{:arglists '([x seq])
@@ -1400,7 +1401,6 @@
   "Returns its argument."
   {:added "1.0"
    :static true
-   :inline-arities =1?
    :inline (fn [x] x)}
   [x] x)
 
