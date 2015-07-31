@@ -351,7 +351,6 @@
   ^{:arglists '([coll])
     :doc "Return the last item in coll, in linear time"
     :added "1.0"
-<<<<<<< HEAD
     :static true
     :strict true}
   last
@@ -361,20 +360,11 @@
         (if n
           (recur n)
           (first s))))))
-=======
-    :static true}
-  last
-  (fn [s]
-    (if (next s)
-      (recur (next s))
-      (first s))))
->>>>>>> skummet
 
 (def 
   ^{:arglists '([coll])
     :doc "Return a seq of all but the last item in coll, in linear time"
     :added "1.0"
-<<<<<<< HEAD
     :static true
     :strict true}
   butlast
@@ -385,15 +375,6 @@
         (if n
           (recur (conj ret (first s)) n)
           (seq ret))))))
-=======
-    :static true}
-  butlast
-  (fn [s]
-    (loop [ret [] s s]
-      (if (next s)
-        (recur (conj ret (first s)) (next s))
-        (seq ret)))))
->>>>>>> skummet
 
 (def 
   ^{:doc "Same as (def name (fn [params* ] exprs*)) or (def
