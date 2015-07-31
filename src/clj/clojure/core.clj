@@ -158,6 +158,7 @@
     :static true
     :inline (fn [x]
               (list 'first (list 'first x)))}
+    :static true}
   ffirst
   (fn [x]
     (first (first x))))
@@ -350,6 +351,7 @@
   ^{:arglists '([coll])
     :doc "Return the last item in coll, in linear time"
     :added "1.0"
+<<<<<<< HEAD
     :static true
     :strict true}
   last
@@ -359,11 +361,20 @@
         (if n
           (recur n)
           (first s))))))
+=======
+    :static true}
+  last
+  (fn [s]
+    (if (next s)
+      (recur (next s))
+      (first s))))
+>>>>>>> skummet
 
 (def 
   ^{:arglists '([coll])
     :doc "Return a seq of all but the last item in coll, in linear time"
     :added "1.0"
+<<<<<<< HEAD
     :static true
     :strict true}
   butlast
@@ -374,6 +385,15 @@
         (if n
           (recur (conj ret (first s)) n)
           (seq ret))))))
+=======
+    :static true}
+  butlast
+  (fn [s]
+    (loop [ret [] s s]
+      (if (next s)
+        (recur (conj ret (first s)) (next s))
+        (seq ret)))))
+>>>>>>> skummet
 
 (def 
   ^{:doc "Same as (def name (fn [params* ] exprs*)) or (def
@@ -641,24 +661,6 @@
               (loop [^StringBuilder sb sb, more more]
                 (if more
                   (recur (. sb (append (str (first more)))) (next more))
-                  (str sb))))
-            (new StringBuilder (str x)) ys)))
-
-(defn ^:strict str'
-  "With no args, returns the empty string. With one arg x, returns
-  x.toString().  (str nil) returns the empty string. With more than
-  one arg, returns the concatenation of the str values of the args."
-  {:tag String
-   :added "1.0"
-   :static true}
-  (^String [] "")
-  (^String [^Object x]
-           (if (nil? x) "" (. x (toString))))
-  (^String [x & ys]
-           ((fn [^StringBuilder sb more]
-              (loop [sb sb more more]
-                (if more
-                  (recur (. sb  (append (str (first more)))) (next more))
                   (str sb))))
             (new StringBuilder (str x)) ys)))
 
