@@ -203,7 +203,9 @@
     that implement Iterable."
     :tag clojure.lang.ISeq
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [x]
+              (rt (list 'seq x)))}
   seq
   (fn [coll]
     (. clojure.lang.RT (seq coll))))
