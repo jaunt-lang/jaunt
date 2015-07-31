@@ -403,7 +403,7 @@ static final public Var CLEAR_ROOT = Var.create(null).setDynamic();
 static final public Var CLEAR_SITES = Var.create(null).setDynamic();
 
 	private static boolean compatibleType(Object tag, Class c) {
-		return tag == null || HostExpr.tagToClass(tag).isAssignableFrom(c);
+		return tag == null || c != null && HostExpr.tagToClass(tag).isAssignableFrom(c);
 	}
 
 	private static void maybeCastTo(ObjExpr objx, GeneratorAdapter gen, Expr e, Class<?> type) {
