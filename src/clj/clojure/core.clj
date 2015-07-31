@@ -120,12 +120,17 @@
     :added "1.0"
     :static true
     :strict true
-    :inline-arities >2?
-    :inline (fn [colle xe & xes]
-              (let [conje (rt (list 'conj colle xe))]
-                (if xes
-                  (list* 'conj conje xes)
-                  conje)))}
+    :inline-arities (fn [x] true)
+    :inline (fn
+              ([] [])
+              ([colle] colle)
+              ([colle xe]
+               (rt (list 'conj colle xe)))
+              ([colle xe & xes]
+               (let [conje (rt (list 'conj colle xe))]
+                 (if xes
+                   (list* 'conj conje xes)
+                   conje))))}
   conj
   (fn
     ([] [])
