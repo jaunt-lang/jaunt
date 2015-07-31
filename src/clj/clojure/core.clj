@@ -70,12 +70,14 @@
     (clojure.lang.Numbers/gt n 0)))
 
 (def
- ^{:arglists '([coll])
-   :doc "Returns the first item in the collection. Calls seq on its
+  ^{:arglists '([coll])
+    :doc "Returns the first item in the collection. Calls seq on its
     argument. If coll is nil, returns nil."
-   :added "1.0"
-   :static true}
- first (fn ^:static first [coll] (. clojure.lang.RT (first coll))))
+    :added "1.0"
+    :static true}
+  first
+  (fn [coll]
+    (. clojure.lang.RT (first coll))))
 
 (def
  ^{:arglists '([coll])
