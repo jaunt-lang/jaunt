@@ -607,7 +607,8 @@
   {:tag Boolean,
    :added "1.0"
    :static true}
-  [x] (clojure.lang.Util/identical x true))
+  [x]
+  (clojure.lang.Util/identical x true))
 
 (defn not
   "Returns true if x is logical false, false otherwise."
