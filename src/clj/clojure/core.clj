@@ -103,7 +103,7 @@
     :added "1.0"
     :static true
     :inline (fn [xe]
-              (rt (list 'more xe)))}  
+              (rt (list 'more xe)))}
   rest
   (fn [x]
     (. clojure.lang.RT (more x))))
