@@ -3386,13 +3386,24 @@
   val(s). When applied to a transient vector, sets the val at index.
   Note - index must be <= (count vector). Returns coll."
   {:added "1.1"
-   :static true}
+   :static true
+   :strict true
+   :inline-arities >2?
+   :inline (fn [colle keye vale & kves]
+             (let [conje `(.assoc ~(as colle clojure.lang.ITransientAssociative) ~keye ~vale)]
+               (if kves
+                 (list* 'assoc! conje kves)
+                 conje)))}
   ([^clojure.lang.ITransientAssociative coll key val] (.assoc coll key val))
   ([^clojure.lang.ITransientAssociative coll key val & kvs]
-   (let [ret (.assoc coll key val)]
-     (if kvs
-       (recur ret (first kvs) (second kvs) (nnext kvs))
-       ret))))
+   (loop [^clojure.lang.ITransientAssociative coll coll
+          key key
+          val val
+          ^clojure.lang.ISeq kvs kvs]
+     (let [^clojure.lang.ITransientAssociative ret (.assoc coll key val)]
+       (if kvs
+         (recur ret (first kvs) (second kvs) (nnext kvs))
+         ret)))))
 
 (defn dissoc!
   "Returns a transient map that doesn't contain a mapping for key(s)."
