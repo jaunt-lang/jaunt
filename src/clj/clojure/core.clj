@@ -364,13 +364,16 @@
   ^{:arglists '([coll])
     :doc "Return a seq of all but the last item in coll, in linear time"
     :added "1.0"
-    :static true}
+    :static true
+    :strict true}
   butlast
   (fn [s]
-    (loop [ret [] s s]
-      (if (next s)
-        (recur (conj ret (first s)) (next s))
-        (seq ret)))))
+    (loop [^clojure.lang.IPersistentVector ret []
+           ^clojure.lang.ISeq s s]
+      (let [n (next s)]
+        (if n
+          (recur (conj ret (first s)) n)
+          (seq ret))))))
 
 (def 
   ^{:doc "Same as (def name (fn [params* ] exprs*)) or (def
