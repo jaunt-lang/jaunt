@@ -64,33 +64,6 @@
     (clojure.lang.Numbers/gt n 0)))
 
 (def
-  ^{:private true
-    :static  true
-    :tag     'boolean
-    :strict  true}
-  =0?
-  (fn [n]
-    (clojure.lang.Numbers/equiv n 0)))
-
-(def
-  ^{:private true
-    :static  true
-    :tag     'boolean
-    :strict  true}
-  =1?
-  (fn [n]
-    (clojure.lang.Numbers/equiv n 1)))
-
-(def
-  ^{:private true
-    :static  true
-    :tag     'boolean
-    :strict  true}
-  =2?
-  (fn [n]
-    (clojure.lang.Numbers/equiv n 2)))
-
-(def
  ^{:arglists '([coll])
    :doc "Returns the first item in the collection. Calls seq on its
     argument. If coll is nil, returns nil."
