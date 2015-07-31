@@ -155,7 +155,9 @@
   ^{:doc "Same as (first (first x))"
     :arglists '([x])
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [x]
+              (list 'first (list 'first x)))}
   ffirst
   (fn [x]
     (first (first x))))
