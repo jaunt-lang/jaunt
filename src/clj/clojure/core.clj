@@ -33,7 +33,9 @@
 (def
   ^{:macro true
     :added "1.0"}
-  let (fn* let [&form &env & decl] (cons 'let* decl)))
+  let
+  (fn* fn [&form &env & decl]
+    (cons 'let* decl)))
 
 (def
  ^{:macro true
