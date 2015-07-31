@@ -144,7 +144,9 @@
   ^{:doc "Same as (first (next x))"
     :arglists '([x])
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [x]
+              (list 'first (list 'next x)))}
   second
   (fn [x]
     (first (next x))))
