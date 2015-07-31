@@ -3361,7 +3361,8 @@
   constant time. The transient collection cannot be used after this
   call, any such use will throw an exception."
   {:added "1.1"
-   :static true}
+   :static true
+   :inline (fn [e] `(.persistent ~(as e clojure.lang.ITransientCollection)))}
   [^clojure.lang.ITransientCollection coll]
   (.persistent coll))
 
