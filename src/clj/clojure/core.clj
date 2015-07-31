@@ -144,7 +144,9 @@
   ^{:doc "Same as (first (next x))"
     :arglists '([x])
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [x]
+              (list 'first (list 'next x)))}
   second
   (fn [x]
     (first (next x))))
@@ -153,6 +155,9 @@
   ^{:doc "Same as (first (first x))"
     :arglists '([x])
     :added "1.0"
+    :static true
+    :inline (fn [x]
+              (list 'first (list 'first x)))}
     :static true}
   ffirst
   (fn [x]
@@ -162,7 +167,9 @@
   ^{:doc "Same as (next (first x))"
     :arglists '([x])
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [x]
+              (list 'next (list 'first x)))}
   nfirst
   (fn [x]
     (next (first x))))
@@ -171,7 +178,9 @@
   ^{:doc "Same as (first (next x))"
     :arglists '([x])
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [x]
+              (list 'first (list 'next x)))}
   fnext
   (fn [x]
     (first (next x))))
@@ -180,7 +189,9 @@
   ^{:doc "Same as (next (next x))"
     :arglists '([x])
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [x]
+              (list 'next (list 'next x)))}
   nnext
   (fn [x]
     (next (next x))))
@@ -193,7 +204,9 @@
     that implement Iterable."
     :tag clojure.lang.ISeq
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [x]
+              (rt (list 'seq x)))}
   seq
   (fn [coll]
     (. clojure.lang.RT (seq coll))))
@@ -259,19 +272,30 @@
     val(s). When applied to a vector, returns a new vector that
     contains val at index. Note - index must be <= (count vector)."
     :added "1.0"
-    :static true}
+    :static true
+    :strict true
+    :inline-arities >2?
+    :inline (fn [me ke ve & kves]
+              (let [aex (rt (list 'assoc me ke ve))]
+                (if kves
+                  (list* 'assoc aex kves)
+                  aex)))}
   assoc
   (fn
     ([map key val]
      (. clojure.lang.RT (assoc map key val)))
     ([map key val & kvs]
-     (let [ret (. clojure.lang.RT (assoc map key val))]
-       (if kvs
-         (if (next kvs)
-           (recur ret (first kvs) (second kvs) (nnext kvs))
-           (throw (IllegalArgumentException.
-                   "assoc expects even number of arguments after map/vector, found odd number")))
-         ret)))))
+     (loop [^clojure.lang.IPersistentMap map map
+            key key
+            val val
+            ^clojure.lang.ISeq kvs kvs]
+       (let [ret (. clojure.lang.RT (assoc map key val))]
+         (if kvs
+           (if (next kvs)
+             (recur ret (first kvs) (second kvs) (nnext kvs))
+             (throw (IllegalArgumentException.
+                     "assoc expects even number of arguments after map/vector, found odd number")))
+           ret))))))
 
 ;;;;;;;;;;;;;;;;; metadata ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def
@@ -327,17 +351,41 @@
   ^{:arglists '([coll])
     :doc "Return the last item in coll, in linear time"
     :added "1.0"
+<<<<<<< HEAD
+    :static true
+    :strict true}
+  last
+  (fn [s]
+    (loop [^clojure.lang.ISeq s s]
+      (let [n (next s)]
+        (if n
+          (recur n)
+          (first s))))))
+=======
     :static true}
   last
   (fn [s]
     (if (next s)
       (recur (next s))
       (first s))))
+>>>>>>> skummet
 
 (def 
   ^{:arglists '([coll])
     :doc "Return a seq of all but the last item in coll, in linear time"
     :added "1.0"
+<<<<<<< HEAD
+    :static true
+    :strict true}
+  butlast
+  (fn [s]
+    (loop [^clojure.lang.IPersistentVector ret []
+           ^clojure.lang.ISeq s s]
+      (let [n (next s)]
+        (if n
+          (recur (conj ret (first s)) n)
+          (seq ret))))))
+=======
     :static true}
   butlast
   (fn [s]
@@ -345,6 +393,7 @@
       (if (next s)
         (recur (conj ret (first s)) (next s))
         (seq ret)))))
+>>>>>>> skummet
 
 (def 
   ^{:doc "Same as (def name (fn [params* ] exprs*)) or (def
@@ -563,35 +612,39 @@
   "Evaluates test. If logical false, evaluates body in an implicit do."
   {:added "1.0"}
   [test & body]
-    (list 'if test nil (cons 'do body)))
+  (list 'if test nil (cons 'do body)))
 
 (defn false?
   "Returns true if x is the value false, false otherwise."
   {:tag Boolean,
    :added "1.0"
    :static true}
-  [x] (clojure.lang.Util/identical x false))
+  [x]
+  (clojure.lang.Util/identical x false))
 
 (defn true?
   "Returns true if x is the value true, false otherwise."
   {:tag Boolean,
    :added "1.0"
    :static true}
-  [x] (clojure.lang.Util/identical x true))
+  [x]
+  (clojure.lang.Util/identical x true))
 
 (defn not
   "Returns true if x is logical false, false otherwise."
   {:tag Boolean
    :added "1.0"
    :static true}
-  [x] (if x false true))
+  [x]
+  (if x false true))
 
 (defn some?
   "Returns true if x is not nil, false otherwise."
   {:tag Boolean
    :added "1.6"
    :static true}
-  [x] (not (nil? x)))
+  [x]
+  (not (nil? x)))
 
 (defn str
   "With no args, returns the empty string. With one arg x, returns
@@ -3287,11 +3340,21 @@
         (recur (conj ret (first items)) (next items))
         ret)))
 
+(def
+  ^{:private true}
+  as
+  (fn [e t]
+    (with-meta e
+      (merge (meta e)
+             {:tag t}))))
+
 ;;;;;;;;;;;;;;;;;;;;; editable collections ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn transient 
   "Returns a new, transient version of the collection, in constant time."
   {:added "1.1"
-   :static true}
+   :static true
+   :inline (fn [e]
+             `(.asTransient ~(as e clojure.lang.ITransientCollection)))}
   [^clojure.lang.IEditableCollection coll] 
   (.asTransient coll))
 
@@ -3300,7 +3363,8 @@
   constant time. The transient collection cannot be used after this
   call, any such use will throw an exception."
   {:added "1.1"
-   :static true}
+   :static true
+   :inline (fn [e] `(.persistent ~(as e clojure.lang.ITransientCollection)))}
   [^clojure.lang.ITransientCollection coll]
   (.persistent coll))
 
@@ -3308,35 +3372,64 @@
   "Adds x to the transient collection, and return coll. The 'addition'
   may happen at different 'places' depending on the concrete type."
   {:added "1.1"
-   :static true}
+   :static true
+   :inline-arities #{1 2}
+   :inline (fn
+             ([x] x)
+             ([ce xe]
+              `(.conj ~(as ce clojure.lang.ITransientCollection) ~xe)))}
   ([] (transient []))
   ([coll] coll)
   ([^clojure.lang.ITransientCollection coll x]
-     (.conj coll x)))
+   (.conj coll x)))
 
 (defn assoc!
   "When applied to a transient map, adds mapping of key(s) to
   val(s). When applied to a transient vector, sets the val at index.
   Note - index must be <= (count vector). Returns coll."
   {:added "1.1"
-   :static true}
+   :static true
+   :strict true
+   :inline-arities >2?
+   :inline (fn [colle keye vale & kves]
+             (let [conje `(.assoc ~(as colle clojure.lang.ITransientAssociative) ~keye ~vale)]
+               (if kves
+                 (list* 'assoc! conje kves)
+                 conje)))}
   ([^clojure.lang.ITransientAssociative coll key val] (.assoc coll key val))
   ([^clojure.lang.ITransientAssociative coll key val & kvs]
-   (let [ret (.assoc coll key val)]
-     (if kvs
-       (recur ret (first kvs) (second kvs) (nnext kvs))
-       ret))))
+   (loop [^clojure.lang.ITransientAssociative coll coll
+          key key
+          val val
+          ^clojure.lang.ISeq kvs kvs]
+     (let [^clojure.lang.ITransientAssociative ret (.assoc coll key val)]
+       (if kvs
+         (recur ret (first kvs) (second kvs) (nnext kvs))
+         ret)))))
 
 (defn dissoc!
   "Returns a transient map that doesn't contain a mapping for key(s)."
   {:added "1.1"
-   :static true}
+   :static true
+   :strict true
+   :inline-arities >1?
+   :inline (fn
+             ([me ke]
+              `(.without ~(as me clojure.lang.ITransientMap) ~ke))
+             ([me ke & kes]
+              (let [de `(.without ~(as me clojure.lang.ITransientMap) ~ke)]
+                (if kes
+                  (list* `dissoc! de kes)
+                  de))))}
   ([^clojure.lang.ITransientMap map key] (.without map key))
   ([^clojure.lang.ITransientMap map key & ks]
-   (let [ret (.without map key)]
-     (if ks
-       (recur ret (first ks) (next ks))
-       ret))))
+   (loop [^clojure.lang.ITransientAssociative map map
+          key key
+          ^clojure.lang.ISeq ks ks]
+     (let [ret (.without map key)]
+       (if ks
+         (recur ret (first ks) (next ks))
+         ret)))))
 
 (defn pop!
   "Removes the last item from a transient vector. If
