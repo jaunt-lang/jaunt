@@ -21,6 +21,12 @@
   (. clojure.lang.PersistentList creator))
 
 (def
+  ^{:private true}
+  rt
+  (fn* [e]
+    (list '. 'clojure.lang.RT e)))
+
+(def
   ^{:arglists '([x seq])
     :doc "Returns a new seq where x is the first element and seq is the rest."
     :added "1.0"
@@ -52,22 +58,15 @@
     (.withMeta ^clojure.lang.IObj (cons 'fn* decl) 
                (.meta ^clojure.lang.IMeta &form))))
 (def
-  ^{:private true
-    :static  true
-    :tag     'boolean
-    :strict  true}
-  >1?
+  ^{:private true}
+  >n?
   (fn [n]
-    (clojure.lang.Numbers/gt n 1)))
+    (fn [x]
+      (clojure.lang.Numbers/gt x n))))
 
-(def
-  ^{:private true
-    :static  true
-    :tag     'boolean
-    :strict  true}
-  >0?
-  (fn [n]
-    (clojure.lang.Numbers/gt n 0)))
+(def ^:private >0? (>n? 0))
+(def ^:private >1? (>n? 1))
+(def ^:private >2? (>n? 2))
 
 (def
   ^{:arglists '([coll])
@@ -101,13 +100,22 @@
   (fn [x]
     (. clojure.lang.RT (more x))))
 
+(def list*)
+
 (def
   ^{:arglists '([coll x] [coll x & xs])
     :doc "conj[oin]. Returns a new collection with the xs
     'added'. (conj nil item) returns (item).  The 'addition' may
     happen at different 'places' depending on the concrete type."
     :added "1.0"
-    :static true}
+    :static true
+    :strict true
+    :inline-arities >2?
+    :inline (fn [colle xe & xes]
+              (let [conje (rt (list 'conj colle xe))]
+                (if xes
+                  (list* 'conj conje xes)
+                  conje)))}
   conj
   (fn
     ([] [])
@@ -115,138 +123,168 @@
     ([coll x]
      (. clojure.lang.RT (conj coll x)))
     ([coll x & xs]
-     (if xs
-       (recur (. clojure.lang.RT (conj coll x))
-              (first xs)
-              (next xs))
-       (. clojure.lang.RT (conj coll x))))))
+     (loop [^clojure.lang.IPersistentCollection coll coll
+            x x
+            ^clojure.lang.ISeq xs xs]
+       (if xs
+         (recur (. clojure.lang.RT (conj coll x))
+                (first xs)
+                (next xs))
+         (. clojure.lang.RT (conj coll x)))))))
 
 (def
- ^{:doc "Same as (first (next x))"
-   :arglists '([x])
-   :added "1.0"
-   :static true}
- second (fn ^:static second [x] (first (next x))))
+  ^{:doc "Same as (first (next x))"
+    :arglists '([x])
+    :added "1.0"
+    :static true}
+  second
+  (fn [x]
+    (first (next x))))
 
 (def
- ^{:doc "Same as (first (first x))"
-   :arglists '([x])
-   :added "1.0"
-   :static true}
- ffirst (fn ^:static ffirst [x] (first (first x))))
+  ^{:doc "Same as (first (first x))"
+    :arglists '([x])
+    :added "1.0"
+    :static true}
+  ffirst
+  (fn [x]
+    (first (first x))))
 
 (def
- ^{:doc "Same as (next (first x))"
-   :arglists '([x])
-   :added "1.0"
-   :static true}
- nfirst (fn ^:static nfirst [x] (next (first x))))
+  ^{:doc "Same as (next (first x))"
+    :arglists '([x])
+    :added "1.0"
+    :static true}
+  nfirst
+  (fn [x]
+    (next (first x))))
 
 (def
- ^{:doc "Same as (first (next x))"
-   :arglists '([x])
-   :added "1.0"
-   :static true}
- fnext (fn ^:static fnext [x] (first (next x))))
+  ^{:doc "Same as (first (next x))"
+    :arglists '([x])
+    :added "1.0"
+    :static true}
+  fnext
+  (fn [x]
+    (first (next x))))
 
 (def
- ^{:doc "Same as (next (next x))"
-   :arglists '([x])
-   :added "1.0"
-   :static true}
- nnext (fn ^:static nnext [x] (next (next x))))
+  ^{:doc "Same as (next (next x))"
+    :arglists '([x])
+    :added "1.0"
+    :static true}
+  nnext
+  (fn [x]
+    (next (next x))))
 
 (def
- ^{:arglists '(^clojure.lang.ISeq [coll])
-   :doc "Returns a seq on the collection. If the collection is
+  ^{:arglists '(^clojure.lang.ISeq [coll])
+    :doc "Returns a seq on the collection. If the collection is
     empty, returns nil.  (seq nil) returns nil. seq also works on
     Strings, native Java arrays (of reference types) and any objects
     that implement Iterable."
-   :tag clojure.lang.ISeq
-   :added "1.0"
-   :static true}
- seq (fn ^:static seq ^clojure.lang.ISeq [coll] (. clojure.lang.RT (seq coll))))
+    :tag clojure.lang.ISeq
+    :added "1.0"
+    :static true}
+  seq
+  (fn [coll]
+    (. clojure.lang.RT (seq coll))))
 
 (def
- ^{:arglists '([^Class c x])
-   :doc "Evaluates x and tests if it is an instance of the class
+  ^{:arglists '([^Class c x])
+    :doc "Evaluates x and tests if it is an instance of the class
     c. Returns true or false"
-   :added "1.0"}
- instance? (fn instance? [^Class c x] (. c (isInstance x))))
+    :added "1.0"}
+  instance?
+  (fn [^Class c x]
+    (. c (isInstance x))))
 
 (def
- ^{:arglists '([x])
-   :doc "Return true if x implements ISeq"
-   :added "1.0"
-   :static true}
- seq? (fn ^:static seq? [x] (instance? clojure.lang.ISeq x)))
+  ^{:arglists '([x])
+    :doc "Return true if x implements ISeq"
+    :added "1.0"
+    :static true}
+  seq?
+  (fn [x]
+    (instance? clojure.lang.ISeq x)))
 
 (def
- ^{:arglists '([x])
-   :doc "Return true if x is a Character"
-   :added "1.0"
-   :static true}
- char? (fn ^:static char? [x] (instance? Character x)))
+  ^{:arglists '([x])
+    :doc "Return true if x is a Character"
+    :added "1.0"
+    :static true}
+  char?
+  (fn [x]
+    (instance? Character x)))
 
 (def
- ^{:arglists '([x])
-   :doc "Return true if x is a String"
-   :added "1.0"
-   :static true}
- string? (fn ^:static string? [x] (instance? String x)))
+  ^{:arglists '([x])
+    :doc "Return true if x is a String"
+    :added "1.0"
+    :static true}
+  string?
+  (fn [x]
+    (instance? String x)))
 
 (def
- ^{:arglists '([x])
-   :doc "Return true if x implements IPersistentMap"
-   :added "1.0"
-   :static true}
- map? (fn ^:static map? [x] (instance? clojure.lang.IPersistentMap x)))
+  ^{:arglists '([x])
+    :doc "Return true if x implements IPersistentMap"
+    :added "1.0"
+    :static true}
+  map?
+  (fn [x]
+    (instance? clojure.lang.IPersistentMap x)))
 
 (def
- ^{:arglists '([x])
-   :doc "Return true if x implements IPersistentVector"
-   :added "1.0"
-   :static true}
- vector? (fn ^:static vector? [x] (instance? clojure.lang.IPersistentVector x)))
+  ^{:arglists '([x])
+    :doc "Return true if x implements IPersistentVector"
+    :added "1.0"
+    :static true}
+  vector?
+  (fn [x]
+    (instance? clojure.lang.IPersistentVector x)))
 
 (def
- ^{:arglists '([map key val] [map key val & kvs])
-   :doc "assoc[iate]. When applied to a map, returns a new map of the
+  ^{:arglists '([map key val] [map key val & kvs])
+    :doc "assoc[iate]. When applied to a map, returns a new map of the
     same (hashed/sorted) type, that contains the mapping of key(s) to
     val(s). When applied to a vector, returns a new vector that
     contains val at index. Note - index must be <= (count vector)."
-   :added "1.0"
-   :static true}
- assoc
- (fn ^:static assoc
-   ([map key val] (. clojure.lang.RT (assoc map key val)))
-   ([map key val & kvs]
-    (let [ret (assoc map key val)]
-      (if kvs
-        (if (next kvs)
-          (recur ret (first kvs) (second kvs) (nnext kvs))
-          (throw (IllegalArgumentException.
-                  "assoc expects even number of arguments after map/vector, found odd number")))
-        ret)))))
+    :added "1.0"
+    :static true}
+  assoc
+  (fn
+    ([map key val]
+     (. clojure.lang.RT (assoc map key val)))
+    ([map key val & kvs]
+     (let [ret (. clojure.lang.RT (assoc map key val))]
+       (if kvs
+         (if (next kvs)
+           (recur ret (first kvs) (second kvs) (nnext kvs))
+           (throw (IllegalArgumentException.
+                   "assoc expects even number of arguments after map/vector, found odd number")))
+         ret)))))
 
 ;;;;;;;;;;;;;;;;; metadata ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def
- ^{:arglists '([obj])
-   :doc "Returns the metadata of obj, returns nil if there is no metadata."
-   :added "1.0"
-   :static true}
- meta (fn ^:static meta [x]
-        (if (instance? clojure.lang.IMeta x)
-          (. ^clojure.lang.IMeta x (meta)))))
+  ^{:arglists '([obj])
+    :doc "Returns the metadata of obj, returns nil if there is no metadata."
+    :added "1.0"
+    :static true}
+  meta
+  (fn [x]
+    (if (instance? clojure.lang.IMeta x)
+      (. ^clojure.lang.IMeta x (meta)))))
 
 (def
- ^{:arglists '([^clojure.lang.IObj obj m])
-   :doc "Returns an object of the same type and value as obj, with
+  ^{:arglists '([^clojure.lang.IObj obj m])
+    :doc "Returns an object of the same type and value as obj, with
     map m as its metadata."
-   :added "1.0"
-   :static true}
- with-meta (fn ^:static with-meta [^clojure.lang.IObj x m]
-             (. x (withMeta m))))
+    :added "1.0"
+    :static true}
+  with-meta
+  (fn [^clojure.lang.IObj x m]
+    (. x (withMeta m))))
 
 (def ^{:private true :dynamic true}
   assert-valid-fdecl (fn [fdecl]))
@@ -278,77 +316,79 @@
 
 
 (def 
- ^{:arglists '([coll])
-   :doc "Return the last item in coll, in linear time"
-   :added "1.0"
-   :static true}
- last (fn ^:static last [s]
-        (if (next s)
-          (recur (next s))
-          (first s))))
+  ^{:arglists '([coll])
+    :doc "Return the last item in coll, in linear time"
+    :added "1.0"
+    :static true}
+  last
+  (fn [s]
+    (if (next s)
+      (recur (next s))
+      (first s))))
 
 (def 
- ^{:arglists '([coll])
-   :doc "Return a seq of all but the last item in coll, in linear time"
-   :added "1.0"
-   :static true}
- butlast (fn ^:static butlast [s]
-           (loop [ret [] s s]
-             (if (next s)
-               (recur (conj ret (first s)) (next s))
-               (seq ret)))))
+  ^{:arglists '([coll])
+    :doc "Return a seq of all but the last item in coll, in linear time"
+    :added "1.0"
+    :static true}
+  butlast
+  (fn [s]
+    (loop [ret [] s s]
+      (if (next s)
+        (recur (conj ret (first s)) (next s))
+        (seq ret)))))
 
 (def 
-
- ^{:doc "Same as (def name (fn [params* ] exprs*)) or (def
+  ^{:doc "Same as (def name (fn [params* ] exprs*)) or (def
     name (fn ([params* ] exprs*)+)) with any doc-string or attrs added
     to the var metadata. prepost-map defines a map with optional keys
     :pre and :post that contain collections of pre or post conditions."
-   :arglists '([name doc-string? attr-map? [params*] prepost-map? body]
+    :arglists '([name doc-string? attr-map? [params*] prepost-map? body]
                 [name doc-string? attr-map? ([params*] prepost-map? body)+ attr-map?])
-   :added "1.0"}
- defn (fn defn [&form &env name & fdecl]
-        ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
-        (if (instance? clojure.lang.Symbol name)
-          nil
-          (throw (IllegalArgumentException. "First argument to defn must be a symbol")))
-        (let [m (if (string? (first fdecl))
-                  {:doc (first fdecl)}
-                  {})
-              fdecl (if (string? (first fdecl))
-                      (next fdecl)
-                      fdecl)
-              m (if (map? (first fdecl))
-                  (conj m (first fdecl))
-                  m)
-              fdecl (if (map? (first fdecl))
-                      (next fdecl)
-                      fdecl)
-              fdecl (if (vector? (first fdecl))
-                      (list fdecl)
-                      fdecl)
-              m (if (map? (last fdecl))
-                  (conj m (last fdecl))
-                  m)
-              fdecl (if (map? (last fdecl))
-                      (butlast fdecl)
-                      fdecl)
-              m (conj {:arglists (list 'quote (sigs fdecl))} m)
-              m (let [inline (:inline m)
-                      ifn (first inline)
-                      iname (second inline)]
-                  ;; same as: (if (and (= 'fn ifn) (not (symbol? iname))) ...)
-                  (if (if (clojure.lang.Util/equiv 'fn ifn)
-                        (if (instance? clojure.lang.Symbol iname) false true))
-                    ;; inserts the same fn name to the inline fn if it does not have one
-                    (assoc m :inline (cons ifn (cons (clojure.lang.Symbol/intern (.concat (.getName ^clojure.lang.Symbol name) "__inliner"))
-                                                     (next inline))))
-                    m))
-              m (conj (if (meta name) (meta name) {}) m)]
-          (list 'def (with-meta name m)
-                ;;todo - restore propagation of fn name
-                ;;must figure out how to convey primitive hints to self calls first
-                (cons `fn fdecl) ))))
+    :added "1.0"}
+  defn
+  (fn [&form &env name & fdecl]
+    ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
+    (if (instance? clojure.lang.Symbol name)
+      nil
+      (throw (IllegalArgumentException. "First argument to defn must be a symbol")))
+    (let [m (if (string? (first fdecl))
+              {:doc (first fdecl)}
+              {})
+          fdecl (if (string? (first fdecl))
+                  (next fdecl)
+                  fdecl)
+          m (if (map? (first fdecl))
+              (conj m (first fdecl))
+              m)
+          fdecl (if (map? (first fdecl))
+                  (next fdecl)
+                  fdecl)
+          fdecl (if (vector? (first fdecl))
+                  (list fdecl)
+                  fdecl)
+          m (if (map? (last fdecl))
+              (conj m (last fdecl))
+              m)
+          fdecl (if (map? (last fdecl))
+                  (butlast fdecl)
+                  fdecl)
+          m (conj {:arglists (list 'quote (sigs fdecl))} m)
+          m (let [inline (:inline m)
+                  ifn (first inline)
+                  iname (second inline)]
+              ;; same as: (if (and (= 'fn ifn) (not (symbol? iname))) ...)
+              (if (if (clojure.lang.Util/equiv 'fn ifn)
+                    (if (instance? clojure.lang.Symbol iname) false true))
+                ;; inserts the same fn name to the inline fn if it does not have one
+                (assoc m :inline (cons ifn (cons (clojure.lang.Symbol/intern (.concat (.getName ^clojure.lang.Symbol name) "__inliner"))
+                                                 (next inline))))
+                m))
+          m (conj (if (meta name) (meta name) {}) m)]
+      (list 'def (with-meta name m)
+            ;;todo - restore propagation of fn name
+            ;;must figure out how to convey primitive hints to self calls first
+            (cons `fn fdecl) ))))
 
 (. (var defn) (setMacro))
 
