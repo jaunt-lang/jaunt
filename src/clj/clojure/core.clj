@@ -30,7 +30,11 @@
   ^{:arglists '([x seq])
     :doc "Returns a new seq where x is the first element and seq is the rest."
     :added "1.0"
-    :static true}
+    :static true
+    :tag clojure.lang.ISeq
+    :inline-arities #{2}
+    :inline (fn* [xe se]
+              (rt (list 'cons xe se)))}
   cons
   (fn* [x seq]
     (. clojure.lang.RT (cons x seq))))
