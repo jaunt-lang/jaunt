@@ -1403,7 +1403,11 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 		return tag != null ? HostExpr.tagToClass(tag) : field.getType();
 	}
 
-	public boolean needsCast() {return !compatibleType(tag, field.getType());}
+	public boolean needsCast() {
+		if (field == null)
+			return tag != null;
+		return !compatibleType(tag, field.getType());
+	}
 
 	public Object evalAssign(Expr val) {
 		return Reflector.setInstanceField(target.eval(), fieldName, val.eval());
