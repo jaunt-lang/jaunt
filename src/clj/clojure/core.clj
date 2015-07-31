@@ -615,7 +615,8 @@
   {:tag Boolean
    :added "1.0"
    :static true}
-  [x] (if x false true))
+  [x]
+  (if x false true))
 
 (defn some?
   "Returns true if x is not nil, false otherwise."
