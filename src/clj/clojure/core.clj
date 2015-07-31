@@ -3338,6 +3338,14 @@
         (recur (conj ret (first items)) (next items))
         ret)))
 
+(def
+  ^{:private true}
+  as
+  (fn [e t]
+    (with-meta e
+      (merge (meta e)
+             {:tag t}))))
+
 ;;;;;;;;;;;;;;;;;;;;; editable collections ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn transient 
   "Returns a new, transient version of the collection, in constant time."
