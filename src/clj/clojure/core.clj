@@ -166,7 +166,9 @@
   ^{:doc "Same as (next (first x))"
     :arglists '([x])
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [x]
+              (list 'next (list 'first x)))}
   nfirst
   (fn [x]
     (next (first x))))
