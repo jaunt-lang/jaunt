@@ -77,7 +77,9 @@
     :doc "Returns the first item in the collection. Calls seq on its
     argument. If coll is nil, returns nil."
     :added "1.0"
-    :static true}
+    :static true
+    :inline (fn [xe]
+              (rt (list 'first xe)))}
   first
   (fn [coll]
     (. clojure.lang.RT (first coll))))
