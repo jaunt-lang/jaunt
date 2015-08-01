@@ -6314,15 +6314,16 @@ public static class LocalBindingExpr implements Expr, MaybePrimitiveExpr, Assign
     public boolean needsCast(ObjExpr objx) {
 			final Symbol tag = b.tag;
 			if (tag == null) {
-				return false;
+				return !compatibleType(this.tag, Object.class);
 			}
 			Class c = HostExpr.tagToClass(tag);
 			if (c.isPrimitive()) {
 				return false;
 			}
 
-			if (objx.closes.containsKey(b))
-				c = Object.class; // closed-over locals are always Object
+			if (objx.closes.containsKey(b)) // closed-over locals are typed
+				return false;
+
 			if (b.isArg) // we haven't figured out how to pre-cast method args
 				return true;
 			return !compatibleType(tag, c);
