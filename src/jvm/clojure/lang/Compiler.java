@@ -4549,7 +4549,7 @@ static public class ObjExpr implements Expr{
 			if(lb.getPrimitiveType() != null)
 				tv = tv.cons(Type.getType(lb.getPrimitiveType()));
 			else
-				tv = tv.cons(OBJECT_TYPE);
+				tv = tv.cons(bindingType(lb));
 			}
 		Type[] ret = new Type[tv.count()];
 		for(int i = 0; i < tv.count(); i++)
@@ -4712,13 +4712,15 @@ static public class ObjExpr implements Expr{
 			else
 				{
 				//todo - only enable this non-private+writability for letfns where we need it
-				if(lb.getPrimitiveType() != null)
+				if (lb.getPrimitiveType() != null)
 					cv.visitField(0 + (isVolatile(lb) ? ACC_VOLATILE : 0)
-							, lb.name, Type.getType(lb.getPrimitiveType()).getDescriptor(),
-								  null, null);
+									, lb.name, Type.getType(lb.getPrimitiveType()).getDescriptor(),
+									null, null);
 				else
+					{
 					cv.visitField(0 //+ (oneTimeUse ? 0 : ACC_FINAL)
-							, lb.name, OBJECT_TYPE.getDescriptor(), null, null);
+								, lb.name, bindingTypeDescriptor(lb), null, null);
+					}
 				}
 			}
 
@@ -4783,7 +4785,7 @@ static public class ObjExpr implements Expr{
 			else
 				{
 				ctorgen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ILOAD), a);
-				ctorgen.putField(objtype, lb.name, OBJECT_TYPE);
+				ctorgen.putField(objtype, lb.name, bindingType(lb));
 				}
 			// No idea why we shouldn't call this in lean mode, need to sort it
 			// out later.
@@ -4884,7 +4886,7 @@ static public class ObjExpr implements Expr{
 					}
 				else
 					{
-					gen.getField(objtype, lb.name, OBJECT_TYPE);
+					gen.getField(objtype, lb.name, bindingType(lb));
 					}
 				}
 
@@ -5325,8 +5327,15 @@ static public class ObjExpr implements Expr{
 				LocalBinding lb = lbe.b;
 				if(lb.getPrimitiveType() != null)
 					objx.emitUnboxedLocal(gen, lb);
-				else
+				else {
 					objx.emitLocal(gen, lb, lbe.shouldClear);
+					final Expr e = lb.init;
+					if (strictMode() && lb.hasJavaClass()
+									&& (e == null && !compatibleType(lb.tag, Object.class)
+									    || e.needsCast(objx))) {
+						gen.checkCast(bindingType(lb));
+					}
+				}
 				}
 			gen.invokeConstructor(objtype, new Method("<init>", Type.VOID_TYPE, ctorTypes()));
 			}
@@ -5566,7 +5575,19 @@ static public class ObjExpr implements Expr{
 
 }
 
-enum PATHTYPE {
+	private static Type bindingType(LocalBinding lb) {
+		Class c;
+		if (!strictMode()) c = Object.class;
+		else c = lb.hasJavaClass() ? lb.getJavaClass() : null;
+		if (c == null) c = Object.class;
+		return Type.getType(c);
+	}
+
+	private static String bindingTypeDescriptor(LocalBinding lb) {
+		return bindingType(lb).getDescriptor();
+	}
+
+	enum PATHTYPE {
     PATH, BRANCH;
 }
 
