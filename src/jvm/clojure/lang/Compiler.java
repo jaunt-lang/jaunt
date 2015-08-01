@@ -5391,7 +5391,7 @@ static public class ObjExpr implements Expr{
 				}
 			else
 				{
-				gen.getField(objtype, lb.name, OBJECT_TYPE);
+				gen.getField(objtype, lb.name, bindingType(lb));
 				if(onceOnly && clear && lb.canBeCleared)
 					{
 					gen.loadThis();
@@ -6323,7 +6323,7 @@ public static class LocalBindingExpr implements Expr, MaybePrimitiveExpr, Assign
 
 			if (objx.closes.containsKey(b))
 				c = Object.class; // closed-over locals are always Object
-			if (b.isArg || b.init == null) // we haven't figured out how to pre-cast method args
+			if (b.isArg) // we haven't figured out how to pre-cast method args
 				return true;
 			return !compatibleType(tag, c);
     }
