@@ -4708,7 +4708,7 @@ static public class ObjExpr implements Expr{
 				else
 				//todo - when closed-overs are fields, use more specific types here and in ctor and emitLocal?
 					fv = cv.visitField(access
-							, lb.name, OBJECT_TYPE.getDescriptor(), null, null);
+							, lb.name, bindingTypeDescriptor(lb), null, null);
 				addAnnotation(fv, RT.meta(lb.sym));
 				}
 			else
@@ -8486,7 +8486,7 @@ static public class NewInstanceExpr extends ObjExpr{
 			else
 			//todo - when closed-overs are fields, use more specific types here and in ctor and emitLocal?
 				cv.visitField(access
-						, lb.name, OBJECT_TYPE.getDescriptor(), null, null);
+						, lb.name, bindingTypeDescriptor(lb), null, null);
 			}
 
 		//ctor that takes closed-overs and does nothing
@@ -8585,6 +8585,9 @@ static public class NewInstanceExpr extends ObjExpr{
 						{
 						mv.visitTypeInsn(CHECKCAST, Type.getType(boxClass(k)).getInternalName());
 						}
+						else if (k != null && k != Object.class){
+						mv.visitTypeInsn(CHECKCAST, Type.getType(k).getInternalName());
+					}
 					mv.visitVarInsn(ASTORE, i);
 					mv.visitVarInsn(ALOAD, 0);
 					mv.visitLdcInsn(bName);
