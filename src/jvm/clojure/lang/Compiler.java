@@ -5567,6 +5567,8 @@ static public class ObjExpr implements Expr{
 						return Type.getType(Var.class);
 					else if(c == String.class)
 							return Type.getType(String.class);
+				else if(Number.class.isAssignableFrom(c))
+					return Type.getType(Number.class);
 
 //			return Type.getType(c);
 			}
