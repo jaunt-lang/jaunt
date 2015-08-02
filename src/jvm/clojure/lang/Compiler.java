@@ -266,21 +266,23 @@ static final public Var TOP_LEVEL_VARS = Var.create().setDynamic();
 // Predicate that given a var returns whether it is lean. This is supplied from
 // outside to exclude certain vars from being lean-compiled.
 static final public Var LEAN_VAR_PRED = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                                   Symbol.intern("*lean-var?*"), null).setDynamic();
+				Symbol.intern("*lean-var?*"), null).setDynamic();
 
 final static Var LEAN_COMPILE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                            Symbol.intern("*lean-compile*"), null).setDynamic();
 
-static final public Var EMIT_LEAN_CODE = Var.create(false).setDynamic();
+	// Set if and only if a wrapping DefExpr is tagged with {:strict true}
+	static final public Var STRICT_TAGS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
+					Symbol.intern("*strict-tags*"), null).setDynamic();
+
+	static final public Var EMIT_LEAN_CODE = Var.create(false).setDynamic();
 static final public Var IS_ANALYZING_META = Var.create(false).setDynamic();
 static final public Var IS_DEFINING_LEAN_VAR = Var.create(false).setDynamic();
 static final public Var LEAN_VAR_BEING_DEFINED = Var.create(null).setDynamic();
 static final public Var FN_TYPE_MAP = Var.create(null).setDynamic();
 static final public Var IS_COMPILING_A_MACRO = Var.create(false).setDynamic();
 
-// Set if and only if a wrapping DefExpr is tagged with {:strict true} 
-static final public Var STRICT_TAGS = Var.create(false).setDynamic();
-    
+
 // Get handle of some Clojure vars that will be of use later.
 static final public Var ALTER_VAR_ROOT = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                                     Symbol.intern("alter-var-root"));
@@ -7848,6 +7850,7 @@ public static Object load(Reader rdr, String sourcePath, String sourceName) {
 			       COLUMN_AFTER, pushbackReader.getColumnNumber()
 			       ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()
 					,RT.WARN_ON_REFLECTION, RT.WARN_ON_REFLECTION.deref()
+							,STRICT_TAGS, false
 			       ,RT.DATA_READERS, RT.DATA_READERS.deref()
                         ));
 
