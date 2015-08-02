@@ -6898,6 +6898,7 @@ public static class RecurExpr implements Expr, MaybePrimitiveExpr{
 			else
 				{
 				arg.emit(C.EXPRESSION, objx, gen);
+					maybeCastTo(objx, gen, arg, lb.tag);
 				}
 			}
 
