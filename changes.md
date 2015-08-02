@@ -2,9 +2,50 @@
 
 # Changes to Clojure in Version 1.7
 
-## 1 New and Improved Features
+## 1 Compatibility Notes
 
-### 1.1 Transducers
+Please be aware of the following issues when upgrading to Clojure 1.7.
+
+### Seqs on Java iterators that return the same mutating object
+
+Seqs are fundamentally incompatible with Java iterators that return
+the same mutating object on every call to next().  Some Clojure
+libraries incorrectly rely on calling seq on such iterators.
+
+In 1.7, iterator-seqs are chunked, which will cause many of these
+incorrect usages to return incorrect results immediately.
+
+The `seq` and `iterator-seq` docstrings have been updated to include
+an explicit warning. Libraries that incorrectly use `seq` and
+`iterator-seq` will need to be fixed before running against 1.7.
+
+* [CLJ-1669](http://dev.clojure.org/jira/browse/CLJ-1669)
+* [CLJ-1738](http://dev.clojure.org/jira/browse/CLJ-1738)
+
+### Thread owner check removed on transients
+
+Prior to Clojure 1.7, transients would allow modification only from the
+thread that created the transient. This check has been removed. It is
+still a requirement that transients should be updated by only a single
+thread at a time.
+
+This constraint was relaxed to allow transients to be used in cases where
+code is multiplexed across multiple threads in a pool (such as go blocks
+in core.async).
+
+### keys/vals require custom map type to implement Iterable
+
+Invoking `keys` or `vals` on a custom map type that implements IPersistentMap
+will now use the Iterable iterator() method instead of accessing entries
+via the seq of the map. There have been no changes in the type hierarchy
+(IPersistentMap has always extended Iterable) but former map-like instances
+may have skipped implementing this method in the past.
+
+* [CLJ-1602](http://dev.clojure.org/jira/browse/CLJ-1602)
+
+## 2 New and Improved Features
+
+### 2.1 Transducers
 
 Transducers is a new way to decouple algorithmic transformations from their
 application in different contexts. Transducers are functions that transform
@@ -16,7 +57,6 @@ Many existing sequence functions now have a new arity (one fewer argument
 than before). This arity will return a transducer that represents the same
 logic but is independent of lazy sequence processing. Functions included are:
 
-* conj (conjs to [])
 * map
 * mapcat
 * filter
@@ -38,7 +78,7 @@ logic but is independent of lazy sequence processing. Functions included are:
 Additionally some new transducer functions have been added:
 
 * cat - concatenates the contents of each input
-* de-dupe - removes consecutive duplicated values
+* dedupe - removes consecutive duplicated values
 * random-sample - returns items from coll with random probability
 
 And this function can be used to make completing transforms:
@@ -51,12 +91,12 @@ transducers in different ways:
 * sequence - takes a transformation and a coll and produces a lazy seq
 * transduce - reduce with a transformation (eager)
 * eduction - returns a reducible/iterable of applications of the transducer to items in coll. Applications are re-performed with every reduce/iterator.
-* run! - run the transformation for side effects on the collection
 
 There have been a number of internal changes to support transducers:
 
 * volatiles - there are a new set of functions (volatile!, vswap!, vreset!, volatile?) to create and use volatile "boxes" to hold state in stateful transducers. Volatiles are faster than atoms but give up atomicity guarantees so should only be used with thread isolation.
 * array iterators - added support for iterators over arrays
+* conj can be used as a reducing function and will conj to []
 
 Some related issues addressed during development:
 * [CLJ-1511](http://dev.clojure.org/jira/browse/CLJ-1511)
@@ -73,7 +113,7 @@ Some related issues addressed during development:
 * [CLJ-1669](http://dev.clojure.org/jira/browse/CLJ-1669)
 * [CLJ-1723](http://dev.clojure.org/jira/browse/CLJ-1723)
 
-### 1.2 Reader Conditionals
+### 2.2 Reader Conditionals
 
 Reader Conditionals are a new capability to support portable code that
 can run on multiple Clojure platforms with only small changes. In
@@ -88,13 +128,14 @@ prior to .cljc.
 A new reader form can be used to specify "reader conditional" code in
 cljc files (and *only* cljc files). Each platform defines a feature
 identifying the platform (:clj, :cljs, :cljr). The reader conditional
-specifies code that is read conditionally based on the feature/
+specifies code that is read conditionally based on the feature. The
+REPL also allows reader conditionals.
 
 Form #? takes a list of alternating feature and expression. These are
 checked like cond and the selected expression is read and returned. Other
-branches are unread. If no branch is selected, the reader reads nothing
-(not nil, but literally as if reading ""). An optional ":default" branch
-can be used as a fallthrough.
+branches are read but skipped. If no branch is selected, the reader reads
+nothing (not nil, but literally as if reading no form). An optional
+`:default` branch can be used as a fallthrough.
 
 Reader conditional with 2 features and a default:
 
@@ -104,14 +145,14 @@ Reader conditional with 2 features and a default:
 
 There is also a reader conditional splicing form. The evaluated expression
 should be sequential and will be spliced into the surrounded code, similar
-to unqoute-splicing.
+to unquote-splicing.
 
 For example:
 
    [1 2 #?@(:clj [3 4] :cljs [5 6])]
 
 This form would read as [1 2 3 4] on Clojure, [1 2 5 6] on ClojureScript,
-and [1 2] on any other platform.
+and [1 2] on any other platform. Splicing is not allowed at the top level.
 
 Additionally, the reader can now be invoked with options for the features
 to use and how to interpret reader conditionals. By default, reader conditionals
@@ -130,8 +171,9 @@ http://dev.clojure.org/display/design/Reader+Conditionals
 * [CLJ-1699](http://dev.clojure.org/jira/browse/CLJ-1699)
 * [CLJ-1700](http://dev.clojure.org/jira/browse/CLJ-1700)
 * [CLJ-1728](http://dev.clojure.org/jira/browse/CLJ-1728)
+* [CLJ-1706](http://dev.clojure.org/jira/browse/CLJ-1706)
 
-### 1.3 Keyword and Symbol Construction
+### 2.3 Keyword and Symbol Construction
 
 In response to issues raised in [CLJ-1439](http://dev.clojure.org/jira/browse/CLJ-1439),
 several changes have been made in symbol and keyword construction:
@@ -143,7 +185,7 @@ in a performance increase.
 2) Keywords are cached and keyword construction includes a cache check. A change was made
 to only clear the cache reference queue when there is a cache miss.
 
-### 1.4 Warn on Boxed Math
+### 2.4 Warn on Boxed Math
 
 One source of performance issues is the (unintended) use of arithmetic operations on
 boxed numbers. To make detecting the presence of boxed math easier, a warning will now
@@ -167,7 +209,7 @@ Example use:
 * [CLJ-1535](http://dev.clojure.org/jira/browse/CLJ-1535)
 * [CLJ-1642](http://dev.clojure.org/jira/browse/CLJ-1642)
 
-### 1.5 update - like update-in for first level
+### 2.5 update - like update-in for first level
 
 `update` is a new function that is like update-in specifically for first-level keys:
 
@@ -184,7 +226,7 @@ Example use:
 
 * [CLJ-1251](http://dev.clojure.org/jira/browse/CLJ-1251)
 
-### 1.6 Faster reduce and iterator paths
+### 2.6 Faster reduce and iterator paths
 
 Several important Clojure functions now return sequences that also
 contain fast reduce() (or in some cases iterator()) paths. In many
@@ -221,7 +263,7 @@ eduction.
 * [CLJ-1726](http://dev.clojure.org/jira/browse/CLJ-1726)
 * [CLJ-1727](http://dev.clojure.org/jira/browse/CLJ-1727)
 
-### 1.7 Printing as data
+### 2.7 Printing as data
 
 There have been enhancements in how the REPL prints values without a
 print-method, specifically Throwable and the fallthrough Object case.
@@ -256,19 +298,26 @@ map data: `Throwable->map`.
 
 * [CLJ-1703](http://dev.clojure.org/jira/browse/CLJ-1703)
 * [CLJ-1716](http://dev.clojure.org/jira/browse/CLJ-1716)
+* [CLJ-1735](http://dev.clojure.org/jira/browse/CLJ-1735)
 
-## 2 Enhancements
+### 2.8 run!
 
-### 2.1 Error messages
+run! is a new function that takes a side effect reducing function and runs
+it for all items in a collection via reduce. The accumulator is ignored and
+nil is returned.
+
+    (run! println (range 10))
+
+## 3 Enhancements
+
+### 3.1 Error messages
 
 * [CLJ-1261](http://dev.clojure.org/jira/browse/CLJ-1261)
   Invalid defrecord results in exception attributed to consuming ns instead of defrecord ns
-* [CLJ-1169](http://dev.clojure.org/jira/browse/CLJ-1169)
-  Report line,column, and source in defmacro errors
 * [CLJ-1297](http://dev.clojure.org/jira/browse/CLJ-1297)
   Give more specific hint if namespace with "-" not found to check file uses "_"
 
-### 2.2 Documentation strings
+### 3.2 Documentation strings
 
 * [CLJ-1417](http://dev.clojure.org/jira/browse/CLJ-1417)
   clojure.java.io/input-stream has incorrect docstring
@@ -282,8 +331,10 @@ map data: `Throwable->map`.
   Fix typo in deftype docstring
 * [CLJ-1478](http://dev.clojure.org/jira/browse/CLJ-1378)
   Fix typo in clojure.main usage
+* [CLJ-1738](http://dev.clojure.org/jira/browse/CLJ-1738)
+  Clarify usage on Java iterators in seq and iterator-seq
 
-### 2.3 Performance
+### 3.3 Performance
 
 * [CLJ-1430](http://dev.clojure.org/jira/browse/CLJ-1430)
   Improve performance of partial with more unrolling
@@ -300,7 +351,7 @@ map data: `Throwable->map`.
 * [CLJ-1695](http://dev.clojure.org/jira/browse/CLJ-1695)
   Fixed reflection call in variadic vector-of constructor
 
-### 2.4 Other enhancements
+### 3.4 Other enhancements
 
 * [CLJ-1191](http://dev.clojure.org/jira/browse/CLJ-1191)
   Improve apropos to show some indication of namespace of symbols found
@@ -331,7 +382,7 @@ map data: `Throwable->map`.
 * [CLJ-1683](http://dev.clojure.org/jira/browse/CLJ-1683)
   Change reduce tests to better catch reduce without init bugs
 
-## 3 Bug Fixes
+## 4 Bug Fixes
 
 * [CLJ-1362](http://dev.clojure.org/jira/browse/CLJ-1362)
   Reduce broken on some primitive vectors
@@ -389,6 +440,8 @@ map data: `Throwable->map`.
   Use equals() instead of == when resolving Symbol
 * [CLJ-1195](http://dev.clojure.org/jira/browse/CLJ-1195)
   emit-hinted-impl expands to ns-qualified invocation of fn
+* [CLJ-1237](http://dev.clojure.org/jira/browse/CLJ-1237)
+  reduce of sequence that switches between chunked and unchunked many times throws StackOverflow
 
 # Changes to Clojure in Version 1.6
 
