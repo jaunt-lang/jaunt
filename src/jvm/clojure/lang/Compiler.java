@@ -2926,9 +2926,9 @@ public static class MetaExpr implements Expr{
 		expr.emit(C.EXPRESSION, objx, gen);
 		if (!RT.booleanCast(EMIT_LEAN_CODE) && ((MapExpr)meta).keyvals.count() > 0)
 			{
-			gen.checkCast(IOBJ_TYPE);
+				maybeCastTo(objx, gen, expr, IObj.class);
 			meta.emit(C.EXPRESSION, objx, gen);
-			gen.checkCast(IPERSISTENTMAP_TYPE);
+				maybeCastTo(objx, gen, meta, IPersistentMap.class);
 			gen.invokeInterface(IOBJ_TYPE, withMetaMethod);
 			}
 		if(context == C.STATEMENT)
@@ -3992,7 +3992,7 @@ static class InvokeExpr implements Expr{
 			{
 			fexpr.emit(C.EXPRESSION, objx, gen);
 			gen.visitLineNumber(line, gen.mark());
-			gen.checkCast(IFN_TYPE);
+				maybeCastTo(objx, gen, fexpr, IFn.class);
 			emitArgsAndCall(0, context,objx,gen);
 			if (emitLeanCode && isAlterVarRoot)
 				{
