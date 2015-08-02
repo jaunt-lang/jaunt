@@ -2242,9 +2242,8 @@ static class NilExpr extends LiteralExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		gen.visitInsn(Opcodes.ACONST_NULL);
-		if(context == C.STATEMENT)
-			gen.pop();
+		if(context != C.STATEMENT)
+			gen.visitInsn(Opcodes.ACONST_NULL);
 	}
 
 	public boolean hasJavaClass(){
@@ -2285,14 +2284,8 @@ static class BooleanExpr extends LiteralExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		if(val)
-			gen.getStatic(BOOLEAN_OBJECT_TYPE, "TRUE", BOOLEAN_OBJECT_TYPE);
-		else
-			gen.getStatic(BOOLEAN_OBJECT_TYPE, "FALSE", BOOLEAN_OBJECT_TYPE);
-		if(context == C.STATEMENT)
-			{
-			gen.pop();
-			}
+		if(context != C.STATEMENT)
+			gen.getStatic(BOOLEAN_OBJECT_TYPE, val ? "TRUE" : "FALSE", BOOLEAN_OBJECT_TYPE);
 	}
 
 	public boolean hasJavaClass(){
@@ -5294,7 +5287,12 @@ static public class ObjExpr implements Expr{
 			if(letFnLocals.contains(lb))
 				{
 				Class primc = lb.getPrimitiveType();
-				gen.dup();
+				for (ISeq more = s.next(); more != null; more = more.next())
+					if (letFnLocals.contains(more.first()))
+					{
+						gen.dup(); // this isn't the last field we'll be setting
+						break;
+					}
 				if(primc != null)
 					{
 					objx.emitUnboxedLocal(gen, lb);
@@ -5307,8 +5305,6 @@ static public class ObjExpr implements Expr{
 					}
 				}
 			}
-		gen.pop();
-
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
