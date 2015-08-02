@@ -5577,6 +5577,12 @@ static public class ObjExpr implements Expr{
 
 }
 
+	private static void debugBinding(LocalBinding lb, String localName, String label) {
+		if (lb.sym.equals(Symbol.intern(localName))) {
+      System.out.println(label + "binding for " + localName + ": tag " + lb.tag + ", arg " + lb.isArg + ", init " + lb.init + ", class " + lb.getJavaClass());
+    }
+	}
+
 	private static Type bindingType(LocalBinding lb) {
 		Class c;
 		if (!strictMode()) c = Object.class;
