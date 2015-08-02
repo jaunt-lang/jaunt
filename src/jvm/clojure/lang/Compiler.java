@@ -406,7 +406,9 @@ static final public Var CLEAR_SITES = Var.create(null).setDynamic();
 		return tag == null || c != null && HostExpr.tagToClass(tag).isAssignableFrom(c);
 	}
 
-	private static void maybeCastTo(ObjExpr objx, GeneratorAdapter gen, Expr e, Class<?> type) {
+	private static void maybeCastTo(ObjExpr objx, GeneratorAdapter gen, Expr e, Object tag) {
+		if (tag == null) return;
+		final Class type = HostExpr.tagToClass(tag);
 		if (!strictMode() || type.isPrimitive() || e.needsCast(objx) || !compatibleType(type, e.hasJavaClass() ? e.getJavaClass() : Object.class))
     {
       HostExpr.emitUnboxArg(objx, gen, type);
