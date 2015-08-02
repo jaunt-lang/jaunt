@@ -3830,8 +3830,12 @@ static class InvokeExpr implements Expr{
 			if (emitLeanCode && isAlterVarRoot)
 				{
 				Var var = ((TheVarExpr)RT.first(args)).var;
-				String typeStr = getNSClassname(var.ns);
-				gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+				if (var.objtype == null || var.isNotSingleton()) {
+					String typeStr = getNSClassname(var.ns);
+					gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+				} else {
+					gen.putStatic(var.objtype, "__instance", OBJECT_TYPE);
+				}
 				return;
 				}
 			}

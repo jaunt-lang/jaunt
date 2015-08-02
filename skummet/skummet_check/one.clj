@@ -80,9 +80,17 @@
 (defn test-transducers []
   (transduce (comp (filter odd?) (map inc)) + (range 5)))
 
+(defn simple-function []
+  42)
+
 (defn test-alter-var-root []
   (alter-var-root #'skummet-check.two/just-value + 100)
   skummet-check.two/just-value)
+
+(defn test-alter-var-root-on-function []
+  (assert (= (simple-function) 42))
+  (alter-var-root #'simple-function (fn [& _] (fn [] 54)))
+  (assert (= (simple-function) 54) "alter-var-root on functions doesn't work"))
 
 (defn recursive [i]
   (if (= i 0)
@@ -163,6 +171,7 @@
   (assert (= (my-multi 10 20) 30) "Multimethods don't work")
   (assert (= skummet-check.two/just-value 42))
   (assert (= (test-alter-var-root) 142) "alter-var-root doesn't work")
+  (test-alter-var-root-on-function)
   (assert (= inside-var 40) "Internal vars don't work")
   (assert (= (fun-inside-let 42) 342) "defn inside let don't work")
   (println "Testing ordinary function:" (ordinary-function args))
