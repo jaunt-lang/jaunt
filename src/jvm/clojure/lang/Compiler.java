@@ -6112,7 +6112,7 @@ abstract public static class ObjMethod{
 					gen.pop();
 					}
 				else
-					gen.unbox(Type.getType(retClass));
+				  maybeCastTo(objx, gen, body, retClass);
 				}
 	}
 	abstract int numParams();
