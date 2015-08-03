@@ -603,7 +603,10 @@ static class DefExpr implements Expr{
 			}
 		if(initProvided) {
 		    try {
-			Var.pushThreadBindings(RT.map(STRICT_TAGS, isStrict));
+				Associative newBindings = RT.map();
+				if(isStrict)
+					newBindings = RT.assoc(newBindings, STRICT_TAGS, isStrict);
+			Var.pushThreadBindings(newBindings);
 			if (emitLeanCode && isLeanVar(var)) {
 			    if (var.isNotSingleton() || !(init instanceof FnExpr && (((FnExpr)init).closes().count() == 0))) {
 				init.emit(C.EXPRESSION, objx, gen);
@@ -724,9 +727,12 @@ static class DefExpr implements Expr{
 				Var.popThreadBindings();
 			}
 			try {
-				Var.pushThreadBindings(RT.map(IS_DEFINING_LEAN_VAR, leanCompile && isLeanVar(v),
-											  LEAN_VAR_BEING_DEFINED, v,
-								STRICT_TAGS, isStrict));
+				Associative newBindings =
+						RT.map(IS_DEFINING_LEAN_VAR, leanCompile && isLeanVar(v),
+								LEAN_VAR_BEING_DEFINED, v);
+				if(isStrict)
+					newBindings = RT.assoc(newBindings, STRICT_TAGS, isStrict);
+				Var.pushThreadBindings(newBindings);
 
 				IPersistentMap locals = (IPersistentMap)LOCAL_ENV.deref();
 				if (locals != null && locals.count() > 0) {
@@ -8327,7 +8333,7 @@ static public class NewInstanceExpr extends ObjExpr{
 		ret.classMeta = RT.meta(className);
 		ret.internalName = ret.name.replace('.', '/');
 		ret.objtype = Type.getObjectType(ret.internalName);
-    boolean strict = RT.booleanCast(RT.get(ret.classMeta, strictKey));
+    boolean isStrict = RT.booleanCast(RT.get(ret.classMeta, strictKey));
 
 		if(thisSym != null)
 			ret.thisName = thisSym.name;
@@ -8378,17 +8384,18 @@ static public class NewInstanceExpr extends ObjExpr{
 
 		try
 			{
-			Var.pushThreadBindings(
-					RT.mapUniqueKeys(CONSTANTS, PersistentVector.EMPTY,
-                                               CONSTANT_LEAN_FLAGS, PersistentVector.EMPTY,
-					       CONSTANT_IDS, new IdentityHashMap(),
-					       KEYWORDS, PersistentHashMap.EMPTY,
-					       VARS, PersistentHashMap.EMPTY,
-					       KEYWORD_CALLSITES, PersistentVector.EMPTY,
-					       PROTOCOL_CALLSITES, PersistentVector.EMPTY,
-					       VAR_CALLSITES, emptyVarCallSites(),
-                           STRICT_TAGS, strict,
-                                               NO_RECUR, null));
+				Associative newBindings = RT.mapUniqueKeys(CONSTANTS, PersistentVector.EMPTY,
+						CONSTANT_LEAN_FLAGS, PersistentVector.EMPTY,
+						CONSTANT_IDS, new IdentityHashMap(),
+						KEYWORDS, PersistentHashMap.EMPTY,
+						VARS, PersistentHashMap.EMPTY,
+						KEYWORD_CALLSITES, PersistentVector.EMPTY,
+						PROTOCOL_CALLSITES, PersistentVector.EMPTY,
+						VAR_CALLSITES, emptyVarCallSites(),
+						NO_RECUR, null);
+				if(isStrict)
+					newBindings = RT.assoc(newBindings, STRICT_TAGS, isStrict);
+				Var.pushThreadBindings(newBindings);
 			if(ret.isDeftype())
 				{
 				Var.pushThreadBindings(RT.mapUniqueKeys(METHOD, null,
@@ -8429,8 +8436,10 @@ static public class NewInstanceExpr extends ObjExpr{
 
 		try
 			{
-          Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, false,
-                                        STRICT_TAGS, strict));
+				Associative newBindings = RT.map(EMIT_LEAN_CODE, false);
+				if(isStrict)
+					newBindings = RT.assoc(newBindings, STRICT_TAGS, isStrict);
+          Var.pushThreadBindings(newBindings);
 			ret.compile(slashname(superClass),inames,false);
 			}
 		catch(IOException e)
