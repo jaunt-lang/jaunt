@@ -36,7 +36,7 @@ rm -rf target/clojure &&
 java -cp package/$ARTIFACT-$VERSION.jar:target skummet_check.one 123456 example &&
 mvn install:install-file\
     -Dfile=package/$ARTIFACT-$VERSION.jar\
-    -DgroupId=org.skummet\
+    -DgroupId=com.factual.skummet\
     -DartifactId=$ARTIFACT\
     -Dversion=$VERSION\
     -Dpackaging=jar
