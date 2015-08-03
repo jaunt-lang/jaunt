@@ -8390,6 +8390,7 @@ static public class NewInstanceExpr extends ObjExpr{
 					       KEYWORD_CALLSITES, PersistentVector.EMPTY,
 					       PROTOCOL_CALLSITES, PersistentVector.EMPTY,
 					       VAR_CALLSITES, emptyVarCallSites(),
+                           STRICT_TAGS, strict,
                                                NO_RECUR, null));
 			if(ret.isDeftype())
 				{
@@ -8431,7 +8432,8 @@ static public class NewInstanceExpr extends ObjExpr{
 
 		try
 			{
-                        Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, false));
+          Var.pushThreadBindings(RT.map(EMIT_LEAN_CODE, false,
+                                        STRICT_TAGS, strict));
 			ret.compile(slashname(superClass),inames,false);
 			}
 		catch(IOException e)
