@@ -8331,6 +8331,7 @@ static public class NewInstanceExpr extends ObjExpr{
 		ret.classMeta = RT.meta(className);
 		ret.internalName = ret.name.replace('.', '/');
 		ret.objtype = Type.getObjectType(ret.internalName);
+    boolean strict = RT.booleanCast(RT.get(ret.classMeta, strictKey));
 
 		if(thisSym != null)
 			ret.thisName = thisSym.name;
