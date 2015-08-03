@@ -84,13 +84,15 @@
   42)
 
 (defn test-alter-var-root []
-  (alter-var-root #'skummet-check.two/just-value + 100)
-  skummet-check.two/just-value)
+  (alter-var-root #'skummet-check.two/just-value + 100))
+
+(defn modified-function [] 52)
+
+(defn modification-function [var] modified-function)
 
 (defn test-alter-var-root-on-function []
-  (assert (= (simple-function) 42))
-  (alter-var-root #'simple-function (fn [& _] (fn [] 54)))
-  (assert (= (simple-function) 54) "alter-var-root on functions doesn't work"))
+  (alter-var-root #'skummet-check.one/simple-function modification-function)
+  (assert (= (simple-function) 52) "alter-var-root on functions doesn't work"))
 
 (defn recursive [i]
   (if (= i 0)
