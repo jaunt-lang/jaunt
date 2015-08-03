@@ -472,6 +472,66 @@
 (defmethod print-method StackTraceElement [^StackTraceElement o ^Writer w]
   (print-method [(symbol (.getClassName o)) (symbol (.getMethodName o)) (.getFileName o) (.getLineNumber o)] w))
 
+(defn Throwable->map
+  "Constructs a data representation for a Throwable."
+  {:added "1.7"}
+  [^Throwable o]
+  (let [base (fn [^Throwable t]
+               (let [m {:type (class t)
+                        :message (.getLocalizedMessage t)
+                        :at (get (.getStackTrace t) 0)}
+                     data (ex-data t)]
+                 (if data
+                   (assoc m :data data)
+                   m)))
+        via (loop [via [], ^Throwable t o]
+              (if t
+                (recur (conj via t) (.getCause t))
+                via))
+        ^Throwable root (peek via)
+        m {:cause (.getLocalizedMessage root)
+           :via (vec (map base via))
+           :trace (vec (.getStackTrace ^Throwable (or root o)))}
+        data (ex-data root)]
+    (if data
+      (assoc m :data data)
+      m)))
+
+(defn- print-throwable [^Throwable o ^Writer w]
+  (.write w "#error {\n :cause ")
+  (let [{:keys [cause data via trace]} (Throwable->map o)
+        print-via #(do (.write w "{:type ")
+		               (print-method (:type %) w)
+					   (.write w "\n   :message ")
+					   (print-method (:message %) w)
+             (when-let [data (:data %)]
+               (.write w "\n   :data ")
+               (print-method data w))
+					   (.write w "\n   :at ")
+					   (print-method (:at %) w)
+					   (.write w "}"))]
+    (print-method cause w)
+    (when data
+      (.write w "\n :data ")
+      (print-method data w))
+    (when via
+      (.write w "\n :via\n [")
+      (when-let [fv (first via)]
+	    (print-via fv)
+        (doseq [v (rest via)]
+          (.write w "\n  ")
+		  (print-via v)))
+      (.write w "]"))
+    (when trace
+      (.write w "\n :trace\n [")
+      (when-let [ft (first trace)]
+        (print-method ft w)
+        (doseq [t (rest trace)]
+          (.write w "\n  ")
+          (print-method t w)))
+      (.write w "]")))
+  (.write w "}"))
+
 (defmethod print-method Throwable [^Throwable o ^Writer w]
   (print-throwable o w))
 

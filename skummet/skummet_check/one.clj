@@ -80,9 +80,19 @@
 (defn test-transducers []
   (transduce (comp (filter odd?) (map inc)) + (range 5)))
 
+(defn simple-function []
+  42)
+
 (defn test-alter-var-root []
-  (alter-var-root #'skummet-check.two/just-value + 100)
-  skummet-check.two/just-value)
+  (alter-var-root #'skummet-check.two/just-value + 100))
+
+(defn modified-function [] 52)
+
+(defn modification-function [var] modified-function)
+
+(defn test-alter-var-root-on-function []
+  (alter-var-root #'skummet-check.one/simple-function modification-function)
+  (assert (= (simple-function) 52) "alter-var-root on functions doesn't work"))
 
 (defn recursive [i]
   (if (= i 0)
@@ -139,10 +149,31 @@
 
 (gen-class :name TestClass)
 
+(defmacro memoized [inside-defn]
+  (let [[_ name & fdecl] inside-defn
+        [m fdecl] (if (string? (first fdecl))
+                    [{:doc (first fdecl)} (next fdecl)]
+                    [{} fdecl])
+        [m fdecl] (if (map? (first fdecl))
+                    [(conj m (first fdecl)) (next fdecl)]
+                    [m fdecl])
+        fdecl (if (vector? (first fdecl))
+                (list fdecl)
+                fdecl)
+        [m fdecl] (if (map? (last fdecl))
+                    [(conj m (last fdecl)) (butlast fdecl)]
+                    [m fdecl])
+        m (conj (if (meta name) (meta name) {}) m)]
+    `(def ~(with-meta name m)
+       (memoize (fn ~@fdecl)))))
+
+(memoized (defn test-redefinition [s] (count s)))
+
 (defn -main [& args]
   (assert (= (my-multi 10 20) 30) "Multimethods don't work")
   (assert (= skummet-check.two/just-value 42))
   (assert (= (test-alter-var-root) 142) "alter-var-root doesn't work")
+  (test-alter-var-root-on-function)
   (assert (= inside-var 40) "Internal vars don't work")
   (assert (= (fun-inside-let 42) 342) "defn inside let don't work")
   (println "Testing ordinary function:" (ordinary-function args))
@@ -168,6 +199,7 @@
   (test-spit-and-slurp)
   (test-dynamic-vars)
   (test-locating-lean-vars)
+  (assert (= (test-redefinition "foobar") 6) "Redefined functions don't work.")
 
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))

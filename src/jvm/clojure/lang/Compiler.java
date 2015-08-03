@@ -3983,8 +3983,14 @@ static class InvokeExpr implements Expr{
 			if (emitLeanCode && isAlterVarRoot)
 				{
 				Var var = ((TheVarExpr)RT.first(args)).var;
-				String typeStr = getNSClassname(var.ns);
-				gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+				if (var.objtype == null || var.isNotSingleton()) {
+					String typeStr = getNSClassname(var.ns);
+					gen.putStatic(Type.getType(typeStr), munge(var.sym.name), OBJECT_TYPE);
+				} else {
+					gen.putStatic(var.objtype, "__instance", OBJECT_TYPE);
+				}
+                if (context == C.RETURN)
+                    objx.emitVarLean(gen, var);
 				return;
 				}
 			}
@@ -7162,16 +7168,6 @@ public static Object macroexpand1(Object x) {
 					{
 						// hide the 2 extra params for a macro
 						throw new ArityException(e.actual - 2, e.name);
-					}
-				catch(Throwable e)
-					{
-						if(!(e instanceof CompilerException)) {
-								Integer line = (Integer) LINE.deref();
-								Integer column = (Integer) COLUMN.deref();
-								String source = (String) SOURCE.deref();
-								throw new CompilerException(source, line, column, e);
-						} else
-							throw (CompilerException) e;
 					}
 			}
 		else

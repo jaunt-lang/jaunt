@@ -1,6 +1,6 @@
 #!/bin/bash -e
 ARTIFACT=clojure
-VERSION=1.7.0-RC1-r4
+VERSION=1.7.0-RC3-r1
 
 # Build simple Clojure jars first
 (cd ../; mvn clean)
