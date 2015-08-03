@@ -807,15 +807,11 @@ public static class VarExpr implements Expr, AssignableExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		if (RT.booleanCast(EMIT_LEAN_CODE.deref()) && isLeanVar(var))
-			objx.emitVarLean(gen,var);
-		else
-			objx.emitVarValue(gen,var);
-
-		if(context == C.STATEMENT)
-			{
-			gen.pop();
-			}
+		if(context != C.STATEMENT)
+			if (RT.booleanCast(EMIT_LEAN_CODE.deref()) && isLeanVar(var))
+				objx.emitVarLean(gen,var);
+			else
+				objx.emitVarValue(gen,var);
 	}
 
 	public boolean hasJavaClass(){
@@ -856,9 +852,8 @@ public static class TheVarExpr implements Expr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		objx.emitVar(gen, var);
-		if(context == C.STATEMENT)
-			gen.pop();
+		if(context != C.STATEMENT)
+			objx.emitVar(gen, var);
 	}
 
 	public boolean hasJavaClass(){
@@ -900,9 +895,8 @@ public static class KeywordExpr extends LiteralExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		objx.emitKeyword(gen, k);
-		if(context == C.STATEMENT)
-			gen.pop();
+		if(context != C.STATEMENT)
+			objx.emitKeyword(gen, k);
 
 	}
 
@@ -1426,7 +1420,8 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 				gen.checkCast(Type.getType(targetClass));
 			val.emit(C.EXPRESSION, objx, gen);
 			gen.visitLineNumber(line, gen.mark());
-			gen.dupX1();
+				if (context != C.STATEMENT)
+					gen.dupX1();
 			final Class<?> fieldType = field.getType();
 				maybeCastTo(objx, gen, val, fieldType);
 				gen.putField(Type.getType(targetClass), fieldName, Type.getType(fieldType));
@@ -1438,9 +1433,9 @@ static class InstanceFieldExpr extends FieldExpr implements AssignableExpr{
 			val.emit(C.EXPRESSION, objx, gen);
 			gen.visitLineNumber(line, gen.mark());
 			gen.invokeStatic(REFLECTOR_TYPE, setInstanceFieldMethod);
+			if(context == C.STATEMENT)
+		 		gen.pop();
 			}
-		if(context == C.STATEMENT)
-			gen.pop();
 	}
 
 }
@@ -1524,11 +1519,10 @@ static class StaticFieldExpr extends FieldExpr implements AssignableExpr{
 	                       Expr val){
 		val.emit(C.EXPRESSION, objx, gen);
 		gen.visitLineNumber(line, gen.mark());
-		gen.dup();
+		if(context != C.STATEMENT)
+			gen.dup();
 		HostExpr.emitUnboxArg(objx, gen, field.getType());
 		gen.putStatic(Type.getType(c), fieldName, Type.getType(field.getType()));
-		if(context == C.STATEMENT)
-			gen.pop();
 	}
 
 
@@ -2174,22 +2168,13 @@ static class ConstantExpr extends LiteralExpr{
 	}
 
 	public void emit(C context, ObjExpr objx, GeneratorAdapter gen){
-		if (RT.booleanCast(EMIT_LEAN_CODE.deref()) && isClass) {
-			gen.visitLdcInsn(Type.getType((Class)v));
-		} else {
-			objx.emitConstant(gen, id);
-		}
-
-		if(context == C.STATEMENT)
-			{
-			gen.pop();
-//			gen.loadThis();
-//			gen.invokeVirtual(OBJECT_TYPE, getClassMethod);
-//			gen.invokeVirtual(CLASS_TYPE, getClassLoaderMethod);
-//			gen.checkCast(DYNAMIC_CLASSLOADER_TYPE);
-//			gen.push(id);
-//			gen.invokeVirtual(DYNAMIC_CLASSLOADER_TYPE, getQuotedValMethod);
+		if (context != C.STATEMENT) {
+			if (RT.booleanCast(EMIT_LEAN_CODE.deref()) && isClass) {
+				gen.visitLdcInsn(Type.getType((Class)v));
+			} else {
+				objx.emitConstant(gen, id);
 			}
+		}
 	}
 
 	public boolean hasJavaClass(){
@@ -2848,7 +2833,8 @@ public static class NewExpr implements Expr{
 			{
 			Type type = getType(c);
 			gen.newInstance(type);
-			gen.dup();
+				if(context != C.STATEMENT)
+					gen.dup();
 			MethodExpr.emitTypedArgs(objx, gen, ctor.getParameterTypes(), args);
 			if(context == C.RETURN)
 				{
@@ -2868,9 +2854,9 @@ public static class NewExpr implements Expr{
 				method.emitClearLocals(gen);
 				}
 			gen.invokeStatic(REFLECTOR_TYPE, invokeConstructorMethod);
+				if(context == C.STATEMENT)
+					gen.pop();
 			}
-		if(context == C.STATEMENT)
-			gen.pop();
 	}
 
 	public boolean hasJavaClass(){
