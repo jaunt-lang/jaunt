@@ -30,10 +30,10 @@ zip -rq $ARTIFACT-$VERSION.jar *
 cd ..
 
 # Retry tests
-rm -rf target/*
-java -cp package/$ARTIFACT-$VERSION.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test-skummet.clj
-rm -rf target/clojure
-java -cp package/$ARTIFACT-$VERSION.jar:target skummet_check.one 123456 example
+rm -rf target/* &&
+java -cp package/$ARTIFACT-$VERSION.jar:. -Dclojure.compile.ignore-lean-classes=true clojure.main test-skummet.clj &&
+rm -rf target/clojure &&
+java -cp package/$ARTIFACT-$VERSION.jar:target skummet_check.one 123456 example &&
 mvn install:install-file\
     -Dfile=package/$ARTIFACT-$VERSION.jar\
     -DgroupId=org.skummet\
