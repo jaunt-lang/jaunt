@@ -363,7 +363,7 @@
     :strict true}
   last
   (fn [s]
-    (loop [^clojure.lang.ISeq s s]
+    (loop [s (seq s)]
       (let [n (next s)]
         (if n
           (recur n)
