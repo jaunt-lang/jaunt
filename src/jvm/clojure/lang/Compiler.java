@@ -5741,6 +5741,8 @@ public static class FnMethod extends ObjMethod{
 				else
 					{
 					Class pc = tagClass(tagOf(p));
+					if(!strictMode())
+							pc = primClass(pc);
 					//System.out.println("Param " + p.name + " has type " + pc.getName());
 //					if(pc.isPrimitive() && !isStatic)
 //						{
@@ -5997,7 +5999,12 @@ public static class FnMethod extends ObjMethod{
 			for(ISeq lbs = argLocals.seq(); lbs != null; lbs = lbs.next())
 				{
 				LocalBinding lb = (LocalBinding) lbs.first();
-				String t = getInternalName(lb.tag);
+				String t = null;
+				if(strictMode()) {
+						t = getInternalName(lb.tag);
+				} else {
+						t = "Ljava/lang/Object;";
+				}
 				gen.visitLocalVariable(lb.name, t, null, startLabel, end, lb.idx);
 				}
 			}
