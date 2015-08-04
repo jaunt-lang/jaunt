@@ -252,6 +252,25 @@ static public Object getCompilerOption(Keyword k){
 	return RT.get(COMPILER_OPTIONS.deref(),k);
 }
 
+static public String getInternalName(Symbol tag) {
+	final String OBJ = "Ljava/lang/Object;";
+
+	if (tag == null) {
+		return OBJ;
+	} else {
+		Class c = HostExpr.tagToClass(tag);
+		if (c != null) {
+			String typeName = Type.getType(c).getInternalName();
+			if (!c.isArray()) {
+				typeName = "L" + typeName + ";";
+			}
+			return typeName;
+		} else {
+			return OBJ;
+		}
+	}
+}
+
 /// Lean vars block
 static final IPersistentMap staticMetaMap = PersistentHashMap.create(staticKey, RT.T);
 
