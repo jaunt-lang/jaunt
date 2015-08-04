@@ -6390,8 +6390,6 @@ public static class LocalBindingExpr implements Expr, MaybePrimitiveExpr, Assign
 			if (objx.closes.containsKey(b)) // closed-over locals are typed
 				return false;
 
-			if (b.isArg && !strictMode())
-				return true;
 			return !compatibleType(tag, c);
     }
 }
