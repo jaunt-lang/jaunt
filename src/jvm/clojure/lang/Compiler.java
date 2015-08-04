@@ -5422,7 +5422,7 @@ static public class ObjExpr implements Expr{
 			int argoff = isStatic?0:1;
 			Class primc = lb.getPrimitiveType();
 //            String rep = lb.sym.name + " " + lb.toString().substring(lb.toString().lastIndexOf('@'));
-			if(lb.isArg)
+			if(lb.isArg && !strictMode())
 				{
 				gen.loadArg(lb.idx-argoff);
 				if(primc != null)
@@ -5740,7 +5740,8 @@ public static class FnMethod extends ObjMethod{
 
 				else
 					{
-					Class pc = primClass(tagClass(tagOf(p)));
+					Class pc = tagClass(tagOf(p));
+					//System.out.println("Param " + p.name + " has type " + pc.getName());
 //					if(pc.isPrimitive() && !isStatic)
 //						{
 //						pc = Object.class;
@@ -5752,16 +5753,18 @@ public static class FnMethod extends ObjMethod{
 
 					if(state == PSTATE.REST && tagOf(p) != null)
 						throw Util.runtimeException("& arg cannot have type hint");
+
 					if(state == PSTATE.REST && method.prim != null)
 						throw Util.runtimeException("fns taking primitives cannot be variadic");
-					                        
+
 					if(state == PSTATE.REST)
 						pc = ISeq.class;
+
 					argtypes.add(Type.getType(pc));
 					argclasses.add(pc);
-					LocalBinding lb = pc.isPrimitive() ?
-					                  registerLocal(p, null, new MethodParamExpr(pc), true)
-					                           : registerLocal(p, state == PSTATE.REST ? ISEQ : tagOf(p), null, true);
+					LocalBinding lb = pc.isPrimitive()
+							? registerLocal(p, null, new MethodParamExpr(pc), true)
+							: registerLocal(p, state == PSTATE.REST ? ISEQ : tagOf(p), null, true);
 					argLocals = argLocals.cons(lb);
 					switch(state)
 						{
@@ -5810,6 +5813,36 @@ public static class FnMethod extends ObjMethod{
 			doEmit(fn,cv);
 	}
 
+	private void initStrictLocals(ObjExpr fn, GeneratorAdapter gen) {
+		if(strictMode()) {
+			int argoff = fn.isStatic ? 0 : 1;
+			for (ISeq lbs = argLocals.seq(); lbs != null; lbs = lbs.next()) {
+				LocalBinding lb = (LocalBinding) lbs.first();
+				String typeName = null;
+				Type t = null;
+
+				if(prim != null) {
+					t = argtypes[lb.idx-argoff];
+				} else if(lb.hasJavaClass()) {
+					t = Type.getType(lb.getJavaClass());
+				} if(t == null) {
+					t = OBJECT_TYPE;
+				}
+
+				typeName = t.getDescriptor();
+
+				//System.out.println("Visiting lb " + lb.sym + " tag " + lb.tag + " -> type " + typeName);
+
+				gen.visitVarInsn(t.getOpcode(Opcodes.ILOAD), lb.idx);
+				if(t != Type.LONG_TYPE
+					&& t != Type.DOUBLE_TYPE
+					&& t != OBJECT_TYPE)
+					gen.checkCast(t);
+				gen.visitVarInsn(t.getOpcode(Opcodes.ISTORE), lb.idx);
+			}
+		}
+	}
+
 	public void doEmitStatic(ObjExpr fn, ClassVisitor cv){
 		Method ms = new Method("invokeStatic", getReturnType(), argtypes);
 
@@ -5820,6 +5853,9 @@ public static class FnMethod extends ObjMethod{
 		                                            EXCEPTION_TYPES,
 		                                            cv);
 		gen.visitCode();
+		Label startLabel = gen.mark();
+		initStrictLocals(fn, gen);
+
 		Label loopLabel = gen.mark();
 		gen.visitLineNumber(line, loopLabel);
 		try
@@ -5831,7 +5867,7 @@ public static class FnMethod extends ObjMethod{
 			for(ISeq lbs = argLocals.seq(); lbs != null; lbs = lbs.next())
 				{
 				LocalBinding lb = (LocalBinding) lbs.first();
-				gen.visitLocalVariable(lb.name, argtypes[lb.idx].getDescriptor(), null, loopLabel, end, lb.idx);
+				gen.visitLocalVariable(lb.name, argtypes[lb.idx].getDescriptor(), null, startLabel, end, lb.idx);
 				}
 			}
 		finally
@@ -5882,6 +5918,8 @@ public static class FnMethod extends ObjMethod{
 		                                            EXCEPTION_TYPES,
 		                                            cv);
 		gen.visitCode();
+		Label startLabel = gen.mark();
+		initStrictLocals(fn, gen);
 
 		Label loopLabel = gen.mark();
 		gen.visitLineNumber(line, loopLabel);
@@ -5896,7 +5934,7 @@ public static class FnMethod extends ObjMethod{
 			for(ISeq lbs = argLocals.seq(); lbs != null; lbs = lbs.next())
 				{
 				LocalBinding lb = (LocalBinding) lbs.first();
-				gen.visitLocalVariable(lb.name, argtypes[lb.idx-argoff].getDescriptor(), null, loopLabel, end, lb.idx);
+				gen.visitLocalVariable(lb.name, argtypes[lb.idx-argoff].getDescriptor(), null, startLabel, end, lb.idx);
 				}
 			}
 		finally
@@ -5943,6 +5981,8 @@ public static class FnMethod extends ObjMethod{
 		                                            EXCEPTION_TYPES,
 		                                            cv);
 		gen.visitCode();
+		Label startLabel = gen.mark();
+		initStrictLocals(fn, gen);
 
 		Label loopLabel = gen.mark();
 		gen.visitLineNumber(line, loopLabel);
@@ -5957,7 +5997,8 @@ public static class FnMethod extends ObjMethod{
 			for(ISeq lbs = argLocals.seq(); lbs != null; lbs = lbs.next())
 				{
 				LocalBinding lb = (LocalBinding) lbs.first();
-				gen.visitLocalVariable(lb.name, "Ljava/lang/Object;", null, loopLabel, end, lb.idx);
+				String t = getInternalName(lb.tag);
+				gen.visitLocalVariable(lb.name, t, null, startLabel, end, lb.idx);
 				}
 			}
 		finally
@@ -6349,7 +6390,7 @@ public static class LocalBindingExpr implements Expr, MaybePrimitiveExpr, Assign
 			if (objx.closes.containsKey(b)) // closed-over locals are typed
 				return false;
 
-			if (b.isArg) // we haven't figured out how to pre-cast method args
+			if (b.isArg && !strictMode())
 				return true;
 			return !compatibleType(tag, c);
     }
