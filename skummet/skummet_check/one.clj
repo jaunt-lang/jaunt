@@ -159,6 +159,46 @@
 
 (memoized (defn test-redefinition [s] (count s)))
 
+;; FIXME:
+;; - Test strict primitives
+;; - Test strict Objects
+;; - Test recur with strict on both
+;; - Test strict closed overs
+;; - Test strict fn arguments
+
+(defn ^:strict sum2 [^Iterable xs]
+  (let [iter (.iterator xs)]
+    (loop [tot (long 0)]
+      (if (.hasNext iter)
+        (recur (+ tot (long (.next iter))))
+        tot))))
+
+;; tests primitive function arguments and loop/recur variables
+;; tests that the iter local is type-inferred (strictly) from interop on the xs argument
+(defn ^:strict strict-sum ^long [^long init ^Iterable xs]
+  (let [iter (.iterator xs)]
+    (loop [tot init]
+      (if (.hasNext iter)
+        (recur (+ tot (long (.next iter))))
+        tot))))
+
+;; tests several ^:strict features:
+;; - x should be cast immediately, then emitted as a typed local
+;; - the lambda should use a typed field for its closed-overs: String x; ISeq xs
+;; - the Object-typed return from calling the lambda should force a cast back to String
+;; - the call to next should be inlined to c.l.RT/next, thus requiring no cast
+(defn ^:strict concat-via-recur [^String x & xs]
+  (if xs
+    (recur ((fn [] (.concat x ^String (first xs)))) ;; forces cast back to String before recurring
+           (next xs))
+    x))
+
+;; should use typed fields for both, and toString should need no casting
+(deftype ^:strict StrictType [^int x ^String s]
+  Object
+  (hashCode [this] x)
+  (toString [this] (.concat s "-str")))
+
 (defn -main [& args]
   (assert (= (my-multi 10 20) 30) "Multimethods don't work")
   (assert (= skummet-check.two/just-value 42))
@@ -180,7 +220,7 @@
   (assert (= (forward-declaring-a-function) :works) "Forward declarations with `declare` don't work")
   (assert (using-forwarded-function) "Using forward declarations doesn't work")
   (assert (= (non-top-no-closure-fn) :works) "Functions inside empty lets work.")
-  (assert (= (recursive-fn-with-closure) 142) "Recursive functions with enclosed values work.")
+  (assert (= (recursive-fn-with-closure) 142) "Recursive functions with enclosed values don't work.")
   (assert (= (reflection-test "abcdef") \d) "Reflection doesn't work.")
   (assert (= var-defed-once 42) "defonce doesn't work.")
   (assert (= (do (memoized-fn) (memoized-fn)) 1) "memoize doesn't work.")
@@ -189,6 +229,11 @@
   (test-dynamic-vars)
   (test-locating-lean-vars)
   (assert (= (test-redefinition "foobar") 6) "Redefined functions don't work.")
+  (do
+    (assert (= 20 (strict-sum 5 [1 2 3 4 5])) "^:strict locals don't work")
+    (assert (= "helloworld!" (concat-via-recur "hello" "world" "!")) "^:strict args don't work")
+    (let [x (StrictType. 1234 "test")]
+      (assert (= [1234 "test-str"] [(hash x) (str x)]) "^:strict deftype doesn't work")))
 
   ;; (let [h [:span {:class "foo"} "bar"]]
   ;;     (println (html h)))
