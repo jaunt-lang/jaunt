@@ -4287,7 +4287,7 @@
                              gmapseq (with-meta gmap {:tag 'clojure.lang.ISeq})
                              defaults (:or b)]
                          (loop [ret (-> bvec (conj gmap) (conj v)
-                                        (conj gmap) (conj `(if (seq? ~gmap) (clojure.lang.PersistentHashMap/create (seq ~gmapseq)) ~gmap))
+                                        (conj gmap) (conj `(if (map? ~gmap) ~gmap (clojure.lang.PersistentHashMap/create (seq ~gmapseq))))
                                         ((fn [ret]
                                            (if (:as b)
                                              (conj ret (:as b) gmap)
