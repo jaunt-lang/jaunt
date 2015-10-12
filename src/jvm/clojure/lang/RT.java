@@ -530,6 +530,8 @@ static ISeq seqFrom(Object coll){
 		return null;
 	else if(coll instanceof Iterable)
 		return chunkIteratorSeq(((Iterable) coll).iterator());
+  else if(coll instanceof Enumeration)
+    return EnumerationSeq.create((Enumeration)coll);
 	else if(coll.getClass().isArray())
 		return ArraySeq.createFromObject(coll);
 	else if(coll instanceof CharSequence)
