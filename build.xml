@@ -2,7 +2,9 @@
 
   <description>
     Build with "ant" and then start the
-    REPL with: "java -cp clojure.jar clojure.main".
+    REPL with: "java -cp clojarr.jar clojure.main".
+
+    Note: You may need to run the antsetup.sh script included.
   </description>
 
   <property name="src" location="src"/>
