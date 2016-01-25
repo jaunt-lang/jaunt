@@ -555,7 +555,10 @@ public class Compiler implements Opcodes {
         if (isDynamic) {
           v.setDynamic();
         }
-        if (!isDynamic && sym.name.startsWith("*") && sym.name.endsWith("*") && sym.name.length() > 2) {
+        if (!isDynamic && sym.name.startsWith("*")
+            && sym.name.endsWith("*")
+            && sym.name.length() > 2
+            && isPedantic()) {
           RT.errPrintWriter().format("Warning: %1$s not declared dynamic and thus is not dynamically rebindable, "
                                      +"but its name suggests otherwise. Please either indicate ^:dynamic %1$s or change the name. (%2$s:%3$d)\n",
                                      sym, SOURCE_PATH.get(), LINE.get());
