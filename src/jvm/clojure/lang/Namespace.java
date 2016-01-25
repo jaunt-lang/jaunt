@@ -72,7 +72,6 @@ public class Namespace extends AReference implements Serializable {
 
     warnOrFailOnReplace(sym, o, v);
 
-
     while (!mappings.compareAndSet(map, map.assoc(sym, v))) {
       map = getMappings();
     }
@@ -116,7 +115,6 @@ public class Namespace extends AReference implements Serializable {
     }
 
     return val;
-
   }
 
   public static boolean areDifferentInstancesOfSameClassName(Class cls1, Class cls2) {
@@ -201,7 +199,6 @@ public class Namespace extends AReference implements Serializable {
     }
     return null;
   }
-
 
   public IPersistentMap getAliases() {
     return aliases.get();
