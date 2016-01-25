@@ -255,15 +255,16 @@ public class Compiler implements Opcodes {
   static final public Keyword disableLocalsClearingKey = Keyword.intern("disable-locals-clearing");
   static final public Keyword directLinkingKey = Keyword.intern("direct-linking");
   static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
+  static final public Keyword pedanticKey = Keyword.intern("pedantic");
 
   static final public Var COMPILER_OPTIONS;
 
   static public Object getCompilerOption(Keyword k) {
-    return RT.get(COMPILER_OPTIONS.deref(),k);
+    return RT.get(COMPILER_OPTIONS.deref(), k);
   }
 
   static {
-    Object compilerOptions = null;
+    Object compilerOptions = RT.assoc(null, pedanticKey, RT.T);
 
     for (Map.Entry e : System.getProperties().entrySet()) {
       String name = (String) e.getKey();
