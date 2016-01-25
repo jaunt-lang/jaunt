@@ -369,6 +369,10 @@ public class Compiler implements Opcodes {
     return specials.containsKey(sym);
   }
 
+  static boolean isPedantic() {
+    return RT.booleanCast(getCompilerOption(pedanticKey));
+  }
+
   static Symbol resolveSymbol(Symbol sym) {
     //already qualified or classname?
     if (sym.name.indexOf('.') > 0) {
