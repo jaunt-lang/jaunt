@@ -4,7 +4,7 @@
  *   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
  *   which can be found in the file epl-v10.html at the root of this distribution.
  *   By using this software in any fashion, you are agreeing to be bound by
- * 	 the terms of this license.
+ *   the terms of this license.
  *   You must not remove this notice, or any other, from this software.
  **/
 
@@ -16,20 +16,20 @@ import java.io.Serializable;
 
 public abstract class Obj implements IObj, Serializable {
 
-final IPersistentMap _meta;
+  final IPersistentMap _meta;
 
-public Obj(IPersistentMap meta){
-	this._meta = meta;
-}
+  public Obj(IPersistentMap meta) {
+    this._meta = meta;
+  }
 
-public Obj(){
-	_meta = null;
-}
+  public Obj() {
+    _meta = null;
+  }
 
-final public IPersistentMap meta(){
-	return _meta;
-}
+  final public IPersistentMap meta() {
+    return _meta;
+  }
 
-abstract public Obj withMeta(IPersistentMap meta);
+  abstract public Obj withMeta(IPersistentMap meta);
 
 }

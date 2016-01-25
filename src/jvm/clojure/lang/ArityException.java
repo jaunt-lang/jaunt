@@ -4,7 +4,7 @@
  *   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
  *   which can be found in the file epl-v10.html at the root of this distribution.
  *   By using this software in any fashion, you are agreeing to be bound by
- * 	 the terms of this license.
+ *   the terms of this license.
  *   You must not remove this notice, or any other, from this software.
  **/
 
@@ -15,18 +15,18 @@ package clojure.lang;
  */
 public class ArityException extends IllegalArgumentException {
 
-	final public int actual;
+  final public int actual;
 
-	final public String name;
+  final public String name;
 
-	public ArityException(int actual, String name) {
-		this(actual, name, null);
-	}
+  public ArityException(int actual, String name) {
+    this(actual, name, null);
+  }
 
-	public ArityException(int actual, String name, Throwable cause) {
-		super("Wrong number of args (" + actual + ") passed to: " + name, cause);
-		this.actual = actual;
-		this.name = name;
-	}
+  public ArityException(int actual, String name, Throwable cause) {
+    super("Wrong number of args (" + actual + ") passed to: " + name, cause);
+    this.actual = actual;
+    this.name = name;
+  }
 
 }

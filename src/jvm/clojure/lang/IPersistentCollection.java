@@ -13,11 +13,11 @@ package clojure.lang;
 
 public interface IPersistentCollection extends Seqable {
 
-int count();
+  int count();
 
-IPersistentCollection cons(Object o);
+  IPersistentCollection cons(Object o);
 
-IPersistentCollection empty();
+  IPersistentCollection empty();
 
-boolean equiv(Object o);
+  boolean equiv(Object o);
 }

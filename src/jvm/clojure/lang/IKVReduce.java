@@ -7,11 +7,11 @@
  * the terms of this license.
  * You must not remove this notice, or any other, from this software.
  **/
- 
+
 /* rich 7/20/15 */
 
 package clojure.lang;
 
-public interface IKVReduce{
-Object kvreduce(IFn f, Object init);
+public interface IKVReduce {
+  Object kvreduce(IFn f, Object init);
 }

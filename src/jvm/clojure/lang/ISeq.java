@@ -18,12 +18,12 @@ package clojure.lang;
  */
 public interface ISeq extends IPersistentCollection {
 
-Object first();
+  Object first();
 
-ISeq next();
+  ISeq next();
 
-ISeq more();
+  ISeq more();
 
-ISeq cons(Object o);
+  ISeq cons(Object o);
 
 }

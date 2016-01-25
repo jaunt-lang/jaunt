@@ -12,8 +12,8 @@ package clojure.lang;
 
 import java.util.Map;
 
-public interface IMapEntry extends Map.Entry{
-Object key();
+public interface IMapEntry extends Map.Entry {
+  Object key();
 
-Object val();
+  Object val();
 }

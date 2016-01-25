@@ -14,5 +14,5 @@ package clojure.lang;
  * that implement a constant-time count() */
 
 public interface Counted {
-    int count();
+  int count();
 }

@@ -4,7 +4,7 @@
  *   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
  *   which can be found in the file epl-v10.html at the root of this distribution.
  *   By using this software in any fashion, you are agreeing to be bound by
- * 	 the terms of this license.
+ *   the terms of this license.
  *   You must not remove this notice, or any other, from this software.
  **/
 
@@ -16,113 +16,112 @@ import java.util.List;
 
 public class PersistentHashSet extends APersistentSet implements IObj, IEditableCollection {
 
-static public final PersistentHashSet EMPTY = new PersistentHashSet(null, PersistentHashMap.EMPTY);
+  static public final PersistentHashSet EMPTY = new PersistentHashSet(null, PersistentHashMap.EMPTY);
 
-final IPersistentMap _meta;
+  final IPersistentMap _meta;
 
-public static PersistentHashSet create(Object... init){
-	ITransientSet ret = (ITransientSet)EMPTY.asTransient();
-	for(int i = 0; i < init.length; i++)
-		{
-		ret = (ITransientSet)ret.conj(init[i]);
-		}
-	return (PersistentHashSet)ret.persistent();
-}
-
-public static PersistentHashSet create(List init){
-	ITransientSet ret = (ITransientSet)EMPTY.asTransient();
-	for(Object key : init)
-		{
-		ret = (ITransientSet) ret.conj(key);
-		}
-	return (PersistentHashSet)ret.persistent();
-}
-
-static public PersistentHashSet create(ISeq items){
-	ITransientSet ret = (ITransientSet)EMPTY.asTransient();
-	for(; items != null; items = items.next())
-		{
-		ret = (ITransientSet) ret.conj(items.first());
-		}
-	return (PersistentHashSet)ret.persistent();
-}
-
-public static PersistentHashSet createWithCheck(Object... init){
+  public static PersistentHashSet create(Object... init) {
     ITransientSet ret = (ITransientSet)EMPTY.asTransient();
-	for(int i = 0; i < init.length; i++)
-		{
-		ret = (ITransientSet) ret.conj(init[i]);
-		if(ret.count() != i + 1)
-			throw new IllegalArgumentException("Duplicate key: " + init[i]);
-		}
-	return (PersistentHashSet) ret.persistent();
-}
+    for (int i = 0; i < init.length; i++) {
+      ret = (ITransientSet)ret.conj(init[i]);
+    }
+    return (PersistentHashSet)ret.persistent();
+  }
 
-public static PersistentHashSet createWithCheck(List init){
+  public static PersistentHashSet create(List init) {
     ITransientSet ret = (ITransientSet)EMPTY.asTransient();
-	int i=0;
-	for(Object key : init)
-		{
-		ret = (ITransientSet) ret.conj(key);
-		if(ret.count() != i + 1)
-			throw new IllegalArgumentException("Duplicate key: " + key);		
-		++i;
-		}
+    for (Object key : init) {
+      ret = (ITransientSet) ret.conj(key);
+    }
+    return (PersistentHashSet)ret.persistent();
+  }
+
+  static public PersistentHashSet create(ISeq items) {
+    ITransientSet ret = (ITransientSet)EMPTY.asTransient();
+    for (; items != null; items = items.next()) {
+      ret = (ITransientSet) ret.conj(items.first());
+    }
+    return (PersistentHashSet)ret.persistent();
+  }
+
+  public static PersistentHashSet createWithCheck(Object... init) {
+    ITransientSet ret = (ITransientSet)EMPTY.asTransient();
+    for (int i = 0; i < init.length; i++) {
+      ret = (ITransientSet) ret.conj(init[i]);
+      if (ret.count() != i + 1) {
+        throw new IllegalArgumentException("Duplicate key: " + init[i]);
+      }
+    }
     return (PersistentHashSet) ret.persistent();
-}
+  }
 
-static public PersistentHashSet createWithCheck(ISeq items){
+  public static PersistentHashSet createWithCheck(List init) {
     ITransientSet ret = (ITransientSet)EMPTY.asTransient();
-	for(int i=0; items != null; items = items.next(), ++i)
-		{
-		ret = (ITransientSet) ret.conj(items.first());
-		if(ret.count() != i + 1)
-			throw new IllegalArgumentException("Duplicate key: " + items.first());
-		}
+    int i=0;
+    for (Object key : init) {
+      ret = (ITransientSet) ret.conj(key);
+      if (ret.count() != i + 1) {
+        throw new IllegalArgumentException("Duplicate key: " + key);
+      }
+      ++i;
+    }
     return (PersistentHashSet) ret.persistent();
-}
+  }
 
-PersistentHashSet(IPersistentMap meta, IPersistentMap impl){
-	super(impl);
-	this._meta = meta;
-}
+  static public PersistentHashSet createWithCheck(ISeq items) {
+    ITransientSet ret = (ITransientSet)EMPTY.asTransient();
+    for (int i=0; items != null; items = items.next(), ++i) {
+      ret = (ITransientSet) ret.conj(items.first());
+      if (ret.count() != i + 1) {
+        throw new IllegalArgumentException("Duplicate key: " + items.first());
+      }
+    }
+    return (PersistentHashSet) ret.persistent();
+  }
 
-public IPersistentSet disjoin(Object key) {
-	if(contains(key))
-		return new PersistentHashSet(meta(),impl.without(key));
-	return this;
-}
+  PersistentHashSet(IPersistentMap meta, IPersistentMap impl) {
+    super(impl);
+    this._meta = meta;
+  }
 
-public IPersistentSet cons(Object o){
-	if(contains(o))
-		return this;
-	return new PersistentHashSet(meta(),impl.assoc(o,o));
-}
+  public IPersistentSet disjoin(Object key) {
+    if (contains(key)) {
+      return new PersistentHashSet(meta(),impl.without(key));
+    }
+    return this;
+  }
 
-public IPersistentCollection empty(){
-	return EMPTY.withMeta(meta());	
-}
+  public IPersistentSet cons(Object o) {
+    if (contains(o)) {
+      return this;
+    }
+    return new PersistentHashSet(meta(),impl.assoc(o,o));
+  }
 
-public PersistentHashSet withMeta(IPersistentMap meta){
-	return new PersistentHashSet(meta, impl);
-}
+  public IPersistentCollection empty() {
+    return EMPTY.withMeta(meta());
+  }
 
-public ITransientCollection asTransient() {
-	return new TransientHashSet(((PersistentHashMap) impl).asTransient());
-}
+  public PersistentHashSet withMeta(IPersistentMap meta) {
+    return new PersistentHashSet(meta, impl);
+  }
 
-public IPersistentMap meta(){
-	return _meta;
-}
+  public ITransientCollection asTransient() {
+    return new TransientHashSet(((PersistentHashMap) impl).asTransient());
+  }
 
-static final class TransientHashSet extends ATransientSet {
-	TransientHashSet(ITransientMap impl) {
-		super(impl);
-	}
+  public IPersistentMap meta() {
+    return _meta;
+  }
 
-	public IPersistentCollection persistent() {
-		return new PersistentHashSet(null, impl.persistent());
-	}
-}
+  static final class TransientHashSet extends ATransientSet {
+    TransientHashSet(ITransientMap impl) {
+      super(impl);
+    }
+
+    public IPersistentCollection persistent() {
+      return new PersistentHashSet(null, impl.persistent());
+    }
+  }
 
 }

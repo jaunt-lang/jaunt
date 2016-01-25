@@ -4,7 +4,7 @@
  *   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
  *   which can be found in the file epl-v10.html at the root of this distribution.
  *   By using this software in any fashion, you are agreeing to be bound by
- * 	 the terms of this license.
+ *   the terms of this license.
  *   You must not remove this notice, or any other, from this software.
  **/
 
@@ -12,18 +12,18 @@ package clojure.lang;
 
 final public class Volatile implements IDeref {
 
-volatile Object val;
+  volatile Object val;
 
-public Volatile(Object val){
-  this.val = val;
-}
+  public Volatile(Object val) {
+    this.val = val;
+  }
 
-public Object deref() {
-  return val;
-}
+  public Object deref() {
+    return val;
+  }
 
-public Object reset(Object newval) {
-  return this.val = newval;
-}
+  public Object reset(Object newval) {
+    return this.val = newval;
+  }
 
 }
