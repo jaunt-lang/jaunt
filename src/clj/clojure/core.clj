@@ -5577,36 +5577,40 @@
   (let [process-reference
         (fn [[kname & args]]
           `(~(symbol "clojure.core" (clojure.core/name kname))
-             ~@(map #(list 'quote %) args)))
-        docstring  (when (string? (first references)) (first references))
-        references (if docstring (next references) references)
-        name (if docstring
-               (vary-meta name assoc :doc docstring)
-               name)
-        metadata   (when (map? (first references)) (first references))
-        references (if metadata (next references) references)
-        name (if metadata
-               (vary-meta name merge metadata)
-               name)
-        gen-class-clause (first (filter #(= :gen-class (first %)) references))
-        gen-class-call
-          (when gen-class-clause
-            (list* `gen-class :name (.replace (str name) \- \_) :impl-ns name :main true (next gen-class-clause)))
-        references (remove #(= :gen-class (first %)) references)
-        ;ns-effect (clojure.core/in-ns name)
-        name-metadata (meta name)]
+            ~@(map #(list 'quote %) args)))
+        docstring         (when (string? (first references)) (first references))
+        references        (if docstring (next references) references)
+        name              (if docstring
+                            (vary-meta name assoc :doc docstring)
+                            name)
+        metadata          (when (map? (first references)) (first references))
+        references        (if metadata (next references) references)
+        name              (if metadata
+                            (vary-meta name merge metadata)
+                            name)
+        gen-class-clause  (first (filter #(= :gen-class (first %)) references))
+        gen-class-call    (when gen-class-clause
+                            (list* `gen-class
+                                   :name    (.replace (str name) \- \_)
+                                   :impl-ns name
+                                   :main    true
+                                   (next gen-class-clause)))
+        references        (remove #(= :gen-class (first %)) references)
+                                        ;ns-effect (clojure.core/in-ns name)
+        name-metadata     (meta name)]
+    (when (:deprecated metadata)
+      (.println *err* (str "Warning: using deprecated ns: " name)))
     `(do
        (clojure.core/in-ns '~name)
        ~@(when name-metadata
            `((.resetMeta (clojure.lang.Namespace/find '~name) ~name-metadata)))
        (with-loading-context
-        ~@(when gen-class-call (list gen-class-call))
-        ~@(when (and (not= name 'clojure.core) (not-any? #(= :refer-clojure (first %)) references))
-            `((clojure.core/refer '~'clojure.core)))
-        ~@(map process-reference references))
-        (if (.equals '~name 'clojure.core) 
-          nil
-          (do (dosync (commute @#'*loaded-libs* conj '~name)) nil)))))
+         ~@(when gen-class-call (list gen-class-call))
+         ~@(when (and (not= name 'clojure.core) (not-any? #(= :refer-clojure (first %)) references))
+             `((clojure.core/refer '~'clojure.core)))
+         ~@(map process-reference references))
+       (when-not (.equals '~name 'clojure.core)
+         (do (dosync (commute @#'*loaded-libs* conj '~name)) nil)))))
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
