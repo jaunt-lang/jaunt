@@ -1,5 +1,9 @@
 # Clojarr
 
+Master: [![Circle CI](https://circleci.com/gh/arrdem/clojarr/tree/master.svg?style=svg)](https://circleci.com/gh/Day8/re-frame/tree/master)
+
+Develop: [![Circle CI](https://circleci.com/gh/arrdem/clojarr/tree/develop.svg?style=svg)](https://circleci.com/gh/Day8/re-frame/tree/develop)
+
 > Every normal man must be tempted, at times, to spit on his hands,
 > hoist the black flag, and begin slitting throats.
 >
