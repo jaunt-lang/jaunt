@@ -3,10 +3,12 @@ machine:
     version: oraclejdk8
 
 dependencies:
-  pre:
-    - bash make-astyle.sh
   cache_directories:
     - ~/bin
+  pre:
+    - bash make-astyle.sh
+  post:
+    - mvn dependency:resolve-plugins
 
 test:
   pre:
