@@ -6785,7 +6785,9 @@ public class Compiler implements Opcodes {
       String loc = String.format(" (%s:%d:%d)", SOURCE.get(), lineDeref(), columnDeref());
       Object meta = RT.meta(v);
       
-      if (RT.booleanCast(RT.get(meta, deprecatedKey, false))
+      if ((RT.booleanCast(RT.get(meta, deprecatedKey, false))
+           || (RT.booleanCast(RT.get(v.ns, deprecatedKey, false))
+               && !Util.equiv(v.ns, RT.CURRENT_NS.get())))
           && isPedantic()) {
         RT.errPrintWriter().println("Warning: using deprecated var: " + v.toString() + loc);
       }
