@@ -48,6 +48,12 @@ This is not to say that contributions, issues and soforth are not
 welcome, merely to clearly state my expectations for the project and
 its management.
 
+## Contributing
+
+This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md).
+By participating, you are expected to uphold this code.
+Please report unacceptable behavior to [?@arrdem.com](mailto:?@arrdem.com).
+
 ## Legal
 
 Clojarr is (c) Reid McKenzie. All rights reserved. The use and
