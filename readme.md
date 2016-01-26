@@ -7,10 +7,11 @@ Branch | Status
 `master` | [![Circle CI](https://circleci.com/gh/arrdem/clojarr/tree/master.svg?style=svg)](https://circleci.com/gh/arrdem/clojarr/tree/master) | 
 `develop` | [![Circle CI](https://circleci.com/gh/arrdem/clojarr/tree/develop.svg?style=svg)](https://circleci.com/gh/arrdem/clojarr/tree/develop)
 
-> Every normal man must be tempted, at times, to spit on his hands,
-> hoist the black flag, and begin slitting throats.
->
-> - H.L. Mencken,
+> The reasonable man adapts himself to the world: the unreasonable one
+> persists in trying to adapt the world to himself. Therefore all
+> progress depends on the unreasonable man.
+> 
+> ~ George Bernard Shaw, _Maxims for Revolutionists_ 1903
 
 ## What
 
