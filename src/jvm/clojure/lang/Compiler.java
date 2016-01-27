@@ -410,7 +410,8 @@ public class Compiler implements Opcodes {
     final static Method symintern = Method.getMethod("clojure.lang.Symbol intern(String, String)");
     final static Method internVar = Method.getMethod("clojure.lang.Var refer(clojure.lang.Symbol, clojure.lang.Var)");
 
-    public DefExpr(String source, int line, int column, Var var, Expr init, Expr meta, boolean initProvided, boolean isDynamic, boolean shadowsCoreMapping) {
+    public DefExpr(String source, int line, int column, Var var, Expr init, Expr meta, boolean initProvided, boolean isDynamic,
+                   boolean shadowsCoreMapping) {
       this.source = source;
       this.line = line;
       this.column = column;
@@ -7382,7 +7383,8 @@ public class Compiler implements Opcodes {
         //use array map to preserve ctor order
         ret.closes = new PersistentArrayMap(closesvec);
         ret.fields = fmap;
-        for (int i=fieldSyms.count()-1; i >= 0 && (((Symbol)fieldSyms.nth(i)).name.equals("__meta") || ((Symbol)fieldSyms.nth(i)).name.equals("__extmap")); --i) {
+        for (int i=fieldSyms.count()-1; i >= 0 && (((Symbol)fieldSyms.nth(i)).name.equals("__meta")
+             || ((Symbol)fieldSyms.nth(i)).name.equals("__extmap")); --i) {
           ret.altCtorDrops++;
         }
       }
@@ -8254,7 +8256,8 @@ public class Compiler implements Opcodes {
       }
     }
 
-    private void emitThenForInts(ObjExpr objx, GeneratorAdapter gen, Type exprType, Expr test, Expr then, Label defaultLabel, boolean emitUnboxed) {
+    private void emitThenForInts(ObjExpr objx, GeneratorAdapter gen, Type exprType, Expr test, Expr then, Label defaultLabel,
+                                 boolean emitUnboxed) {
       if (exprType == null) {
         expr.emit(C.EXPRESSION, objx, gen);
         test.emit(C.EXPRESSION, objx, gen);

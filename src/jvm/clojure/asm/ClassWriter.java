@@ -1197,7 +1197,8 @@ public class ClassWriter extends ClassVisitor {
     int length = (1 + 1 + argsLength) << 1; // (bsm + argCount + arguments)
     hashCode &= 0x7FFFFFFF;
     Item result = items[hashCode % items.length];
-    loop: while (result != null) {
+    loop:
+    while (result != null) {
       if (result.type != BSM || result.hashCode != hashCode) {
         result = result.next;
         continue;

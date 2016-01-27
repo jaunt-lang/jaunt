@@ -212,7 +212,8 @@ public class LispReader {
     }
   }
 
-  static private Object read(PushbackReader r, boolean eofIsError, Object eofValue, Character returnOn, Object returnOnValue, boolean isRecursive, Object opts, Object pendingForms) {
+  static private Object read(PushbackReader r, boolean eofIsError, Object eofValue, Character returnOn, Object returnOnValue,
+                             boolean isRecursive, Object opts, Object pendingForms) {
     if (RT.READEVAL.deref() == UNKNOWN) {
       throw Util.runtimeException("Reading disallowed - *read-eval* bound to :unknown");
     }
