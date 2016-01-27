@@ -1592,7 +1592,8 @@ class MethodWriter extends MethodVisitor {
       }
     }
     int i = 1;
-    loop: while (true) {
+    loop:
+    while (true) {
       int j = i;
       switch (descriptor.charAt(i++)) {
       case 'Z':
