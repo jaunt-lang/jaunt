@@ -3,8 +3,10 @@ machine:
     version: oraclejdk8
 
 dependencies:
-  override:
+  pre:
     - bash make-astyle.sh
+  cache_directories:
+    - ~/bin
 
 test:
   pre:
