@@ -1,3 +1,11 @@
 machine:
   java:
     version: oraclejdk8
+
+dependencies:
+  override:
+    - bash make-astyle.sh
+
+test:
+  pre:
+    - bash check-whitespace.sh
