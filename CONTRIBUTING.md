@@ -11,7 +11,7 @@ These are just guidelines, not rules, use your best judgment and feel free to pr
 
 This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code.
-Please report unacceptable behavior to [?@arrdem.com](mailto:?@arrdem.com).
+Please report unacceptable behavior to [me+clojarr+coc@arrdem.com](mailto:me+clojarr+coc@arrdem.com).
 
 ## Issues
 
