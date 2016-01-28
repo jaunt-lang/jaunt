@@ -16,10 +16,9 @@ Branch | Status
 ## What
 
 Clojarr is a hard fork of Clojure. Rich Hickey wrote Clojure to be the
-language he wanted, and administers it as he pleases. This is awesome,
-but I (Reid McKenzie) disagree with enough choices made both in the
-language and its administration that I've forked with little/no intent
-to return.
+language he wanted, and administers it in the way that he wants. This is
+awesome, but I (Reid McKenzie) disagree with enough of the choices made in the
+language and its administration that I've forked to go my own way.
 
 The name itself is a corruption of "Clojure" which I owe to Gregory
 Cerna.
@@ -27,26 +26,23 @@ Cerna.
 ## Goals
 
 Clojarr is in no small part an experiment in what Clojure would look
-like if it were not "finished" and had active community contribution
-to the language core.
+like if it had a different contribution process, and was more willing
+to make bold/risky changes.
 
-Unlike Clojure which is eminently stable, Clojarr is not guaranteed to
-be stable until stated otherwise and consequently some level of
-breaking changes with respect to Clojure will be tolerated and even
-invited.
+Unlike Clojure which is eminently stable, Clojarr is not guaranteed to be
+stable (yet). Some level of breaking changes with Clojure will
+be accepted if there is a good reason for them.
 
 ## Administration
 
-For the time being, Clojarr is administered at my (Reid McKenzie's)
-sole discretion with regards to changes made, accepted and the reasons
-for such actions. Pull requests, issues and email are all considered
-requests for work/support and will be ignored unless it suits my
-whimsy to address them or an explicit support contract has been
-issued.
+Currently, Clojarr is administered at my (Reid McKenzie's) sole
+discretion. Pull requests, issues and email are all considered requests for
+work/support and will only be adressed when and if it suits me to address them
+or an explicit support contract has been issued.
 
-This is not to say that contributions, issues and soforth are not
-welcome, merely to clearly state my expectations for the project and
-its management.
+This is not to say that contributions, bug reports, and feature requests are
+not welcome, only to clearly state my expectations for the project and its
+management.
 
 ## Contributing
 
