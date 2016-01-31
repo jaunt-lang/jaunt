@@ -200,22 +200,24 @@
 
 ;;;;;;;;;;;;;;;;; metadata ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def
- ^{:arglists '([obj])
-   :doc "Returns the metadata of obj, returns nil if there is no metadata."
-   :added "1.0"
-   :static true}
- meta (fn ^:static meta [x]
-        (if (instance? clojure.lang.IMeta x)
-          (. ^clojure.lang.IMeta x (meta)))))
+  ^{:arglists '([obj])
+    :doc      "Returns the metadata of obj, returns nil if there is no metadata."
+    :added    "1.0"
+    :static   true}
+  meta
+  (fn meta [x]
+    (if (instance? clojure.lang.IMeta x)
+      (. ^clojure.lang.IMeta x (meta)))))
 
 (def
- ^{:arglists '([^clojure.lang.IObj obj m])
-   :doc "Returns an object of the same type and value as obj, with
+  ^{:arglists '([^clojure.lang.IObj obj m])
+    :doc      "Returns an object of the same type and value as obj, with
     map m as its metadata."
-   :added "1.0"
-   :static true}
- with-meta (fn ^:static with-meta [^clojure.lang.IObj x m]
-             (. x (withMeta m))))
+    :added    "1.0"
+    :static   true}
+  with-meta
+  (fn with-meta [^clojure.lang.IObj x m]
+    (. x (withMeta m))))
 
 (def ^{:private true :dynamic true}
   assert-valid-fdecl (fn [fdecl]))
