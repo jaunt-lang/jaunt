@@ -219,6 +219,20 @@
   (fn with-meta [^clojure.lang.IObj x m]
     (. x (withMeta m))))
 
+(def
+  ^{:doc   "Checks to see if the supplied object is marked deprecated."
+    :added "1.9"}
+  deprecated?
+  (fn [o]
+    (clojure.lang.RT/booleanCast (:deprecated (meta o)))))
+
+(def
+  ^{:doc   "Checks to see if the supplied object is marked private."
+    :added "1.9"}
+  private?
+  (fn [o]
+    (clojure.lang.RT/booleanCast (:deprecated (meta o)))))
+
 (def ^{:private true :dynamic true}
   assert-valid-fdecl (fn [fdecl]))
 
