@@ -3505,7 +3505,7 @@ public class Compiler implements Opcodes {
           if (this.protocolOn != null) {
             IPersistentMap mmap = (IPersistentMap) RT.get(pvar.get(), methodMapKey);
             Keyword mmapVal = (Keyword) mmap.valAt(Keyword.intern(fvar.sym));
-            
+
             if (mmapVal == null) {
               throw new IllegalArgumentException(
                 "No method of interface: " + protocolOn.getName() +
@@ -3566,7 +3566,7 @@ public class Compiler implements Opcodes {
         gen.checkCast(IFN_TYPE);
         emitArgsAndCall(0, context,objx,gen);
       }
-      
+
       if (context == C.STATEMENT) {
         gen.pop();
       }
@@ -3689,10 +3689,10 @@ public class Compiler implements Opcodes {
         Object meta = RT.meta(v);
         Object arglists = RT.get(meta, arglistsKey);
         int arity = RT.count(form.next());
-        
+
         for (ISeq s = RT.seq(arglists); s != null; s = s.next()) {
           IPersistentVector args = (IPersistentVector) s.first();
-          
+
           if (args.count() == arity) {
             String primc = FnMethod.primInterface(args);
             if (primc != null)
@@ -6784,14 +6784,14 @@ public class Compiler implements Opcodes {
 
       String loc = String.format(" (%s:%d:%d)", SOURCE.get(), lineDeref(), columnDeref());
       Object meta = RT.meta(v);
-      
+
       if ((RT.booleanCast(RT.get(meta, deprecatedKey, false))
            || (RT.booleanCast(RT.get(v.ns, deprecatedKey, false))
                && !Util.equiv(v.ns, RT.CURRENT_NS.get())))
           && isPedantic()) {
         RT.errPrintWriter().println("Warning: using deprecated var: " + v.toString() + loc);
       }
-      
+
       if (RT.booleanCast(RT.get(meta, privateKey, false))
           && !Util.equals(RT.CURRENT_NS.get(), v.ns)
           && isPedantic()) {
