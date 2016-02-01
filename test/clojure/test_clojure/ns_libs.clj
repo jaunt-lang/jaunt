@@ -41,10 +41,18 @@
   (is (let [err (with-out-str
                   (binding [*err* *out*
                             *ns*  *ns*]
-                    (eval '(do (ns exporter-r {:deprecated true})
+                    (eval '(do (ns exporter-r1 {:deprecated true})
                                (def otherd 3)
-                               (ns importer-r)
-                               (refer 'exporter-r :only '(otherd))))))]
+                               (ns importer-r1)
+                               (refer 'exporter-r1 :only '(otherd))))))]
+        (re-find #"referring deprecated var:" err)))
+  (is (let [err (with-out-str
+                  (binding [*err* *out*
+                            *ns*  *ns*]
+                    (eval '(do (ns exporter-r2)
+                               (def ^:deprecated otherd 3)
+                               (ns importer-r2)
+                               (refer 'exporter-r2 :only '(otherd))))))]
         (re-find #"referring deprecated var:" err))))
 
 (deftest test-require
