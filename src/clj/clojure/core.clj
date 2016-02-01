@@ -4128,7 +4128,7 @@
     (when (and to-do (not (instance? clojure.lang.Sequential to-do)))
       (throw (new Exception ":only/:refer value must be a sequential collection of symbols")))
     (when (deprecated? ns)
-      (.write *err* (str "Warning: referring vars from deprecated ns: " (ns-name ns))))
+      (.write *err* (str "Warning: referring vars from deprecated ns: " (name ns))))
     (doseq [sym to-do]
       (when-not (exclude sym)
         (let [v (nspublics sym)]
@@ -5760,7 +5760,7 @@
         (throw-if (and need-ns (not (find-ns lib)))
                   "namespace '%s' not found" lib))
       (when (and need-ns *loading-verbosely*)
-        (printf "(clojure.core/in-ns '%s)\n" (ns-name *ns*)))
+        (printf "(clojure.core/in-ns '%s)\n" (name *ns*)))
       (when as
         (when *loading-verbosely*
           (printf "(clojure.core/alias '%s '%s)\n" as lib))
@@ -5901,7 +5901,7 @@
   (doseq [^String path paths]
     (let [^String path (if (.startsWith path "/")
                           path
-                          (str (root-directory (ns-name *ns*)) \/ path))]
+                          (str (root-directory (name *ns*)) \/ path))]
       (when *loading-verbosely*
         (printf "(clojure.core/load \"%s\")\n" path)
         (flush))

@@ -123,7 +123,7 @@
 
 (defn- generate-class [options-map]
   (validate-generate-class-options options-map)
-  (let [default-options {:prefix "-" :load-impl-ns true :impl-ns (ns-name *ns*)}
+  (let [default-options {:prefix "-" :load-impl-ns true :impl-ns (name *ns*)}
         {:keys [name extends implements constructors methods main factory state init exposes 
                 exposes-methods prefix load-impl-ns impl-ns post-init]} 
           (merge default-options options-map)
