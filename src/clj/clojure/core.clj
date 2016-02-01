@@ -4157,7 +4157,10 @@
   {:added "1.0"
    :static true}
   [alias namespace-sym]
-  (.addAlias *ns* alias (the-ns namespace-sym)))
+  (let [other (the-ns namespace-sym)]
+    (when (deprecated? other)
+      (.write *err* (str "Warning: aliasing deprecated ns: " (name namespace-sym) "\n")))
+    (.addAlias *ns* alias other)))
 
 (defn ns-aliases
   "Returns a map of the aliases for the namespace."
