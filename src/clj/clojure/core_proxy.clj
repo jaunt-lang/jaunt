@@ -109,7 +109,7 @@
                                         ;call fn
                   (. gen (invokeInterface ifn-type (new Method "invoke" obj-type 
                                                         (into-array (cons obj-type 
-                                                                          (replicate (count ptypes) obj-type))))))
+                                                                          (repeat (count ptypes) obj-type))))))
                                         ;unbox return
                   (. gen (unbox rtype))
                   (when (= (. rtype (getSort)) (. Type VOID))

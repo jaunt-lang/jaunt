@@ -146,7 +146,7 @@
                             (make-array Type 0)))
         obj-type ^Type (totype Object)
         arg-types (fn [n] (if (pos? n)
-                            (into-array (replicate n obj-type))
+                            (into-array (repeat n obj-type))
                             (make-array Type 0)))
         super-type ^Type (totype super)
         init-name (str init)
@@ -232,11 +232,11 @@
                   (. clojure.lang.Compiler$HostExpr (emitBoxReturn nil gen (nth pclasses i))))
                                         ;call fn
                 (. gen (invokeInterface ifn-type (new Method "invoke" obj-type 
-                                                      (to-types (replicate (+ (count ptypes)
+                                                      (to-types (repeat (+ (count ptypes)
                                                                               (if as-static 0 1)) 
                                                                            Object)))))
                                         ;(into-array (cons obj-type 
-                                        ;                 (replicate (count ptypes) obj-type))))))
+                                        ;                 (repeat (count ptypes) obj-type))))))
                                         ;unbox return
                 (. gen (unbox rtype))
                 (when (= (. rtype (getSort)) (. Type VOID))
