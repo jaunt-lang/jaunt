@@ -35,6 +35,16 @@
                                (ns importer-d)
                                (alias 'e 'exporter-d)))))]
         (re-find #"aliasing deprecated ns:" err))))
+
+(deftest test-refer
+  (is (let [err (with-out-str
+                  (binding [*err* *out*]
+                    (eval '(do (ns exporter-r {:deprecated true})
+                               (def otherd 3)
+                               (ns importer-r)
+                               (refer 'exporter-r :only '(otherd))))))]
+        (re-find #"referring deprecated var:" err))))
+
 (deftest test-require
          (is (thrown? Exception (require :foo)))
          (is (thrown? Exception (require))))
