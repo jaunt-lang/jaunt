@@ -4036,7 +4036,7 @@
   {:added  "1.0"
    :static true}
   [ns]
-  (symbol (.getName (the-ns ns))))
+  (.name ^clojure.lang.Namespace (the-ns ns)))
 
 (defn ns-map
   "Returns a map of all the mappings for the namespace."
