@@ -179,6 +179,13 @@
  vector? (fn ^:static vector? [x] (instance? clojure.lang.IPersistentVector x)))
 
 (def
+ ^{:arglists '([x])
+   :doc "Return true if x is a Var"
+   :added "1.0"
+   :static true}
+  var? (fn ^:static var? [x] (instance? clojure.lang.Var x)))
+
+(def
  ^{:arglists '([map key val] [map key val & kvs])
    :doc "assoc[iate]. When applied to a map, returns a new map of the
     same (hashed/sorted) type, that contains the mapping of key(s) to
@@ -224,7 +231,10 @@
     :added "1.9"}
   deprecated?
   (fn [o]
-    (clojure.lang.RT/booleanCast (:deprecated (meta o)))))
+    (let [d' (clojure.lang.RT/booleanCast (:deprecated (meta o)))]
+      (if d' d'
+          (if (var? o)
+            (deprecated? (.ns ^clojure.lang.Var o)))))))
 
 (def
   ^{:doc   "Checks to see if the supplied object is marked private."
