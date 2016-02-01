@@ -143,7 +143,7 @@ public final class Var
 
   public String getNamespace() {
     if (ns != null) {
-      return ns.getName().getName();
+      return ns.getName();
     }
     return null;
   }
