@@ -4037,7 +4037,7 @@
    :static     true
    :deprecated "1.9"}
   [ns]
-  (.getName (the-ns ns)))
+  (symbol (.getName (the-ns ns))))
 
 (defn ns-map
   "Returns a map of all the mappings for the namespace."
