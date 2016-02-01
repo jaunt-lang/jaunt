@@ -382,6 +382,15 @@ public class Compiler implements Opcodes {
     return RT.booleanCast(getCompilerOption(pedanticKey));
   }
 
+  static boolean isDeprecated(Var v) {
+    return (RT.booleanCast(RT.get(v.meta(), deprecatedKey, false))
+            || isDeprecated(v.ns));
+  }
+
+  static boolean isDeprecated(Namespace n) {
+    return RT.booleanCast(RT.get(n.meta(), deprecatedKey, false));
+  }
+
   static Symbol resolveSymbol(Symbol sym) {
     //already qualified or classname?
     if (sym.name.indexOf('.') > 0) {
@@ -6784,16 +6793,19 @@ public class Compiler implements Opcodes {
 
       String loc = String.format(" (%s:%d:%d)", SOURCE.get(), lineDeref(), columnDeref());
       Object meta = RT.meta(v);
+      Namespace nsc = (Namespace) RT.CURRENT_NS.get();
 
-      if ((RT.booleanCast(RT.get(meta, deprecatedKey, false))
-           || (RT.booleanCast(RT.get(v.ns, deprecatedKey, false))
-               && !Util.equiv(v.ns, RT.CURRENT_NS.get())))
+      if (isDeprecated(v)
+          // Mask out warnings when the whole ns is deprecated
+          // Also handles the case of both nss being deprecated
+          && !isDeprecated(nsc)
+          // Mask out warnings when not pedantic
           && isPedantic()) {
         RT.errPrintWriter().println("Warning: using deprecated var: " + v.toString() + loc);
       }
 
       if (RT.booleanCast(RT.get(meta, privateKey, false))
-          && !Util.equals(RT.CURRENT_NS.get(), v.ns)
+          && !Util.equals(nsc, v.ns)
           && isPedantic()) {
         RT.errPrintWriter().println("Warning: using private var in other ns: " + v.toString() + loc);
       }
