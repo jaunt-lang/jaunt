@@ -4035,7 +4035,7 @@
   "Returns the name of the namespace, a symbol."
   {:added  "1.0"
    :static true}
-  [ns]
+  ^clojure.lang.Symbol [ns]
   (.name ^clojure.lang.Namespace (the-ns ns)))
 
 (defn ns-map
