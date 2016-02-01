@@ -4120,15 +4120,25 @@
   (let [ns        (or (find-ns ns-sym) (throw (new Exception (str "No namespace: " ns-sym))))
         fs        (apply hash-map filters)
         nspublics (ns-publics ns)
-        rename    (or (:rename fs) {})
+        all       (keys nspublics)
+        rename    (:rename fs {})
         exclude   (set (:exclude fs))
-        to-do     (if (= :all (:refer fs))
-                    (keys nspublics)
-                    (or (:refer fs) (:only fs) (keys nspublics)))]
-    (when (and to-do (not (instance? clojure.lang.Sequential to-do)))
-      (throw (new Exception ":only/:refer value must be a sequential collection of symbols")))
-    (when (deprecated? ns)
-      (.write *err* (str "Warning: referring vars from deprecated ns: " (name ns))))
+        refer     (:refer fs)
+        only      (:only fs)
+        op        (cond (= :all refer) :all
+                        refer          :refer
+                        only           :only
+                        :else          :all)
+        to-do     (cond (= op :all)   all
+                        (= op :refer) refer
+                        (= op :only)  only
+                        :else         all)]
+    (when (and to-do
+               (not (instance? clojure.lang.Sequential to-do)))
+      (throw (Exception. ":only/:refer value must be a sequential collection of symbols")))
+    (when (and (= op :all)
+               (deprecated? ns))
+      (.write *err* (str "Warning: referring vars from deprecated ns: " (name ns) "\n")))
     (doseq [sym to-do]
       (when-not (exclude sym)
         (let [v (nspublics sym)]
@@ -4137,6 +4147,9 @@
                         (if (get (ns-interns ns) sym)
                           (str sym " is not public")
                           (str sym " does not exist")))))
+          (when (and (deprecated? v)
+                     (not= op :all))
+            (.write *err* (str "Warning: referring deprecated var: " v "\n")))
           (. *ns* (refer (or (rename sym) sym) v)))))))
 
 (defn ns-refers
