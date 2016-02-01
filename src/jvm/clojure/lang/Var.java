@@ -15,7 +15,9 @@ package clojure.lang;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-public final class Var extends ARef implements IFn, IRef, Settable {
+public final class Var
+  extends ARef
+  implements IFn, IRef, Settable, Named {
 
   static class TBox {
 
@@ -130,9 +132,20 @@ public final class Var extends ARef implements IFn, IRef, Settable {
 
   public String toString() {
     if (ns != null) {
-      return "#'" + ns.name + "/" + sym;
+      return "#'" + getNamespace() + "/" + getName();
     }
-    return "#<Var: " + (sym != null ? sym.toString() : "--unnamed--") + ">";
+    return "#<Var: " + getName() + ">";
+  }
+
+  public String getName() {
+    return (sym != null ? sym.toString() : "--unnamed--");
+  }
+
+  public String getNamespace() {
+    if (ns != null) {
+      return ns.getName().getName();
+    }
+    return null;
   }
 
   public static Var find(Symbol nsQualifiedSym) {
