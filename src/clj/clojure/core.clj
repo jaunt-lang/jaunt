@@ -4033,11 +4033,10 @@
 
 (defn ns-name
   "Returns the name of the namespace, a symbol."
-  {:added      "1.0"
-   :static     true
-   :deprecated "1.9"}
-  [ns]
-  (symbol (.getName (the-ns ns))))
+  {:added  "1.0"
+   :static true}
+  ^clojure.lang.Symbol [ns]
+  (.name ^clojure.lang.Namespace (the-ns ns)))
 
 (defn ns-map
   "Returns a map of all the mappings for the namespace."
