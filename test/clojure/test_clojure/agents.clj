@@ -25,11 +25,10 @@
      ;; Let the action finish; eat the "agent has errors" error that bubbles up
      (await-for fragile-wait agt)
      (catch RuntimeException _))
-    (is (instance? Throwable (first (agent-errors agt))))
-    (is (= 1 (count (agent-errors agt))))
+    (is (instance? Throwable (agent-error agt)))
 
     ;; And now send an action that should work
-    (clear-agent-errors agt)
+    (restart-agent agt @agt)
     (is (= nil @agt))
     (send agt nil?)
     (is (true? (await-for fragile-wait agt)))
