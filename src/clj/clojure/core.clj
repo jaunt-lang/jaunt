@@ -4033,9 +4033,8 @@
 
 (defn ns-name
   "Returns the name of the namespace, a symbol."
-  {:added      "1.0"
-   :static     true
-   :deprecated "1.9"}
+  {:added  "1.0"
+   :static true}
   [ns]
   (symbol (.getName (the-ns ns))))
 
