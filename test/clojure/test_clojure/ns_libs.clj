@@ -29,7 +29,8 @@
 (deftest test-alias
   (is (thrown-with-msg? Exception #"No namespace: epicfail found" (alias 'bogus 'epicfail)))
   (is (let [err (with-out-str
-                  (binding [*err* *out*]
+                  (binding [*err* *out*
+                            *ns*  *ns*]
                     (eval '(do (ns exporter-d {:deprecated true})
                                (def otherd 3)
                                (ns importer-d)
@@ -38,7 +39,8 @@
 
 (deftest test-refer
   (is (let [err (with-out-str
-                  (binding [*err* *out*]
+                  (binding [*err* *out*
+                            *ns*  *ns*]
                     (eval '(do (ns exporter-r {:deprecated true})
                                (def otherd 3)
                                (ns importer-r)
