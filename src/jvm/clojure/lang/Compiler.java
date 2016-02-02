@@ -235,6 +235,9 @@ public class Compiler implements Opcodes {
 //DynamicClassLoader
   static final public Var LOADER = Var.create().setDynamic();
 
+  // boolean flag
+  static final public Var IN_DEPRECATED = Var.create(RT.F).setDynamic();
+
 //String
   static final public Var SOURCE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                    Symbol.intern("*source-path*"), "NO_SOURCE_FILE").setDynamic();
@@ -601,9 +604,14 @@ public class Compiler implements Opcodes {
 //          .without(Keyword.intern(null, "static"));
         mm = (IPersistentMap) elideMeta(mm);
         Expr meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
-        return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
-                           v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
-                           meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
+        try {
+          Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey))));
+          return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
+                             v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
+                             meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
+        } finally {
+          Var.popThreadBindings();
+        }
       }
     }
   }
@@ -6799,6 +6807,8 @@ public class Compiler implements Opcodes {
           // Mask out warnings when the whole ns is deprecated
           // Also handles the case of both nss being deprecated
           && !isDeprecated(nsc)
+          // Mask out warnings when in a deprecated form
+          && !RT.booleanCast(IN_DEPRECATED.get())
           // Mask out warnings when not pedantic
           && isPedantic()) {
         RT.errPrintWriter().println("Warning: using deprecated var: " + v.toString() + loc);
