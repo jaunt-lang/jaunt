@@ -6799,7 +6799,7 @@ public class Compiler implements Opcodes {
         return analyze(C.EXPRESSION, RT.list(QUOTE, v.get()));
       }
 
-      String loc = String.format(" (%s:%d:%d)", SOURCE.get(), lineDeref(), columnDeref());
+      String loc = String.format(" (%s:%d:%d)", SOURCE_PATH.get(), lineDeref(), columnDeref());
       Object meta = RT.meta(v);
       Namespace nsc = (Namespace) RT.CURRENT_NS.get();
 
