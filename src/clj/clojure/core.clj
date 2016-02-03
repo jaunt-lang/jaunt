@@ -6166,6 +6166,18 @@
   When there is no file, e.g. in the REPL, the value is not defined."
   {:added "1.0"})
 
+(add-doc-and-meta *line*
+  "The line number into *file* of the top level form being evaluated.
+
+  Integer valued, 0 by default."
+  {:added "1.9"})
+
+(add-doc-and-meta *column*
+  "The column number into *file*:*line* of the top level form being evaluated.
+
+  Integer valued, 0 by default."
+  {:added "1.9"})
+
 (add-doc-and-meta *command-line-args*
   "A sequence of the supplied command line arguments, or nil if
   none were supplied"

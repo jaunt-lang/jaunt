@@ -98,3 +98,16 @@
     (with-redefs [dynamic-var 3]
       (is (= 2 dynamic-var))))
   (is (= 1 dynamic-var)))
+
+(defmacro capturing-line-column [& forms]
+  (let [info (meta &form)]
+    `(let [~'mline   ~(:line info)
+           ~'mcolumn ~(:column info)]
+       ~@forms)))
+
+(capturing-line-column
+ (let [vline   *line*
+       vcolumn *column*]
+   (deftest line-column-test
+     (is (= vline mline))
+     (is (= vcolumn mcolumn)))))
