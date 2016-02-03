@@ -5003,8 +5003,6 @@
   (println "WARNING: add-classpath is deprecated")
   (clojure.lang.RT/addURL url))
 
-
-
 (defn hash
   "Returns the hash code of its argument. Note this is the hash code
   consistent with =, and thus is different than .hashCode for Integer,
