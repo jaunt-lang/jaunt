@@ -4148,7 +4148,8 @@
       (throw (Exception. ":only/:refer value must be a sequential collection of symbols")))
     (when (and (= op :all)
                (deprecated? ns))
-      (.write *err* (str "Warning: referring vars from deprecated ns: " (name ns) "\n")))
+      (.write *err* (str "Warning: referring vars from deprecated ns: " (name ns)
+                         " (" *file* ":" *line* ":" *column* ")\n")))
     (doseq [sym to-do]
       (when-not (exclude sym)
         (let [v (nspublics sym)]
@@ -4159,7 +4160,8 @@
                           (str sym " does not exist")))))
           (when (and (deprecated? v)
                      (not= op :all))
-            (.write *err* (str "Warning: referring deprecated var: " v "\n")))
+            (.write *err* (str "Warning: referring deprecated var: " v
+                               " (" *file* ":" *line* ":" *column* ")\n")))
           (. *ns* (refer (or (rename sym) sym) v)))))))
 
 (defn ns-refers
@@ -4182,7 +4184,8 @@
   [alias namespace-sym]
   (let [other (the-ns namespace-sym)]
     (when (deprecated? other)
-      (.write *err* (str "Warning: aliasing deprecated ns: " (name namespace-sym) "\n")))
+      (.write *err* (str "Warning: aliasing deprecated ns: " (name namespace-sym)
+                         " (" *file* ":" *line* ":" *column* ")\n")))
     (.addAlias *ns* alias other)))
 
 (defn ns-aliases
