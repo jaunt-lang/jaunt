@@ -263,6 +263,9 @@ public class Compiler implements Opcodes {
   static final public Keyword directLinkingKey = Keyword.intern("direct-linking");
   static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
   static final public Keyword warnOnBoxedKeyword = Keyword.intern("warn-on-boxed");
+  static final public Keyword warnOnDeprecatedKey = Keyword.intern("warn-on-deprecated");
+  static final public Keyword warnOnEarmuffsKey = Keyword.intern("warn-on-earmuffs");
+  static final public Keyword warnOnAccessKey = Keyword.intern("warn-on-access-violation");
   static final public Keyword pedanticKey = Keyword.intern("pedantic");
 
   static final public Var COMPILER_OPTIONS;
@@ -381,10 +384,22 @@ public class Compiler implements Opcodes {
     return specials.containsKey(sym);
   }
 
-  static boolean isPedantic() {
+  static boolean warnOnPedantic() {
     return RT.booleanCast(getCompilerOption(pedanticKey));
   }
 
+  static boolean warnOnDeprecated() {
+    return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnDeprecatedKey));
+  }
+
+  static boolean warnOnEarmuffs() {
+    return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnEarmuffsKey));
+  }
+
+  static boolean warnOnAccessViolation() {
+    return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnAccessKey));
+  }
+  
   static boolean isDeprecated(Var v) {
     return (RT.booleanCast(RT.get(v.meta(), deprecatedKey, false))
             || isDeprecated(v.ns));
@@ -575,7 +590,7 @@ public class Compiler implements Opcodes {
         if (!isDynamic && sym.name.startsWith("*")
             && sym.name.endsWith("*")
             && sym.name.length() > 2
-            && isPedantic()) {
+            && warnOnEarmuffs()) {
           RT.errPrintWriter().format("Warning: %1$s not declared dynamic and thus is not dynamically rebindable, "
                                      +"but its name suggests otherwise. Please either indicate ^:dynamic %1$s or change the name. (%2$s:%3$d)\n",
                                      sym, SOURCE_PATH.get(), LINE.get());
@@ -6810,13 +6825,13 @@ public class Compiler implements Opcodes {
           // Mask out warnings when in a deprecated form
           && !RT.booleanCast(IN_DEPRECATED.get())
           // Mask out warnings when not pedantic
-          && isPedantic()) {
+          && warnOnDeprecated()) {
         RT.errPrintWriter().println("Warning: using deprecated var: " + v.toString() + loc);
       }
 
       if (RT.booleanCast(RT.get(meta, privateKey, false))
           && !Util.equals(nsc, v.ns)
-          && isPedantic()) {
+          && warnOnAccessViolation()) {
         RT.errPrintWriter().println("Warning: using private var in other ns: " + v.toString() + loc);
       }
 
