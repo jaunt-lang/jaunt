@@ -291,9 +291,15 @@ public class Compiler implements Opcodes {
     return m;
   }
 
-//Integer
-  static final public Var LINE = Var.create(0).setDynamic();
-  static final public Var COLUMN = Var.create(0).setDynamic();
+  //Integer
+  static final public Var LINE =
+    Var.intern(RT.CLOJURE_NS, Symbol.intern("*line*"), 0)
+      .setDynamic();
+  
+  //Integer
+  static final public Var COLUMN =
+    Var.intern(RT.CLOJURE_NS, Symbol.intern("*column*"), 0)
+      .setDynamic();
 
   static int lineDeref() {
     return ((Number)LINE.deref()).intValue();
