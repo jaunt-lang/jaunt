@@ -5000,7 +5000,6 @@
   {:added "1.0"
    :deprecated "1.1"}
   [url]
-  (println "WARNING: add-classpath is deprecated")
   (clojure.lang.RT/addURL url))
 
 (defn hash
