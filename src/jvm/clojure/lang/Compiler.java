@@ -275,7 +275,10 @@ public class Compiler implements Opcodes {
   }
 
   static {
-    Object compilerOptions = RT.assoc(null, pedanticKey, RT.T);
+    Object compilerOptions =
+      RT.assoc(null, warnOnEarmuffsKey, RT.T)
+      .assoc(warnOnDeprecatedKey, RT.T)
+      .assoc(warnOnAccessKey, RT.T);
 
     for (Map.Entry e : System.getProperties().entrySet()) {
       String name = (String) e.getKey();
@@ -399,7 +402,7 @@ public class Compiler implements Opcodes {
   static boolean warnOnAccessViolation() {
     return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnAccessKey));
   }
-  
+
   static boolean isDeprecated(Var v) {
     return (RT.booleanCast(RT.get(v.meta(), deprecatedKey, false))
             || isDeprecated(v.ns));
