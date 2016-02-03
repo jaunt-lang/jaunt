@@ -6276,6 +6276,7 @@
   :warn-on-deprecated - on by default. Switches warnings for using ^:deprecated vars.
   :warn-on-access-violation - on by default. Switches warnings for using ^:private vars from other namespaces.
   :warn-on-earmuffs - on by default. Switches warnings for non-dynamic earmuffed vars.
+  :pedantic - off by default. Enables all warning switches.
 
   Alpha, subject to change."
   {:added "1.4"})
