@@ -6269,9 +6269,14 @@
 (add-doc-and-meta *compiler-options*
   "A map of keys to options.
   Note, when binding dynamically make sure to merge with previous value.
+
   Supported options:
   :elide-meta - a collection of metadata keys to elide during compilation.
   :disable-locals-clearing - set to true to disable clearing, useful for using a debugger
+  :warn-on-deprecated - on by default. Switches warnings for using ^:deprecated vars.
+  :warn-on-access-violation - on by default. Switches warnings for using ^:private vars from other namespaces.
+  :warn-on-earmuffs - on by default. Switches warnings for non-dynamic earmuffed vars.
+
   Alpha, subject to change."
   {:added "1.4"})
 
