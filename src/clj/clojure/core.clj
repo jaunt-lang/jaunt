@@ -4142,11 +4142,13 @@
         to-do     (cond (= op :all)   all
                         (= op :refer) refer
                         (= op :only)  only
-                        :else         all)]
+                        :else         all)
+        d-ctx     (deprecated? *ns*)]
     (when (and to-do
                (not (instance? clojure.lang.Sequential to-do)))
       (throw (Exception. ":only/:refer value must be a sequential collection of symbols")))
     (when (and (= op :all)
+               (not d-ctx)
                (deprecated? ns))
       (.write *err* (str "Warning: referring vars from deprecated ns: " (name ns)
                          " (" *file* ":" *line* ":" *column* ")\n")))
@@ -4159,6 +4161,7 @@
                           (str sym " is not public")
                           (str sym " does not exist")))))
           (when (and (deprecated? v)
+                     (not d-ctx)
                      (not= op :all))
             (.write *err* (str "Warning: referring deprecated var: " v
                                " (" *file* ":" *line* ":" *column* ")\n")))
@@ -4183,7 +4186,8 @@
    :static true}
   [alias namespace-sym]
   (let [other (the-ns namespace-sym)]
-    (when (deprecated? other)
+    (when (and (not (deprecated? *ns*))
+               (deprecated? other))
       (.write *err* (str "Warning: aliasing deprecated ns: " (name namespace-sym)
                          " (" *file* ":" *line* ":" *column* ")\n")))
     (.addAlias *ns* alias other)))
