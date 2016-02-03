@@ -4110,6 +4110,12 @@
                                  (= ns (.ns v))))
                 (ns-map ns))))
 
+;; FIXME: not really how I want to do this in the long run but correct for now.
+;; See arrdem/clojarr#21
+(defn ^:private warn-deprecated? []
+  (or (:pedantic *compiler-options*)
+      (:warn-on-deprecated *compiler-options*)))
+
 (defn refer
   "refers to all public vars of ns, subject to filters.
   filters can include at most one each of:
@@ -4149,6 +4155,7 @@
       (throw (Exception. ":only/:refer value must be a sequential collection of symbols")))
     (when (and (= op :all)
                (not d-ctx)
+               (warn-deprecated?)
                (deprecated? ns))
       (.write *err* (str "Warning: referring vars from deprecated ns: " (name ns)
                          " (" *file* ":" *line* ":" *column* ")\n")))
@@ -4162,6 +4169,7 @@
                           (str sym " does not exist")))))
           (when (and (deprecated? v)
                      (not d-ctx)
+                     (warn-deprecated?)
                      (not= op :all))
             (.write *err* (str "Warning: referring deprecated var: " v
                                " (" *file* ":" *line* ":" *column* ")\n")))
@@ -4187,6 +4195,7 @@
   [alias namespace-sym]
   (let [other (the-ns namespace-sym)]
     (when (and (not (deprecated? *ns*))
+               (warn-deprecated?)
                (deprecated? other))
       (.write *err* (str "Warning: aliasing deprecated ns: " (name namespace-sym)
                          " (" *file* ":" *line* ":" *column* ")\n")))
