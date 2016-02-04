@@ -192,6 +192,11 @@
           <generateGitPropertiesFilename>src/resources/clojure/git.properties</generateGitPropertiesFilename>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>2.2</version>
+      </plugin>
     </plugins>
   </build>
 
