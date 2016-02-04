@@ -9,7 +9,7 @@
   <packaging>jar</packaging>
   <version>1.9.0-master-SNAPSHOT</version>
 
-  <url>http://arrdem.com/clojure</url>
+  <url>https://github.com/arrdem/clojarr</url>
   <description>arrdem flavored Clojure</description>
 
   <developers>
