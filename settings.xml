@@ -1,0 +1,21 @@
+<settings>
+  <servers>
+    <server>
+      <id>clojars</id>
+      <username>${env.CLOJARS_USERNAME}</username>
+      <password>${env.CLOJARS_PASSWORD}</password>
+    </server>
+  </servers>
+  <profiles>
+    <profile>
+      <id>gpg</id>
+      <properties>
+        <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
+        <gpg.passphrase>${env.GPG_PASSWORD}</gpg.passphrase>
+      </properties>
+    </profile>
+  </profiles>
+   <activeProfiles>
+    <activeProfile>gpg</activeProfile>
+  </activeProfiles>
+</settings>
