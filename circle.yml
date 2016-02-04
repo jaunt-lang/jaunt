@@ -11,3 +11,10 @@ dependencies:
 test:
   pre:
     - bash check-whitespace.sh
+
+deployment:
+  staging:
+    branch: develop
+    commands:
+      - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(git rev-parse HEAD | head -c 8)-SNAPSHOT
+      - mvn -s settings.xml deploy
