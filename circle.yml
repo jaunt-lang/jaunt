@@ -14,7 +14,7 @@ test:
 
 deployment:
   staging:
-    branch: develop
+    branch: /.*/
     commands:
       - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)-$(git rev-parse HEAD | head -c 8)-SNAPSHOT
       - mvn -s settings.xml deploy
