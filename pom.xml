@@ -34,6 +34,14 @@
     <url>git@github.com:arrdem/clojarr.git</url>
   </scm>
 
+  <distributionManagement>
+    <repository>
+      <id>clojars</id>
+      <name>Clojars repository</name>
+      <url>https://clojars.org/repo</url>
+    </repository>
+  </distributionManagement>
+
   <properties>
     <directlinking>true</directlinking>
   </properties>
