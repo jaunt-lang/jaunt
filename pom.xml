@@ -153,29 +153,6 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2</version>
-        <executions>
-          <execution>
-            <id>clojure-slim-jar</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <descriptors>
-                <descriptor>src/assembly/slim.xml</descriptor>
-              </descriptors>
-              <archive>
-                <manifest>
-                  <mainClass>clojure.main</mainClass>
-                </manifest>
-              </archive>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <version>2.3.1</version>
         <configuration>
