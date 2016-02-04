@@ -83,6 +83,10 @@ public class Compiler implements Opcodes {
   static final Keyword inlineAritiesKey = Keyword.intern(null, "inline-arities");
   static final Keyword staticKey = Keyword.intern(null, "static");
   static final Keyword arglistsKey = Keyword.intern(null, "arglists");
+  static final Keyword methodMapKey = Keyword.intern(null, "method-map");
+  static final Keyword deprecatedKey = Keyword.intern(null, "deprecated");
+  static final Keyword privateKey = Keyword.intern(null, "private");
+
   static final Symbol INVOKE_STATIC = Symbol.intern("invokeStatic");
 
   static final Keyword volatileKey = Keyword.intern(null, "volatile");
@@ -91,7 +95,7 @@ public class Compiler implements Opcodes {
 
   static final Keyword protocolKey = Keyword.intern(null, "protocol");
   static final Keyword onKey = Keyword.intern(null, "on");
-  static Keyword dynamicKey = Keyword.intern("dynamic");
+  static final Keyword dynamicKey = Keyword.intern(null, "dynamic");
   static final Keyword redefKey = Keyword.intern(null, "redef");
 
   static final Symbol NS = Symbol.intern("ns");
@@ -231,6 +235,9 @@ public class Compiler implements Opcodes {
 //DynamicClassLoader
   static final public Var LOADER = Var.create().setDynamic();
 
+  // boolean flag
+  static final public Var IN_DEPRECATED = Var.create(RT.F).setDynamic();
+
 //String
   static final public Var SOURCE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
                                    Symbol.intern("*source-path*"), "NO_SOURCE_FILE").setDynamic();
@@ -255,15 +262,23 @@ public class Compiler implements Opcodes {
   static final public Keyword disableLocalsClearingKey = Keyword.intern("disable-locals-clearing");
   static final public Keyword directLinkingKey = Keyword.intern("direct-linking");
   static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
+  static final public Keyword warnOnBoxedKeyword = Keyword.intern("warn-on-boxed");
+  static final public Keyword warnOnDeprecatedKey = Keyword.intern("warn-on-deprecated");
+  static final public Keyword warnOnEarmuffsKey = Keyword.intern("warn-on-earmuffs");
+  static final public Keyword warnOnAccessKey = Keyword.intern("warn-on-access-violation");
+  static final public Keyword pedanticKey = Keyword.intern("pedantic");
 
   static final public Var COMPILER_OPTIONS;
 
   static public Object getCompilerOption(Keyword k) {
-    return RT.get(COMPILER_OPTIONS.deref(),k);
+    return RT.get(COMPILER_OPTIONS.deref(), k);
   }
 
   static {
-    Object compilerOptions = null;
+    Object compilerOptions =
+      RT.assoc(null, warnOnEarmuffsKey, RT.T)
+      .assoc(warnOnDeprecatedKey, RT.T)
+      .assoc(warnOnAccessKey, RT.T);
 
     for (Map.Entry e : System.getProperties().entrySet()) {
       String name = (String) e.getKey();
@@ -370,6 +385,31 @@ public class Compiler implements Opcodes {
 
   static boolean isSpecial(Object sym) {
     return specials.containsKey(sym);
+  }
+
+  static boolean warnOnPedantic() {
+    return RT.booleanCast(getCompilerOption(pedanticKey));
+  }
+
+  static boolean warnOnDeprecated() {
+    return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnDeprecatedKey));
+  }
+
+  static boolean warnOnEarmuffs() {
+    return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnEarmuffsKey));
+  }
+
+  static boolean warnOnAccessViolation() {
+    return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnAccessKey));
+  }
+
+  static boolean isDeprecated(Var v) {
+    return (RT.booleanCast(RT.get(v.meta(), deprecatedKey, false))
+            || isDeprecated(v.ns));
+  }
+
+  static boolean isDeprecated(Namespace n) {
+    return RT.booleanCast(RT.get(n.meta(), deprecatedKey, false));
   }
 
   static Symbol resolveSymbol(Symbol sym) {
@@ -550,7 +590,10 @@ public class Compiler implements Opcodes {
         if (isDynamic) {
           v.setDynamic();
         }
-        if (!isDynamic && sym.name.startsWith("*") && sym.name.endsWith("*") && sym.name.length() > 2) {
+        if (!isDynamic && sym.name.startsWith("*")
+            && sym.name.endsWith("*")
+            && sym.name.length() > 2
+            && warnOnEarmuffs()) {
           RT.errPrintWriter().format("Warning: %1$s not declared dynamic and thus is not dynamically rebindable, "
                                      +"but its name suggests otherwise. Please either indicate ^:dynamic %1$s or change the name. (%2$s:%3$d)\n",
                                      sym, SOURCE_PATH.get(), LINE.get());
@@ -579,9 +622,14 @@ public class Compiler implements Opcodes {
 //          .without(Keyword.intern(null, "static"));
         mm = (IPersistentMap) elideMeta(mm);
         Expr meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
-        return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
-                           v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
-                           meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
+        try {
+          Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey))));
+          return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
+                             v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
+                             meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
+        } finally {
+          Var.popThreadBindings();
+        }
       }
     }
   }
@@ -1557,7 +1605,6 @@ public class Compiler implements Opcodes {
     final static Method forNameMethod = Method.getMethod("Class classForName(String)");
     final static Method invokeStaticMethodMethod =
       Method.getMethod("Object invokeStaticMethod(Class,String,Object[])");
-    final static Keyword warnOnBoxedKeyword = Keyword.intern("warn-on-boxed");
 
     public StaticMethodExpr(String source, int line, int column, Symbol tag, Class c, String methodName, IPersistentVector args) {
       this.c = c;
@@ -3459,8 +3506,6 @@ public class Compiler implements Opcodes {
     public int siteIndex = -1;
     public Class protocolOn;
     public java.lang.reflect.Method onMethod;
-    static Keyword onKey = Keyword.intern("on");
-    static Keyword methodMapKey = Keyword.intern("method-map");
 
     static Object sigTag(int argcount, Var v) {
       Object arglists = RT.get(RT.meta(v), arglistsKey);
@@ -3481,25 +3526,31 @@ public class Compiler implements Opcodes {
       this.args = args;
       this.line = line;
       this.column = column;
+
       if (fexpr instanceof VarExpr) {
         Var fvar = ((VarExpr)fexpr).var;
         Var pvar =  (Var)RT.get(fvar.meta(), protocolKey);
+
         if (pvar != null && PROTOCOL_CALLSITES.isBound()) {
           this.isProtocol = true;
           this.siteIndex = registerProtocolCallsite(((VarExpr)fexpr).var);
           Object pon = RT.get(pvar.get(), onKey);
           this.protocolOn = HostExpr.maybeClass(pon,false);
+
           if (this.protocolOn != null) {
             IPersistentMap mmap = (IPersistentMap) RT.get(pvar.get(), methodMapKey);
             Keyword mmapVal = (Keyword) mmap.valAt(Keyword.intern(fvar.sym));
+
             if (mmapVal == null) {
               throw new IllegalArgumentException(
                 "No method of interface: " + protocolOn.getName() +
                 " found for function: " + fvar.sym + " of protocol: " + pvar.sym +
                 " (The protocol method may have been defined before and removed.)");
             }
+
             String mname = munge(mmapVal.sym.toString());
             List methods = Reflector.getMethods(protocolOn, args.count() - 1, mname, false);
+
             if (methods.size() != 1)
               throw new IllegalArgumentException(
                 "No single method: " + mname + " of interface: " + protocolOn.getName() +
@@ -3550,6 +3601,7 @@ public class Compiler implements Opcodes {
         gen.checkCast(IFN_TYPE);
         emitArgsAndCall(0, context,objx,gen);
       }
+
       if (context == C.STATEMENT) {
         gen.pop();
       }
@@ -3658,19 +3710,24 @@ public class Compiler implements Opcodes {
           Expr ret = StaticInvokeExpr
                      .parse(v, RT.next(form), formtag != null ? formtag : sigtag != null ? sigtag : vtag);
           if (ret != null) {
-//            System.out.println("invoke direct: " + v);
+            // System.out.println("invoke direct: " + v);
             return ret;
+          } else {
+            // System.out.println("NOT direct: " + v);
           }
-//                System.out.println("NOT direct: " + v);
         }
       }
 
-      if (fexpr instanceof VarExpr && context != C.EVAL) {
+      if (fexpr instanceof VarExpr
+          && context != C.EVAL) {
         Var v = ((VarExpr)fexpr).var;
-        Object arglists = RT.get(RT.meta(v), arglistsKey);
+        Object meta = RT.meta(v);
+        Object arglists = RT.get(meta, arglistsKey);
         int arity = RT.count(form.next());
+
         for (ISeq s = RT.seq(arglists); s != null; s = s.next()) {
           IPersistentVector args = (IPersistentVector) s.first();
+
           if (args.count() == arity) {
             String primc = FnMethod.primInterface(args);
             if (primc != null)
@@ -6747,18 +6804,40 @@ public class Compiler implements Opcodes {
       }
     }
     //Var v = lookupVar(sym, false);
-//  Var v = lookupVar(sym, false);
-//  if(v != null)
-//    return new VarExpr(v, tag);
+    //  Var v = lookupVar(sym, false);
+    //  if(v != null)
+    //    return new VarExpr(v, tag);
     Object o = resolve(sym);
     if (o instanceof Var) {
       Var v = (Var) o;
       if (isMacro(v) != null) {
         throw Util.runtimeException("Can't take value of a macro: " + v);
       }
-      if (RT.booleanCast(RT.get(v.meta(),RT.CONST_KEY))) {
+      if (RT.booleanCast(RT.get(v.meta(), RT.CONST_KEY))) {
         return analyze(C.EXPRESSION, RT.list(QUOTE, v.get()));
       }
+
+      String loc = String.format(" (%s:%d:%d)", SOURCE_PATH.get(), lineDeref(), columnDeref());
+      Object meta = RT.meta(v);
+      Namespace nsc = (Namespace) RT.CURRENT_NS.get();
+
+      if (isDeprecated(v)
+          // Mask out warnings when the whole ns is deprecated
+          // Also handles the case of both nss being deprecated
+          && !isDeprecated(nsc)
+          // Mask out warnings when in a deprecated form
+          && !RT.booleanCast(IN_DEPRECATED.get())
+          // Mask out warnings when not pedantic
+          && warnOnDeprecated()) {
+        RT.errPrintWriter().println("Warning: using deprecated var: " + v.toString() + loc);
+      }
+
+      if (RT.booleanCast(RT.get(meta, privateKey, false))
+          && !Util.equals(nsc, v.ns)
+          && warnOnAccessViolation()) {
+        RT.errPrintWriter().println("Warning: using private var in other ns: " + v.toString() + loc);
+      }
+
       registerVar(v);
       return new VarExpr(v, tag);
     } else if (o instanceof Class) {
@@ -8107,11 +8186,11 @@ public class Compiler implements Opcodes {
     final static Method hashMethod = Method.getMethod("int hash(Object)");
     final static Method hashCodeMethod = Method.getMethod("int hashCode()");
     final static Method equivMethod = Method.getMethod("boolean equiv(Object, Object)");
-    final static Keyword compactKey = Keyword.intern(null, "compact");
-    final static Keyword sparseKey = Keyword.intern(null, "sparse");
-    final static Keyword hashIdentityKey = Keyword.intern(null, "hash-identity");
-    final static Keyword hashEquivKey = Keyword.intern(null, "hash-equiv");
-    final static Keyword intKey = Keyword.intern(null, "int");
+    final static Keyword compactKey = Keyword.intern("compact");
+    final static Keyword sparseKey = Keyword.intern("sparse");
+    final static Keyword hashIdentityKey = Keyword.intern("hash-identity");
+    final static Keyword hashEquivKey = Keyword.intern("hash-equiv");
+    final static Keyword intKey = Keyword.intern("int");
     //(case* expr shift mask default map<minhash, [test then]> table-type test-type skip-check?)
     public CaseExpr(int line, int column, LocalBindingExpr expr, int shift, int mask, int low, int high, Expr defaultExpr,
                     SortedMap<Integer,Expr> tests,HashMap<Integer,Expr> thens, Keyword switchType, Keyword testType, Set<Integer> skipCheck) {

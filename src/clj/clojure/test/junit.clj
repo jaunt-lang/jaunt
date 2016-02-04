@@ -111,12 +111,11 @@
   (finish-element 'testsuite true))
 
 (defn message-el
-  [tag message expected-str actual-str]
+  [{:keys [tag message expected-str actual-str file line]}]
   (indent)
   (start-element tag false (if message {:message message} {}))
   (element-content
-   (let [[file line] (t/file-position 5)
-         detail (apply str (interpose
+   (let [detail (apply str (interpose
                             "\n"
                             [(str "expected: " expected-str)
                              (str "  actual: " actual-str)
@@ -126,17 +125,21 @@
   (println))
 
 (defn failure-el
-  [message expected actual]
-  (message-el 'failure message (pr-str expected) (pr-str actual)))
+  [m]
+  (message-el (assoc m
+                :tag 'failure
+                :expected-str (pr-str (:expected m))
+                :actual-str (pr-str (:actual m)))))
 
 (defn error-el
-  [message expected actual]
-  (message-el 'error
-              message
-              (pr-str expected)
-              (if (instance? Throwable actual)
-                (with-out-str (stack/print-cause-trace actual t/*stack-trace-depth*))
-                (prn actual))))
+  [{:keys [expected actual] :as m}]
+  (message-el (assoc m
+                :tag 'error
+                :expected-str (pr-str expected)
+                :actual-str (if (instance? Throwable actual)
+                              (with-out-str
+                                (stack/print-cause-trace actual t/*stack-trace-depth*))
+                              (pr-str actual)))))
 
 ;; This multimethod will override test-is/report
 (defmulti ^:dynamic junit-report :type)
@@ -166,16 +169,12 @@
 (defmethod junit-report :fail [m]
   (t/with-test-out
    (t/inc-report-counter :fail)
-   (failure-el (:message m)
-               (:expected m)
-               (:actual m))))
+   (failure-el m)))
 
 (defmethod junit-report :error [m]
   (t/with-test-out
    (t/inc-report-counter :error)
-   (error-el (:message m)
-             (:expected m)
-             (:actual m))))
+   (error-el m)))
 
 (defmethod junit-report :default [_])
 

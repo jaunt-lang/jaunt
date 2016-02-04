@@ -243,7 +243,7 @@
                        `(entrySet [this#] (set this#)))])
       ]
      (let [[i m] (-> [interfaces methods] irecord eqhash iobj ilookup imap ijavamap)]
-       `(deftype* ~(symbol (name (ns-name *ns*)) (name tagname)) ~classname ~(conj hinted-fields '__meta '__extmap)
+       `(deftype* ~(symbol (name *ns*) (name tagname)) ~classname ~(conj hinted-fields '__meta '__extmap)
           :implements ~(vec i) 
           ~@(mapcat identity opts)
           ~@m))))))
@@ -399,7 +399,7 @@
   [tagname cname fields interfaces methods opts]
   (let [classname (with-meta (symbol (str (namespace-munge *ns*) "." cname)) (meta cname))
         interfaces (conj interfaces 'clojure.lang.IType)]
-    `(deftype* ~(symbol (name (ns-name *ns*)) (name tagname)) ~classname ~fields
+    `(deftype* ~(symbol (name *ns*) (name tagname)) ~classname ~fields
        :implements ~interfaces 
        ~@(mapcat identity opts)
        ~@methods)))
