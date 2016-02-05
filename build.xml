@@ -257,7 +257,29 @@
           description="Build Clojure (compilation only, no tests)."
           depends="compile-java, compile-clojure"/>
 
-  <target name="jar" depends="build"
+  <target name="jar.check"
+          depends="compile-java.check,compile-clojure.check">
+    <condition property="jar.files.uptodate">
+      <uptodate targetfile="${clojure_jar}">
+        <srcfiles dir="${src}" includes="**/*.clj"/>
+        <srcfiles dir="${src}" includes="**/*.cljc"/>
+        <srcfiles dir="${src}" includes="**/*.edn"/>
+        <srcfiles dir="${build}" includes="**/*.class"/>
+      </uptodate>
+    </condition>
+
+    <condition property="jar.uptodate">
+      <and>
+        <istrue value="${compile-java.uptodate}"/>
+        <istrue value="${compile-clojure.uptodate}"/>
+        <istrue value="${jar.files.uptodate}"/>
+      </and>
+    </condition>
+  </target>
+  
+  <target name="jar"
+          depends="build,jar.check"
+          unless="jar.uptodate"
           description="Create clojure jar file.">
     <jar jarfile="${clojure_jar}" basedir="${build}">
       <fileset dir="${cljsrc}">
