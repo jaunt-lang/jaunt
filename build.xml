@@ -32,6 +32,9 @@
 
   <property name="directlinking" value="true"/>
 
+  <!-- Lazy compilation flag files -->
+  <property name="compile-java-flag" value="${target}/compile-java.flag"/>
+
   <target name="init" depends="">
     <tstamp/>
     <mkdir dir="${build}"/>
@@ -39,11 +42,19 @@
     <echo file="${version.properties}">version=${clojure.version.label}</echo>
   </target>
 
-  <target name="compile-java" depends="init"
+  <uptodate property="compile-java.uptodate"
+            targetfile="${compile-java-flag}">
+    <srcfiles dir= "${jsrc}" includes="**/*.java"/>
+  </uptodate>
+
+  <target name="compile-java"
+          depends="init"
+          unless="compile-java.uptodate"
           description="Compile Java sources.">
     <javac srcdir="${jsrc}" destdir="${build}" includeJavaRuntime="yes"
            includeAntRuntime="false"
            debug="true" source="1.6" target="1.6"/>
+    <touch file="${compile-java-flag}"/>
   </target>
 
   <target name="compile-clojure"
