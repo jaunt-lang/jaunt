@@ -37,6 +37,7 @@
   <property name="compile-clojure-flag" value="${target}/compile-clojure.flag"/>
   <property name="compile-tests-flag" value="${target}/compile-tests.flag"/>
   <property name="test-example-flag" value="${target}/test-example.flag"/>
+  <property name="test-generative-flag" value="${target}/test-generative.flag"/>
 
   <target name="init" depends="">
     <tstamp/>
@@ -206,10 +207,31 @@
     <touch file="${test-example-flag}"/>
   </target>
 
+  <target name="test-generative.check"
+          depends="compile-clojure.check,compile-tests.check">
+    <condition property="test-generative.files.uptodate">
+      <uptodate targetfile="${test-generative-flag}">
+        <srcfiles dir="${test}" includes="**/*.clj"/>
+        <srcfiles dir="${test}" includes="**/*.cljc"/>
+        <srcfiles dir="${test}" includes="**/*.edn"/>
+      </uptodate>
+    </condition>
+    <condition property="test-generative.uptodate">
+      <or>
+        <istrue value="${maven.test.skip}"/>
+        <and>
+          <istrue value="${compile-tests.uptodate}"/>
+          <istrue value="${compile-clojure.uptodate}"/>
+          <istrue value="${test-generative.files.uptodate}"/>
+        </and>
+      </or>
+    </condition>
+  </target>
+
   <target name="test-generative"
           description="Run test generative tests without recompiling clojure."
-          depends="compile-tests"
-          unless="maven.test.skip">
+          depends="compile-tests,test-generative.check"
+          unless="test-generative.uptodate">
     <java classname="clojure.main"
           failonerror="true"
           fork="true"
@@ -224,6 +246,7 @@
       </classpath>
       <arg value="${test-generative-script}"/>
     </java>
+    <touch file="${test-generative-flag}"/>
   </target>
 
   <target name="test"
