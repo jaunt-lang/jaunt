@@ -34,6 +34,7 @@
 
   <!-- Lazy compilation flag files -->
   <property name="compile-java-flag" value="${target}/compile-java.flag"/>
+  <property name="compile-clojure-flag" value="${target}/compile-clojure.flag"/>
 
   <target name="init" depends="">
     <tstamp/>
@@ -42,13 +43,15 @@
     <echo file="${version.properties}">version=${clojure.version.label}</echo>
   </target>
 
-  <uptodate property="compile-java.uptodate"
-            targetfile="${compile-java-flag}">
-    <srcfiles dir= "${jsrc}" includes="**/*.java"/>
-  </uptodate>
+  <target name="compile-java.check">
+    <uptodate property="compile-java.uptodate"
+              targetfile="${compile-java-flag}">
+      <srcfiles dir= "${jsrc}" includes="**/*.java"/>
+    </uptodate>
+  </target>
 
   <target name="compile-java"
-          depends="init"
+          depends="init,compile-java.check"
           unless="compile-java.uptodate"
           description="Compile Java sources.">
     <javac srcdir="${jsrc}" destdir="${build}" includeJavaRuntime="yes"
