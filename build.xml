@@ -32,7 +32,7 @@
 
   <property name="directlinking" value="true"/>
 
-  <target name="init" depends="clean">
+  <target name="init" depends="">
     <tstamp/>
     <mkdir dir="${build}"/>
     <mkdir dir="${build}/clojure"/>
