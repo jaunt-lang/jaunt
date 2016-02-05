@@ -44,10 +44,11 @@
   </target>
 
   <target name="compile-java.check">
-    <uptodate property="compile-java.uptodate"
-              targetfile="${compile-java-flag}">
-      <srcfiles dir= "${jsrc}" includes="**/*.java"/>
-    </uptodate>
+    <condition property="compile-java.uptodate">
+      <uptodate targetfile="${compile-java-flag}">
+        <srcfiles dir= "${jsrc}" includes="**/*.java"/>
+      </uptodate>
+    </condition>
   </target>
 
   <target name="compile-java"
