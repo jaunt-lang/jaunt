@@ -11,3 +11,15 @@ dependencies:
 test:
   pre:
     - bash check-whitespace.sh
+
+deployment:
+  staging:
+    branch: /.*/
+    commands:
+      - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)-$(git rev-parse HEAD | head -c 8)-SNAPSHOT
+      - mvn -s settings.xml deploy
+  release:
+    tag: /v[0-9]+(\.[0-9]+)*/
+    commands:
+      - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)
+      - mvn -s settings.xml deploy
