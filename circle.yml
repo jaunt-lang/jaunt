@@ -3,10 +3,13 @@ machine:
     version: oraclejdk8
 
 dependencies:
-  pre:
-    - bash make-astyle.sh
   cache_directories:
     - ~/bin
+  pre:
+    - bash make-astyle.sh
+    - bash circle-deps.sh
+  post:
+    - mvn dependency:resolve-plugins
 
 test:
   pre:
@@ -14,9 +17,9 @@ test:
 
 deployment:
   staging:
-    branch: /.*/
+    branch: /develop/
     commands:
-      - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)-$(git rev-parse HEAD | head -c 8)-SNAPSHOT
+      - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)-SNAPSHOT
       - mvn -s settings.xml deploy
   release:
     tag: /v[0-9]+(\.[0-9]+)*/
