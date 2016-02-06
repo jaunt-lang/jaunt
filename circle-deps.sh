@@ -3,7 +3,7 @@
 DIR="~/.m2/tags"
 FILE="$DIR/$(cat pom.xml build.xml circle-deps.sh | grep -v "<version>.*</version>" | shasum -a 512 | awk '{print $1}')"
 mkdir -p "$DIR"
-if [ ! -f "$FILE" ]
+if [ ! -e "$FILE" ]
 then
   # Do a deploy
   # - Forces a build
