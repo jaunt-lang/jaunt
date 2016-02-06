@@ -1,8 +1,9 @@
 #!/bin/bash
 
-DIR="~/.m2/tags"
-FILE="$DIR/$(cat pom.xml build.xml circle-deps.sh | grep -v "<version>.*</version>" | shasum -a 512 | awk '{print $1}')"
-mkdir -p "$DIR"
+M2="$HOME/.m2"
+FLAGS="$M2/tags"
+mkdir -p "$FLAGS"
+FILE="$FLAGS/$(cat pom.xml build.xml circle-deps.sh | grep -v "<version>.*</version>" | shasum -a 512 | awk '{print $1}')"
 if [ ! -e "$FILE" ]
 then
   # Do a deploy
@@ -18,7 +19,7 @@ then
 
   # purge clojarr from m2
   # no reason to leave those lying about
-  rm -r ~/.m2/repository/me/arrdem/clojarr/
+   rm -r "$M2/repository/me/arrdem/clojarr/"
   
   # leave the flag file behind
   touch "$FILE"
