@@ -12,13 +12,14 @@ then
   # - Without a profile, the deploy fails
   mvn deploy -Dmaven.test.skip=true
 
-  # cleans up the mess
-  mvn clean
+  # use the versions plugin
+  mvn versions:set -DgenerateBackupPoms=false -DnewVersion=whatever
+  git checkout pom.xml
 
   # purge clojarr from m2
   # no reason to leave those lying about
   rm -r ~/.m2/repository/me/arrdem/clojarr/
-
+  
   # leave the flag file behind
   touch "$FILE"
 fi
