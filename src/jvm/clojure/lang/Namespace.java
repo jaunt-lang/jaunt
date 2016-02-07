@@ -1,4 +1,4 @@
-/**
+M<>/**
  *   Copyright (c) Rich Hickey. All rights reserved.
  *   The use and distribution terms for this software are covered by the
  *   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
@@ -23,6 +23,7 @@ public class Namespace
   final public Symbol name;
   transient final AtomicReference<IPersistentMap> mappings = new AtomicReference<IPersistentMap>();
   transient final AtomicReference<IPersistentMap> aliases = new AtomicReference<IPersistentMap>();
+  private transient long rev = 1;
 
   final static ConcurrentHashMap<Symbol, Namespace> namespaces = new ConcurrentHashMap<Symbol, Namespace>();
 
@@ -240,9 +241,52 @@ public class Namespace
     }
   }
 
+  private static Keyword moduleKey = Keyword.intern("module");
+
+  public boolean isModule() {
+    return RT.booleanCast(RT.get(meta(), moduleKey, RT.T));
+  }
+
+  public synchronized void reset() {
+    if (isModule()) {
+      // this makes all vars in the ns stale
+      rev++;
+
+      // Purge imports
+      APersistentMap om, nm, oa;
+      int retrys = -1;
+      do {
+        retrys++;
+        oa = (APersistentMap) aliases.get();
+        om = (APersistentMap) mappings.get();
+        nm = om;
+        for (Object e : om) {
+          MapEntry me = (MapEntry) e;
+          Object val = me.val();
+          Object key = me.key();
+          if (val instanceof Var) {
+            Var v = (Var) val;
+            if (v.ns != this) {
+              nm = (APersistentMap) nm.without(key);
+            }
+          } else if (val instanceof Class) {
+            if (!RT.booleanCast(RT.DEFAULT_IMPORTS.valAt(key))) {
+              nm = (APersistentMap) nm.without(key);
+            }
+          } // else is probably an error case
+        }
+      } while (!aliases.compareAndSet(oa, PersistentHashMap.EMPTY)
+               && !mappings.compareAndSet(om, nm));
+    }
+  }
+
   private Object readResolve() throws ObjectStreamException {
     // ensures that serialized namespaces are "deserialized" to the
     // namespace in the present runtime
     return findOrCreate(name);
+  }
+
+  public long getRev() {
+    return rev;
   }
 }
