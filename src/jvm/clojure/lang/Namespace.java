@@ -95,7 +95,7 @@ public class Namespace
         throw new IllegalStateException(sym + " already refers to: " + o + " in namespace: " + name);
       }
     }
-    RT.errPrintWriter().println("WARNING: " + sym + " already refers to: " + o + " in namespace: " + name
+    RT.errPrintWriter().println("Warning: " + sym + " already refers to: " + o + " in namespace: " + name
                                 + ", being replaced by: " + v);
   }
 
