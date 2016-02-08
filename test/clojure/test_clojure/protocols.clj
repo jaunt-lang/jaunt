@@ -45,16 +45,18 @@
   (getKey [_] k)
   (getValue [_] v))
 
+(defn at-least? [l r]
+  (every? #(= (get l %) (get r %)) (keys l)))
+
 (deftest protocols-test
   (testing "protocol fns have useful metadata"
-    (let [common-meta {:ns (find-ns 'clojure.test-clojure.protocols.examples)
+    (let [common-meta {:ns       (find-ns 'clojure.test-clojure.protocols.examples)
                        :protocol #'ExampleProtocol}]
-      (are [m f] (= (merge (quote m) common-meta)
-                    (meta (var f)))
-        {:name foo :arglists ([a]) :doc "method with one arg"} foo
-        {:name bar :arglists ([a b]) :doc "method with two args"} bar
+      (are [m f] (at-least? (merge (quote m) common-meta) (meta (var f)))
+        {:name foo :arglists ([a]) :doc "method with one arg"}                            foo
+        {:name bar :arglists ([a b]) :doc "method with two args"}                         bar
         {:name baz :arglists ([a] [a b]) :doc "method with multiple arities" :tag String} baz
-        {:name with-quux :arglists ([a]) :doc "method name with a hyphen"} with-quux)))
+        {:name with-quux :arglists ([a]) :doc "method name with a hyphen"}                with-quux)))
   (testing "protocol fns throw IllegalArgumentException if no impl matches"
     (is (thrown-with-msg?
          IllegalArgumentException
