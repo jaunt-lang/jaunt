@@ -238,27 +238,6 @@ public class Compiler implements Opcodes {
   // boolean flag
   static final public Var IN_DEPRECATED = Var.create(RT.F).setDynamic();
 
-//String
-  static final public Var SOURCE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                   Symbol.intern("*source-path*"), "NO_SOURCE_FILE").setDynamic();
-
-//String
-  static final public Var SOURCE_PATH = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                        Symbol.intern("*file*"), "NO_SOURCE_PATH").setDynamic();
-
-//String
-  static final public Var COMPILE_PATH = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                         Symbol.intern("*compile-path*"), null).setDynamic();
-//boolean
-  static final public Var COMPILE_FILES = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                          Symbol.intern("*compile-files*"), Boolean.FALSE).setDynamic();
-
-  static final public Var INSTANCE = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-                                     Symbol.intern("instance?"));
-
-  static final public Var ADD_ANNOTATIONS = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-      Symbol.intern("add-annotations"));
-
   static final public Keyword disableLocalsClearingKey = Keyword.intern("disable-locals-clearing");
   static final public Keyword directLinkingKey = Keyword.intern("direct-linking");
   static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
@@ -306,20 +285,12 @@ public class Compiler implements Opcodes {
     return m;
   }
 
-  //Integer
-  static final public Var LINE =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("*line*"), 0).setDynamic();
-
-  //Integer
-  static final public Var COLUMN =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("*column*"), 0).setDynamic();
-
   static int lineDeref() {
-    return ((Number)LINE.deref()).intValue();
+    return ((Number) RT.LINE.deref()).intValue();
   }
 
   static int columnDeref() {
-    return ((Number)COLUMN.deref()).intValue();
+    return ((Number) RT.COLUMN.deref()).intValue();
   }
 
 //Integer
@@ -596,7 +567,7 @@ public class Compiler implements Opcodes {
             && warnOnEarmuffs()) {
           RT.errPrintWriter().format("Warning: %1$s not declared dynamic and thus is not dynamically rebindable, "
                                      +"but its name suggests otherwise. Please either indicate ^:dynamic %1$s or change the name. (%2$s:%3$d)\n",
-                                     sym, SOURCE_PATH.get(), LINE.get());
+                                     sym, RT.SOURCE_PATH.get(), RT.LINE.get());
         }
         if (RT.booleanCast(RT.get(mm, arglistsKey))) {
           IPersistentMap vm = v.meta();
@@ -605,9 +576,9 @@ public class Compiler implements Opcodes {
           vm = (IPersistentMap) RT.assoc(vm,arglistsKey,RT.second(mm.valAt(arglistsKey)));
           v.setMeta(vm);
         }
-        Object source_path = SOURCE_PATH.get();
+        Object source_path = RT.SOURCE_PATH.get();
         source_path = source_path == null ? "NO_SOURCE_FILE" : source_path;
-        mm = (IPersistentMap) RT.assoc(mm, RT.LINE_KEY, LINE.get()).assoc(RT.COLUMN_KEY, COLUMN.get()).assoc(RT.FILE_KEY, source_path);
+        mm = (IPersistentMap) RT.assoc(mm, RT.LINE_KEY, RT.LINE.get()).assoc(RT.COLUMN_KEY, RT.COLUMN.get()).assoc(RT.FILE_KEY, source_path);
         if (docstring != null) {
           mm = (IPersistentMap) RT.assoc(mm, RT.DOC_KEY, docstring);
         }
@@ -624,7 +595,7 @@ public class Compiler implements Opcodes {
         Expr meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
         try {
           Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey))));
-          return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
+          return new DefExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(),
                              v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
                              meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
         } finally {
@@ -996,7 +967,7 @@ public class Compiler implements Opcodes {
         //static target must be symbol, either fully.qualified.Classname or Classname that has been imported
         int line = lineDeref();
         int column = columnDeref();
-        String source = (String) SOURCE.deref();
+        String source = (String) RT.SOURCE.deref();
         Class c = maybeClass(RT.second(form), false);
         //at this point c will be non-null if static
         Expr instance = null;
@@ -1176,11 +1147,11 @@ public class Compiler implements Opcodes {
         if (targetClass == null) {
           RT.errPrintWriter()
           .format("Reflection warning, %s:%d:%d - reference to field %s can't be resolved.\n",
-                  SOURCE_PATH.deref(), line, column, fieldName);
+                  RT.SOURCE_PATH.deref(), line, column, fieldName);
         } else {
           RT.errPrintWriter()
           .format("Reflection warning, %s:%d:%d - reference to field %s on %s can't be resolved.\n",
-                  SOURCE_PATH.deref(), line, column, fieldName, targetClass.getName());
+                  RT.SOURCE_PATH.deref(), line, column, fieldName, targetClass.getName());
         }
       }
     }
@@ -1460,7 +1431,7 @@ public class Compiler implements Opcodes {
           if (RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
             RT.errPrintWriter()
             .format("Reflection warning, %s:%d:%d - call to method %s on %s can't be resolved (no such method).\n",
-                    SOURCE_PATH.deref(), line, column, methodName, target.getJavaClass().getName());
+                    RT.SOURCE_PATH.deref(), line, column, methodName, target.getJavaClass().getName());
           }
         } else {
           int methodidx = 0;
@@ -1484,7 +1455,7 @@ public class Compiler implements Opcodes {
           if (method == null && RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
             RT.errPrintWriter()
             .format("Reflection warning, %s:%d:%d - call to method %s on %s can't be resolved (argument types: %s).\n",
-                    SOURCE_PATH.deref(), line, column, methodName, target.getJavaClass().getName(), getTypeStringForArgs(args));
+                    RT.SOURCE_PATH.deref(), line, column, methodName, target.getJavaClass().getName(), getTypeStringForArgs(args));
           }
         }
       } else {
@@ -1492,7 +1463,7 @@ public class Compiler implements Opcodes {
         if (RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
           RT.errPrintWriter()
           .format("Reflection warning, %s:%d:%d - call to method %s can't be resolved (target class is unknown).\n",
-                  SOURCE_PATH.deref(), line, column, methodName);
+                  RT.SOURCE_PATH.deref(), line, column, methodName);
         }
       }
     }
@@ -1635,12 +1606,12 @@ public class Compiler implements Opcodes {
       if (method == null && RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
         RT.errPrintWriter()
         .format("Reflection warning, %s:%d:%d - call to static method %s on %s can't be resolved (argument types: %s).\n",
-                SOURCE_PATH.deref(), line, column, methodName, c.getName(), getTypeStringForArgs(args));
+                RT.SOURCE_PATH.deref(), line, column, methodName, c.getName(), getTypeStringForArgs(args));
       }
       if (method != null && warnOnBoxedKeyword.equals(RT.UNCHECKED_MATH.deref()) && isBoxedMath(method)) {
         RT.errPrintWriter()
         .format("Boxed math warning, %s:%d:%d - call: %s.\n",
-                SOURCE_PATH.deref(), line, column, method.toString());
+                RT.SOURCE_PATH.deref(), line, column, method.toString());
       }
     }
 
@@ -2505,7 +2476,7 @@ public class Compiler implements Opcodes {
       if (ctor == null && RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
         RT.errPrintWriter()
         .format("Reflection warning, %s:%d:%d - call to %s ctor can't be resolved.\n",
-                SOURCE_PATH.deref(), line, column, c.getName());
+                RT.SOURCE_PATH.deref(), line, column, c.getName());
       }
     }
 
@@ -3687,7 +3658,7 @@ public class Compiler implements Opcodes {
         context = C.EXPRESSION;
       }
       Expr fexpr = analyze(context, form.first());
-      if (fexpr instanceof VarExpr && ((VarExpr)fexpr).var.equals(INSTANCE) && RT.count(form) == 3) {
+      if (fexpr instanceof VarExpr && ((VarExpr)fexpr).var.equals(RT.INSTANCE) && RT.count(form) == 3) {
         Expr sexpr = analyze(C.EXPRESSION, RT.second(form));
         if (sexpr instanceof ConstantExpr) {
           Object val = ((ConstantExpr) sexpr).val();
@@ -3743,7 +3714,7 @@ public class Compiler implements Opcodes {
       if (fexpr instanceof KeywordExpr && RT.count(form) == 2 && KEYWORD_CALLSITES.isBound()) {
 //      fexpr = new ConstantExpr(new KeywordCallSite(((KeywordExpr)fexpr).k));
         Expr target = analyze(context, RT.second(form));
-        return new KeywordInvokeExpr((String) SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form),
+        return new KeywordInvokeExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form),
                                      (KeywordExpr) fexpr, target);
       }
       PersistentVector args = PersistentVector.EMPTY;
@@ -3754,7 +3725,7 @@ public class Compiler implements Opcodes {
 //      throw new IllegalArgumentException(
 //          String.format("No more than %d args supported", MAX_POSITIONAL_ARITY));
 
-      return new InvokeExpr((String) SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form), fexpr, args);
+      return new InvokeExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form), fexpr, args);
     }
   }
 
@@ -4161,13 +4132,13 @@ public class Compiler implements Opcodes {
       cv.visit(V1_5, ACC_PUBLIC + ACC_SUPER + ACC_FINAL, internalName, null,superName,interfaceNames);
 //             superName != null ? superName :
 //             (isVariadic() ? "clojure/lang/RestFn" : "clojure/lang/AFunction"), null);
-      String source = (String) SOURCE.deref();
+      String source = (String) RT.SOURCE.deref();
       int lineBefore = (Integer) LINE_BEFORE.deref();
       int lineAfter = (Integer) LINE_AFTER.deref() + 1;
       int columnBefore = (Integer) COLUMN_BEFORE.deref();
       int columnAfter = (Integer) COLUMN_AFTER.deref() + 1;
 
-      if (source != null && SOURCE_PATH.deref() != null) {
+      if (source != null && RT.SOURCE_PATH.deref() != null) {
         //cv.visitSource(source, null);
         String smap = "SMAP\n" +
                       ((source.lastIndexOf('.') > 0) ?
@@ -4179,7 +4150,7 @@ public class Compiler implements Opcodes {
                       "*S Clojure\n" +
                       "*F\n" +
                       "+ 1 " + source + "\n" +
-                      (String) SOURCE_PATH.deref() + "\n" +
+                      (String) RT.SOURCE_PATH.deref() + "\n" +
                       "*L\n" +
                       String.format("%d#1,%d:%d\n", lineBefore, lineAfter - lineBefore, lineBefore) +
                       "*E";
@@ -4475,7 +4446,7 @@ public class Compiler implements Opcodes {
       cv.visitEnd();
 
       bytecode = cw.toByteArray();
-      if (RT.booleanCast(COMPILE_FILES.deref())) {
+      if (RT.booleanCast(RT.COMPILE_FILES.deref())) {
         writeClassFile(internalName, bytecode);
       }
 //    else
@@ -6292,7 +6263,7 @@ public class Compiler implements Opcodes {
       public Expr parse(C context, Object frm) {
         int line = lineDeref();
         int column = columnDeref();
-        String source = (String) SOURCE.deref();
+        String source = (String) RT.SOURCE.deref();
 
         ISeq form = (ISeq) frm;
         IPersistentVector loopLocals = (IPersistentVector) LOOP_LOCALS.deref();
@@ -6439,7 +6410,7 @@ public class Compiler implements Opcodes {
       return new ConstantExpr(form);
     } catch (Throwable e) {
       if (!(e instanceof CompilerException)) {
-        throw new CompilerException((String) SOURCE_PATH.deref(), lineDeref(), columnDeref(), e);
+        throw new CompilerException((String) RT.SOURCE_PATH.deref(), lineDeref(), columnDeref(), e);
       } else {
         throw (CompilerException) e;
       }
@@ -6593,7 +6564,7 @@ public class Compiler implements Opcodes {
       column = RT.meta(form).valAt(RT.COLUMN_KEY);
     }
     Var.pushThreadBindings(
-      RT.map(LINE, line, COLUMN, column));
+      RT.map(RT.LINE, line, RT.COLUMN, column));
     try {
       Object me = macroexpand1(form);
       if (me != form) {
@@ -6618,7 +6589,7 @@ public class Compiler implements Opcodes {
       }
     } catch (Throwable e) {
       if (!(e instanceof CompilerException)) {
-        throw new CompilerException((String) SOURCE_PATH.deref(), lineDeref(), columnDeref(), e);
+        throw new CompilerException((String) RT.SOURCE_PATH.deref(), lineDeref(), columnDeref(), e);
       } else {
         throw (CompilerException) e;
       }
@@ -6650,7 +6621,7 @@ public class Compiler implements Opcodes {
       if (RT.meta(form) != null && RT.meta(form).containsKey(RT.COLUMN_KEY)) {
         column = RT.meta(form).valAt(RT.COLUMN_KEY);
       }
-      Var.pushThreadBindings(RT.map(LINE, line, COLUMN, column));
+      Var.pushThreadBindings(RT.map(RT.LINE, line, RT.COLUMN, column));
       try {
         form = macroexpand(form);
         if (form instanceof ISeq && Util.equals(RT.first(form), DO)) {
@@ -6773,14 +6744,14 @@ public class Compiler implements Opcodes {
   }
 
   static void addAnnotation(Object visitor, IPersistentMap meta) {
-    if (meta != null && ADD_ANNOTATIONS.isBound()) {
-      ADD_ANNOTATIONS.invoke(visitor, meta);
+    if (meta != null && RT.ADD_ANNOTATIONS.isBound()) {
+      RT.ADD_ANNOTATIONS.invoke(visitor, meta);
     }
   }
 
   static void addParameterAnnotation(Object visitor, IPersistentMap meta, int i) {
-    if (meta != null && ADD_ANNOTATIONS.isBound()) {
-      ADD_ANNOTATIONS.invoke(visitor, meta, i);
+    if (meta != null && RT.ADD_ANNOTATIONS.isBound()) {
+      RT.ADD_ANNOTATIONS.invoke(visitor, meta, i);
     }
   }
 
@@ -6817,7 +6788,7 @@ public class Compiler implements Opcodes {
         return analyze(C.EXPRESSION, RT.list(QUOTE, v.get()));
       }
 
-      String loc = String.format(" (%s:%d:%d)", SOURCE_PATH.get(), lineDeref(), columnDeref());
+      String loc = String.format(" (%s:%d:%d)", RT.SOURCE_PATH.get(), lineDeref(), columnDeref());
       Object meta = RT.meta(v);
       Namespace nsc = (Namespace) RT.CURRENT_NS.get();
 
@@ -7100,8 +7071,8 @@ public class Compiler implements Opcodes {
     consumeWhitespaces(pushbackReader);
     Var.pushThreadBindings(
       RT.mapUniqueKeys(LOADER, RT.makeClassLoader(),
-                       SOURCE_PATH, sourcePath,
-                       SOURCE, sourceName,
+                       RT.SOURCE_PATH, sourcePath,
+                       RT.SOURCE, sourceName,
                        METHOD, null,
                        LOCAL_ENV, null,
                        LOOP_LOCALS, null,
@@ -7143,7 +7114,7 @@ public class Compiler implements Opcodes {
   }
 
   static public void writeClassFile(String internalName, byte[] bytecode) throws IOException {
-    String genPath = (String) COMPILE_PATH.deref();
+    String genPath = (String) RT.COMPILE_PATH.deref();
     if (genPath == null) {
       throw Util.runtimeException("*compile-path* not set");
     }
@@ -7166,13 +7137,11 @@ public class Compiler implements Opcodes {
   }
 
   public static void pushNS() {
-    Var.pushThreadBindings(PersistentHashMap.create(Var.intern(Symbol.intern("clojure.core"),
-                           Symbol.intern("*ns*")).setDynamic(), null));
+    Var.pushThreadBindings(PersistentHashMap.create(RT.CURRENT_NS, null));
   }
 
   public static void pushNSandLoader(ClassLoader loader) {
-    Var.pushThreadBindings(RT.map(Var.intern(Symbol.intern("clojure.core"),
-                                  Symbol.intern("*ns*")).setDynamic(),
+    Var.pushThreadBindings(RT.map(RT.CURRENT_NS,
                                   null,
                                   RT.FN_LOADER_VAR, loader,
                                   RT.READEVAL, RT.T
@@ -7193,7 +7162,7 @@ public class Compiler implements Opcodes {
       column = RT.meta(form).valAt(RT.COLUMN_KEY);
     }
     Var.pushThreadBindings(
-      RT.map(LINE, line, COLUMN, column
+      RT.map(RT.LINE, line, RT.COLUMN, column
              ,LOADER, RT.makeClassLoader()
             ));
     try {
@@ -7216,7 +7185,7 @@ public class Compiler implements Opcodes {
   }
 
   public static Object compile(Reader rdr, String sourcePath, String sourceName) throws IOException {
-    if (COMPILE_PATH.deref() == null) {
+    if (RT.COMPILE_PATH.deref() == null) {
       throw Util.runtimeException("*compile-path* not set");
     }
 
@@ -7226,8 +7195,8 @@ public class Compiler implements Opcodes {
       (rdr instanceof LineNumberingPushbackReader) ? (LineNumberingPushbackReader) rdr :
       new LineNumberingPushbackReader(rdr);
     Var.pushThreadBindings(
-      RT.mapUniqueKeys(SOURCE_PATH, sourcePath,
-                       SOURCE, sourceName,
+      RT.mapUniqueKeys(RT.SOURCE_PATH, sourcePath,
+                       RT.SOURCE, sourceName,
                        METHOD, null,
                        LOCAL_ENV, null,
                        LOOP_LOCALS, null,
@@ -8219,7 +8188,7 @@ public class Compiler implements Opcodes {
       if (RT.count(skipCheck) > 0 && RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
         RT.errPrintWriter()
         .format("Performance warning, %s:%d:%d - hash collision of some case test constants; if selected, those entries will be tested sequentially.\n",
-                SOURCE_PATH.deref(), line, column);
+                RT.SOURCE_PATH.deref(), line, column);
       }
     }
 
@@ -8318,7 +8287,7 @@ public class Compiler implements Opcodes {
         if (RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
           RT.errPrintWriter()
           .format("Performance warning, %s:%d:%d - case has int tests, but tested expression is not primitive.\n",
-                  SOURCE_PATH.deref(), line, column);
+                  RT.SOURCE_PATH.deref(), line, column);
         }
         expr.emit(C.EXPRESSION, objx, gen);
         gen.instanceOf(NUMBER_TYPE);
@@ -8457,8 +8426,8 @@ public class Compiler implements Opcodes {
           Var.popThreadBindings();
         }
 
-        int line = ((Number)LINE.deref()).intValue();
-        int column = ((Number)COLUMN.deref()).intValue();
+        int line = ((Number) RT.LINE.deref()).intValue();
+        int column = ((Number) RT.COLUMN.deref()).intValue();
         return new CaseExpr(line, column, testexpr, shift, mask, low, high,
                             defaultExpr, tests, thens, switchType, testType, skipCheck);
       }
