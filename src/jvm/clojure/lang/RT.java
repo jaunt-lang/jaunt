@@ -223,7 +223,8 @@ public class RT {
                new OutputStreamWriter(System.out)).setOnce().setDynamic();
 
   final static public Var IN =
-    Var.intern(CLOJURE_NS, Symbol.intern("*in*"),
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*in*"),
                new LineNumberingPushbackReader(new InputStreamReader(System.in))).setOnce().setDynamic();
 
   final static public Var ERR =
@@ -281,7 +282,7 @@ public class RT {
   static Keyword FILE_KEY = Keyword.intern(null, "file");
   static Keyword DECLARED_KEY = Keyword.intern(null, "declared");
   static Keyword DOC_KEY = Keyword.intern(null, "doc");
-  
+
   final static public Var USE_CONTEXT_CLASSLOADER =
     Var.intern(CLOJURE_NS,
                Symbol.intern("*use-context-classloader*"),
@@ -351,7 +352,7 @@ public class RT {
     Var.intern(CLOJURE_NS,
                Symbol.intern("print-initialized"),
                F).setPublic(false).setDynamic();
-  
+
   static final Var PR_ON = Var.intern(CLOJURE_NS, Symbol.intern("pr-on"));
 
   final static IFn inNamespace = new AFn() {
