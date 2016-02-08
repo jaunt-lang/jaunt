@@ -5827,9 +5827,11 @@
                                            (not-any? #(= :refer-clojure (first %)) references))
                                   `((clojure.core/refer* *ns* '~'clojure.core)))
                               ~@(map process-reference references)))
-        res-form         `(let [~'__ns (clojure.core/in-ns '~name)
+        res-form         `(let [~'^clojure.lang.Namespace __ns (clojure.core/in-ns '~name)
                                 ~'__fn ~(binding [*ns* (find-ns 'clojure.core)]
                                           (eval fn-form))]
+                            (if (.isModule ~'__ns)
+                              (.reset ~'__ns))
                             ~@(when name-metadata
                                 `((.resetMeta ~'__ns ~name-metadata)))
                             (~'__fn)
