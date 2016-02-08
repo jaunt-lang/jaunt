@@ -206,7 +206,8 @@ public class RT {
                new OutputStreamWriter(System.out)).setOnce().setDynamic();
 
   final static public Var IN =
-    Var.intern(CLOJURE_NS, Symbol.intern("*in*"),
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*in*"),
                new LineNumberingPushbackReader(new InputStreamReader(System.in))).setOnce().setDynamic();
 
   final static public Var ERR =
@@ -255,7 +256,7 @@ public class RT {
     Var.intern(CLOJURE_NS,
                Symbol.intern("*math-context*"),
                null).setOnce().setDynamic();
-  
+
   final static public Var USE_CONTEXT_CLASSLOADER =
     Var.intern(CLOJURE_NS,
                Symbol.intern("*use-context-classloader*"),

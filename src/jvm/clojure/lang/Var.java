@@ -246,7 +246,7 @@ public final class Var
   public synchronized long getRev() {
     return rev;
   }
-  
+
   public synchronized void resetRev() {
     rev = nsRev();
   }

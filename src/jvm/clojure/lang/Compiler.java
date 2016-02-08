@@ -238,8 +238,10 @@ public class Compiler implements Opcodes {
       }
     }
 
-    COMPILER_OPTIONS = Var.intern(RT.CLOJURE_NS,
-                                  Symbol.intern("*compiler-options*"), compilerOptions).setDynamic();
+    COMPILER_OPTIONS =
+      Var.intern(RT.CLOJURE_NS,
+                 Symbol.intern("*compiler-options*"),
+                 compilerOptions).setOnce().setDynamic();
   }
 
   static Object elideMeta(Object m) {
@@ -6475,6 +6477,11 @@ public class Compiler implements Opcodes {
           && !Util.equals(nsc, v.ns)
           && warnOnAccessViolation()) {
         RT.errPrintWriter().println("Warning: using private var in other ns: " + v.toString() + loc);
+      }
+
+      if (v.isStale()) {
+        RT.errPrintWriter().println("Warning: using stale var: " + v.toString()
+                                    + String.format(" (var: %d, ns: %d)", v.getRev(), v.ns.getRev()) + loc);
       }
 
       registerVar(v);
