@@ -74,7 +74,7 @@
   (alter-meta! #'example-var assoc :macro true)
   (is (contains? (meta #'example-var) :macro))
   (.bindRoot #'example-var 0)
-  (is (not (contains? (meta #'example-var) :macro))))
+  (is (not (get (meta #'example-var) :macro))))
 
 (deftest last-var-wins-for-core
   (testing "you can replace a core name, with warning"
