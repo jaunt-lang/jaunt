@@ -369,9 +369,15 @@ public class RT {
                inNamespace).setOnce();
 
   final static IFn bootNamespace = new AFn() {
-    public Object invoke(Object __form, Object __env,Object arg1) {
+    public Object invoke(Object __form, Object __env, Object arg1) {
       Symbol nsname = (Symbol) arg1;
-      Namespace ns = Namespace.findOrCreate(nsname);
+      Namespace ns = Namespace.find(nsname);
+      if (ns != null && ns.isModule()) {
+        ns.reset();
+      } else {
+        ns = Namespace.findOrCreate(nsname);
+      }
+      ns.resetMeta(nsname.meta());
       CURRENT_NS.set(ns);
       return ns;
     }

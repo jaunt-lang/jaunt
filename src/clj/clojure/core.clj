@@ -5702,6 +5702,9 @@
         references (remove #(= :gen-class (first %)) references)
         name-metadata (meta name)]
     `(do
+       (let [n# (clojure.lang.Namespace/find '~name)]
+         (if (and n# (.isModule n#))
+           (.reset n#)))
        (clojure.core/in-ns '~name)
        ~@(when name-metadata
            `((.resetMeta (clojure.lang.Namespace/find '~name) ~name-metadata)))
