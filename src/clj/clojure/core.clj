@@ -3582,8 +3582,6 @@
        (number? x) (BigDecimal/valueOf (long x))
        :else (BigDecimal. x)))
 
-(def ^:dynamic ^{:private true} print-initialized false)
-
 (defmulti print-method (fn [x writer]
                          (let [t (get (meta x) :type)]
                            (if (keyword? t) t (class x)))))

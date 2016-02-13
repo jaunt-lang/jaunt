@@ -487,4 +487,7 @@
   (when (:splicing? o) (.write w "@"))
   (print-method (:form o) w))
 
-(def ^{:private true} print-initialized true)
+(def
+  ^{:private true
+    :dynamic true}
+  print-initialized true)
