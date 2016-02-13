@@ -273,6 +273,13 @@ public class RT {
     }
   }
 
+  public static String getPos() {
+    return String.format("(%s:%d:%d)",
+                         Compiler.SOURCE_PATH.get(),
+                         Compiler.LINE.get(),
+                         Compiler.COLUMN.get());
+  }
+
   static public final Object[] EMPTY_ARRAY = new Object[] {};
   static public final Comparator DEFAULT_COMPARATOR = new DefaultComparator();
 
