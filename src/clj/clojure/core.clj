@@ -6271,6 +6271,15 @@
 (defmacro add-doc-and-meta {:private true} [name docstring meta]
   `(alter-meta! (var ~name) merge (assoc ~meta :doc ~docstring)))
 
+(add-doc-and-meta in-ns
+   "Sets *ns* to the namespace named by the symbol, creating it if needed."
+   {:arglists '([name])
+    :added    "1.0"})
+
+(add-doc-and-meta load-file
+  "Sequentially read and evaluate the set of forms contained in the file."
+  {:arglists '([name])})
+
 (add-doc-and-meta *agent*
   "The agent currently running an action on this thread, else nil"
   {:added "1.0"
@@ -7588,13 +7597,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; data readers ;;;;;;;;;;;;;;;;;;
 
-(def ^{:added "1.4"} default-data-readers
+(def
+  ^{:added "1.4"}
+  default-data-readers
   "Default map of data reader functions provided by Clojure. May be
   overridden by binding *data-readers*."
   {'inst #'clojure.instant/read-instant-date
    'uuid #'clojure.uuid/default-uuid-reader})
 
-(def ^{:added "1.4" :dynamic true} *data-readers*
+(add-doc-and-meta *data-readers*
   "Map from reader tag symbols to data reader Vars.
 
   When Clojure starts, it searches for files named 'data_readers.clj'
@@ -7621,14 +7632,16 @@
   Clojure. Default reader tags are defined in
   clojure.core/default-data-readers but may be overridden in
   data_readers.clj or by rebinding this Var."
-  {})
+  {:added   "1.4"
+   :dynamic true
+   :once    true})
 
-(def ^{:added "1.5" :dynamic true} *default-data-reader-fn*
+(add-doc-and-meta *default-data-reader-fn*
   "When no data reader is found for a tag and *default-data-reader-fn*
   is non-nil, it will be called with two arguments,
   the tag and the value.  If *default-data-reader-fn* is nil (the
   default), an exception will be thrown for the unknown tag."
-  nil)
+  {:added   "1.5"})
 
 (defn- data-reader-urls []
   (let [cl (.. Thread currentThread getContextClassLoader)]

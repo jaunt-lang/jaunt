@@ -254,7 +254,7 @@ public class RT {
   final static public Var DEFAULT_DATA_READER_FN =
     Var.intern(CLOJURE_NS,
                Symbol.intern("*default-data-reader-fn*"),
-               RT.map()).setOnce().setDynamic();
+               null).setOnce().setDynamic();
 
   final static public Var DEFAULT_DATA_READERS =
     Var.intern(CLOJURE_NS,
@@ -337,11 +337,6 @@ public class RT {
                Symbol.intern("*allow-unresolved-vars*"),
                F).setOnce().setDynamic();
 
-  final static Var IN_NS_VAR =
-    Var.intern(CLOJURE_NS,
-               Symbol.intern("in-ns"),
-               F).setOnce();
-
   final static Var NS_VAR =
     Var.intern(CLOJURE_NS,
                Symbol.intern("ns"),
@@ -368,6 +363,11 @@ public class RT {
     }
   };
 
+  final static Var IN_NS_VAR =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("in-ns"),
+               inNamespace).setOnce();
+
   final static IFn bootNamespace = new AFn() {
     public Object invoke(Object __form, Object __env,Object arg1) {
       Symbol nsname = (Symbol) arg1;
@@ -376,6 +376,21 @@ public class RT {
       return ns;
     }
   };
+
+  final static IFn loadFile = new AFn() {
+    public Object invoke(Object arg1) {
+      try {
+        return Compiler.loadFile((String) arg1);
+      } catch (IOException e) {
+        throw Util.sneakyThrow(e);
+      }
+    }
+  };
+
+  final static Var LOAD_FILE_VAR =
+    Var.intern(CLOJURE_NS,
+               LOAD_FILE,
+               loadFile).setOnce();
 
   public static List<String> processCommandLine(String[] args) {
     List<String> arglist = Arrays.asList(args);
@@ -439,22 +454,6 @@ public class RT {
     MATH_CONTEXT.setTag(Symbol.intern("java.math.MathContext"));
     Var nv = Var.intern(CLOJURE_NS, NAMESPACE, bootNamespace);
     nv.setMacro();
-    Var v;
-    v = Var.intern(CLOJURE_NS, IN_NAMESPACE, inNamespace);
-    v.setMeta(map(DOC_KEY, "Sets *ns* to the namespace named by the symbol, creating it if needed.",
-                  arglistskw, list(vector(namesym))));
-    v = Var.intern(CLOJURE_NS, LOAD_FILE,
-    new AFn() {
-      public Object invoke(Object arg1) {
-        try {
-          return Compiler.loadFile((String) arg1);
-        } catch (IOException e) {
-          throw Util.sneakyThrow(e);
-        }
-      }
-    });
-    v.setMeta(map(DOC_KEY, "Sequentially read and evaluate the set of forms contained in the file.",
-                  arglistskw, list(vector(namesym))));
     try {
       doInit();
     } catch (Exception e) {
