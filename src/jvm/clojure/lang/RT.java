@@ -471,9 +471,8 @@ public class RT {
       Symbol USER = Symbol.intern("user");
       Symbol CLOJURE = Symbol.intern("clojure.core");
 
-      Var in_ns = var("clojure.core", "in-ns");
       Var refer = var("clojure.core", "refer");
-      in_ns.invoke(USER);
+      IN_NS_VAR.invoke(USER);
       refer.invoke(CLOJURE);
       maybeLoadResourceScript("user.clj");
 
