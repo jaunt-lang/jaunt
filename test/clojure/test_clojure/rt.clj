@@ -103,3 +103,26 @@
                    (.refer ns 'subset? #'clojure.set/intersection)))
       (is (nil? ('subset? (ns-publics ns))))
       (is (= #'clojure.set/subset? ('subset? (ns-refers ns)))))))
+
+(deftest var-meta-tests
+  (testing "Var.resetMeta should clear flags, getters"
+    (let [v (def a-test-v)]
+      (do (.resetMeta v {})
+          (is (.isPublic v))
+          (is (not (.isDynamic v)))
+          (is (not (.isMacro v))))
+
+      (do (.resetMeta v {:private true})
+          (is (not (.isPublic v)))
+          (is (not (.isDynamic v)))
+          (is (not (.isMacro v))))
+
+      (do (.resetMeta v {:dynamic true})
+          (is (.isPublic v))
+          (is (.isDynamic v))
+          (is (not (.isMacro v))))
+
+      (do (.resetMeta v {:macro true})
+          (is (.isPublic v))
+          (is (not (.isDynamic v)))
+          (is (.isMacro v))))))
