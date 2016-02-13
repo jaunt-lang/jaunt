@@ -3582,8 +3582,6 @@
        (number? x) (BigDecimal/valueOf (long x))
        :else (BigDecimal. x)))
 
-(def ^:dynamic ^{:private true} print-initialized false)
-
 (defmulti print-method (fn [x writer]
                          (let [t (get (meta x) :type)]
                            (if (keyword? t) t (class x)))))
@@ -6210,12 +6208,16 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; var documentation ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(alter-meta! #'*agent* assoc :added "1.0")
 (alter-meta! #'in-ns assoc :added "1.0")
 (alter-meta! #'load-file assoc :added "1.0")
 
 (defmacro add-doc-and-meta {:private true} [name docstring meta]
   `(alter-meta! (var ~name) merge (assoc ~meta :doc ~docstring)))
+
+(add-doc-and-meta *agent*
+  "The agent currently running an action on this thread, else nil"
+  {:added "1.0"
+   :tag   clojure.lang.Agent})
 
 (add-doc-and-meta *file*
   "The path of the file being evaluated, as a String.
