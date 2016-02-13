@@ -5707,8 +5707,8 @@
       (.setStackTrace exception trace)
       (throw (clojure.lang.Compiler$CompilerException.
               *file*
-              (.deref clojure.lang.Compiler/LINE)
-              (.deref clojure.lang.Compiler/COLUMN)
+              *line*
+              *column*
               exception)))))
 
 (defn- libspec?

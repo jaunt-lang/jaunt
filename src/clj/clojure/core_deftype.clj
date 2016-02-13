@@ -287,8 +287,8 @@
     (when (seq non-syms)
       (throw (clojure.lang.Compiler$CompilerException.
               *file*
-              (.deref clojure.lang.Compiler/LINE)
-              (.deref clojure.lang.Compiler/COLUMN)
+              *line*
+              *column*
               (AssertionError.
                (str "defrecord and deftype fields must be symbols, "
                     *ns* "." name " had: "
