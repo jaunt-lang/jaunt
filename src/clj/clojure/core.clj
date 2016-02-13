@@ -7818,13 +7818,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; data readers ;;;;;;;;;;;;;;;;;;
 
-(def ^{:added "0.1.0"} default-data-readers
+(def
+  ^{:added "0.1.0"}
+  default-data-readers
   "Default map of data reader functions provided by Clojure. May be
   overridden by binding *data-readers*."
   {'inst #'clojure.instant/read-instant-date
    'uuid #'clojure.uuid/default-uuid-reader})
 
-(def ^{:added "0.1.0" :dynamic true} *data-readers*
+(add-doc-and-meta *data-readers*
   "Map from reader tag symbols to data reader Vars.
 
   When Clojure starts, it searches for files named 'data_readers.clj'
@@ -7851,14 +7853,16 @@
   Clojure. Default reader tags are defined in
   clojure.core/default-data-readers but may be overridden in
   data_readers.clj or by rebinding this Var."
-  {})
+  {:added   "0.1.0"
+   :dynamic true
+   :once    true})
 
-(def ^{:added "0.1.0" :dynamic true} *default-data-reader-fn*
+(add-doc-and-meta *default-data-reader-fn*
   "When no data reader is found for a tag and *default-data-reader-fn*
   is non-nil, it will be called with two arguments,
   the tag and the value.  If *default-data-reader-fn* is nil (the
   default), an exception will be thrown for the unknown tag."
-  nil)
+  {:added "0.1.0"})
 
 (defn- data-reader-urls []
   (let [cl (.. Thread currentThread getContextClassLoader)]

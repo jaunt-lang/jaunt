@@ -234,7 +234,7 @@ public class RT {
   final static public Var DEFAULT_DATA_READER_FN =
     Var.intern(CLOJURE_NS,
                Symbol.intern("*default-data-reader-fn*"),
-               RT.map()).setOnce().setDynamic();
+               null).setOnce().setDynamic();
 
   final static public Var DEFAULT_DATA_READERS =
     Var.intern(CLOJURE_NS,
@@ -328,7 +328,10 @@ public class RT {
     }
   };
 
-  final static Var IN_NS_VAR = Var.intern(CLOJURE_NS, IN_NAMESPACE, inNamespace);
+  final static Var IN_NS_VAR =
+    Var.intern(CLOJURE_NS,
+               IN_NAMESPACE,
+               inNamespace).setOnce();
 
   final static IFn bootNamespace = new AFn() {
     public Object invoke(Object __form, Object __env, Object arg1) {
@@ -351,7 +354,10 @@ public class RT {
     }
   };
 
-  final static Var LOAD_FILE_VAR = Var.intern(CLOJURE_NS, LOAD_FILE, bootLoadFile);
+  final static Var LOAD_FILE_VAR =
+    Var.intern(CLOJURE_NS,
+               LOAD_FILE,
+               bootLoadFile).setOnce();
 
   public static List<String> processCommandLine(String[] args) {
     List<String> arglist = Arrays.asList(args);
@@ -411,6 +417,7 @@ public class RT {
     OUT.setTag(Symbol.intern("java.io.Writer"));
     CURRENT_NS.setTag(Symbol.intern("clojure.lang.Namespace"));
     MATH_CONTEXT.setTag(Symbol.intern("java.math.MathContext"));
+
     try {
       doInit();
     } catch (Exception e) {
