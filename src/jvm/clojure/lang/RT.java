@@ -312,8 +312,6 @@ public class RT {
     Symbol namesym = Symbol.intern("name");
     OUT.setTag(Symbol.intern("java.io.Writer"));
     CURRENT_NS.setTag(Symbol.intern("clojure.lang.Namespace"));
-    AGENT.setMeta(map(DOC_KEY, "The agent currently running an action on this thread, else nil"));
-    AGENT.setTag(Symbol.intern("clojure.lang.Agent"));
     MATH_CONTEXT.setTag(Symbol.intern("java.math.MathContext"));
     Var nv = Var.intern(CLOJURE_NS, NAMESPACE, bootNamespace);
     nv.setMacro();
