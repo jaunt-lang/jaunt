@@ -178,66 +178,187 @@ public class RT {
     return Keyword.intern(null, "unknown");
   }
 
-  static public final Namespace CLOJURE_NS = Namespace.findOrCreate(Symbol.intern("clojure.core"));
-//static final Namespace USER_NS = Namespace.findOrCreate(Symbol.intern("user"));
+  static public final Namespace CLOJURE_NS =
+    Namespace.findOrCreate(Symbol.intern("clojure.core"));
+
+  static final public Var COLUMN =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*column*"),
+               0).setOnce().setDynamic();
+
+  static final public Var LINE =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*line*"),
+               0).setOnce().setDynamic();
+
+  static final public Var ADD_ANNOTATIONS =
+    Var.intern(CLOJURE_NS, Symbol.intern("add-annotations"));
+
+  static final public Var INSTANCE =
+    Var.intern(CLOJURE_NS, Symbol.intern("instance?"));
+
+  static final public Var COMPILE_FILES =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*compile-files*"),
+               F).setOnce().setDynamic();
+
+  static final public Var COMPILE_PATH =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*compile-path*"),
+               null).setOnce().setDynamic();
+
+  static final public Var SOURCE_PATH =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*file*"),
+               "NO_SOURCE_PATH").setOnce().setDynamic();
+
+  static final public Var SOURCE =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*source-path*"),
+               "NO_SOURCE_FILE").setOnce().setDynamic();
+
   final static public Var OUT =
-    Var.intern(CLOJURE_NS, Symbol.intern("*out*"), new OutputStreamWriter(System.out)).setDynamic();
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*out*"),
+               new OutputStreamWriter(System.out)).setOnce().setDynamic();
+
   final static public Var IN =
     Var.intern(CLOJURE_NS, Symbol.intern("*in*"),
-               new LineNumberingPushbackReader(new InputStreamReader(System.in))).setDynamic();
+               new LineNumberingPushbackReader(new InputStreamReader(System.in))).setOnce().setDynamic();
+
   final static public Var ERR =
-    Var.intern(CLOJURE_NS, Symbol.intern("*err*"),
-               new PrintWriter(new OutputStreamWriter(System.err), true)).setDynamic();
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*err*"),
+               new PrintWriter(new OutputStreamWriter(System.err), true)).setOnce().setDynamic();
+
   final static Keyword TAG_KEY = Keyword.intern(null, "tag");
   final static Keyword CONST_KEY = Keyword.intern(null, "const");
-  final static public Var AGENT = Var.intern(CLOJURE_NS, Symbol.intern("*agent*"), null).setDynamic();
+
+  final static public Var AGENT =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*agent*"),
+               null).setOnce().setDynamic();
+
   static Object readeval = readTrueFalseUnknown(System.getProperty("clojure.read.eval","true"));
-  final static public Var READEVAL = Var.intern(CLOJURE_NS, Symbol.intern("*read-eval*"),  readeval).setDynamic();
-  final static public Var DATA_READERS = Var.intern(CLOJURE_NS, Symbol.intern("*data-readers*"), RT.map()).setDynamic();
-  final static public Var DEFAULT_DATA_READER_FN = Var.intern(CLOJURE_NS, Symbol.intern("*default-data-reader-fn*"), RT.map()).setDynamic();
-  final static public Var DEFAULT_DATA_READERS = Var.intern(CLOJURE_NS, Symbol.intern("default-data-readers"), RT.map());
-  final static public Var SUPPRESS_READ = Var.intern(CLOJURE_NS, Symbol.intern("*suppress-read*"), null).setDynamic();
-  final static public Var ASSERT = Var.intern(CLOJURE_NS, Symbol.intern("*assert*"), T).setDynamic();
-  final static public Var MATH_CONTEXT = Var.intern(CLOJURE_NS, Symbol.intern("*math-context*"), null).setDynamic();
+
+  final static public Var READEVAL =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*read-eval*"),
+               readeval).setOnce().setDynamic();
+
+  final static public Var DATA_READERS =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*data-readers*"),
+               RT.map()).setOnce().setDynamic();
+
+  final static public Var DEFAULT_DATA_READER_FN =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*default-data-reader-fn*"),
+               RT.map()).setOnce().setDynamic();
+
+  final static public Var DEFAULT_DATA_READERS =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("default-data-readers"),
+               RT.map());
+
+  final static public Var SUPPRESS_READ =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*suppress-read*"),
+               null).setOnce().setDynamic();
+
+  final static public Var ASSERT =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*assert*"),
+               T).setOnce().setDynamic();
+
+  final static public Var MATH_CONTEXT =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*math-context*"),
+               null).setOnce().setDynamic();
+
   static Keyword LINE_KEY = Keyword.intern(null, "line");
   static Keyword COLUMN_KEY = Keyword.intern(null, "column");
   static Keyword FILE_KEY = Keyword.intern(null, "file");
   static Keyword DECLARED_KEY = Keyword.intern(null, "declared");
   static Keyword DOC_KEY = Keyword.intern(null, "doc");
-  final static public Var USE_CONTEXT_CLASSLOADER =
-    Var.intern(CLOJURE_NS, Symbol.intern("*use-context-classloader*"), T).setDynamic();
-//boolean
-  static final public Var UNCHECKED_MATH = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-      Symbol.intern("*unchecked-math*"), Boolean.FALSE).setDynamic();
 
-//final static public Var CURRENT_MODULE = Var.intern(Symbol.intern("clojure.core", "current-module"),
-//                                                    Module.findOrCreateModule("clojure/user"));
+  final static public Var USE_CONTEXT_CLASSLOADER =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*use-context-classloader*"),
+               T).setOnce().setDynamic();
+
+  static final public Var UNCHECKED_MATH =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*unchecked-math*"),
+               F).setOnce().setDynamic();
 
   final static Symbol LOAD_FILE = Symbol.intern("load-file");
   final static Symbol IN_NAMESPACE = Symbol.intern("in-ns");
   final static Symbol NAMESPACE = Symbol.intern("ns");
   static final Symbol IDENTICAL = Symbol.intern("identical?");
-  final static Var CMD_LINE_ARGS = Var.intern(CLOJURE_NS, Symbol.intern("*command-line-args*"), null).setDynamic();
-//symbol
-  final public static Var CURRENT_NS = Var.intern(CLOJURE_NS, Symbol.intern("*ns*"),
-                                       CLOJURE_NS).setDynamic();
 
-  final static Var FLUSH_ON_NEWLINE = Var.intern(CLOJURE_NS, Symbol.intern("*flush-on-newline*"), T).setDynamic();
-  final static Var PRINT_META = Var.intern(CLOJURE_NS, Symbol.intern("*print-meta*"), F).setDynamic();
-  final static Var PRINT_READABLY = Var.intern(CLOJURE_NS, Symbol.intern("*print-readably*"), T).setDynamic();
-  final static Var PRINT_DUP = Var.intern(CLOJURE_NS, Symbol.intern("*print-dup*"), F).setDynamic();
-  final static Var WARN_ON_REFLECTION = Var.intern(CLOJURE_NS, Symbol.intern("*warn-on-reflection*"), F).setDynamic();
-  final static Var ALLOW_UNRESOLVED_VARS = Var.intern(CLOJURE_NS, Symbol.intern("*allow-unresolved-vars*"), F).setDynamic();
+  final static Var CMD_LINE_ARGS =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*command-line-args*"),
+               null).setOnce().setDynamic();
 
-  final static Var IN_NS_VAR = Var.intern(CLOJURE_NS, Symbol.intern("in-ns"), F);
-  final static Var NS_VAR = Var.intern(CLOJURE_NS, Symbol.intern("ns"), F);
-  final static Var FN_LOADER_VAR = Var.intern(CLOJURE_NS, Symbol.intern("*fn-loader*"), null).setDynamic();
+  final public static Var CURRENT_NS =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*ns*"),
+               CLOJURE_NS).setOnce().setDynamic();
+
+  final static Var FLUSH_ON_NEWLINE =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*flush-on-newline*"),
+               T).setOnce().setDynamic();
+
+  final static Var PRINT_META =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*print-meta*"),
+               F).setOnce().setDynamic();
+
+  final static Var PRINT_READABLY =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*print-readably*"),
+               T).setOnce().setDynamic();
+
+  final static Var PRINT_DUP =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*print-dup*"),
+               F).setOnce().setDynamic();
+
+  final static Var WARN_ON_REFLECTION =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*warn-on-reflection*"),
+               F).setOnce().setDynamic();
+
+  final static Var ALLOW_UNRESOLVED_VARS =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*allow-unresolved-vars*"),
+               F).setOnce().setDynamic();
+
+  final static Var IN_NS_VAR =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("in-ns"),
+               F).setOnce();
+
+  final static Var NS_VAR =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("ns"),
+               F);
+
+  final static Var FN_LOADER_VAR =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("*fn-loader*"),
+               null).setOnce().setDynamic();
+
   static final Var PRINT_INITIALIZED =
     Var.intern(CLOJURE_NS,
                Symbol.intern("print-initialized"),
                F).setPublic(false).setDynamic();
+
   static final Var PR_ON = Var.intern(CLOJURE_NS, Symbol.intern("pr-on"));
-//final static Var IMPORTS = Var.intern(CLOJURE_NS, Symbol.intern("*imports*"), DEFAULT_IMPORTS);
+
   final static IFn inNamespace = new AFn() {
     public Object invoke(Object arg1) {
       Symbol nsname = (Symbol) arg1;
@@ -278,9 +399,9 @@ public class RT {
 
   public static String getPos() {
     return String.format("(%s:%d:%d)",
-                         Compiler.SOURCE_PATH.get(),
-                         Compiler.LINE.get(),
-                         Compiler.COLUMN.get());
+                         SOURCE_PATH.get(),
+                         LINE.get(),
+                         COLUMN.get());
   }
 
   static public final Object[] EMPTY_ARRAY = new Object[] {};
@@ -450,7 +571,7 @@ public class RT {
       }
     }
     if (!loaded && cljURL != null) {
-      if (booleanCast(Compiler.COMPILE_FILES.deref())) {
+      if (booleanCast(COMPILE_FILES.deref())) {
         compile(scriptfile);
       } else {
         loadResourceScript(RT.class, scriptfile);
@@ -471,9 +592,8 @@ public class RT {
       Symbol USER = Symbol.intern("user");
       Symbol CLOJURE = Symbol.intern("clojure.core");
 
-      Var in_ns = var("clojure.core", "in-ns");
       Var refer = var("clojure.core", "refer");
-      in_ns.invoke(USER);
+      IN_NS_VAR.invoke(USER);
       refer.invoke(CLOJURE);
       maybeLoadResourceScript("user.clj");
 
