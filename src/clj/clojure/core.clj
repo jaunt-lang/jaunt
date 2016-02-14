@@ -1655,7 +1655,7 @@
           (map #(str ", " %) (rest valid-keys)))))))
 
 ;;multimethods
-(def global-hierarchy)
+(def ^:private global-hierarchy)
 
 (defmacro defmulti
   "Creates a new multimethod with the associated dispatch function.
