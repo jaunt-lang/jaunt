@@ -5309,7 +5309,7 @@
 
 (defn- descriptor [^Class c] (clojure.asm.Type/getDescriptor c))
 
-(declare process-annotation)
+(declare ^:private process-annotation)
 (defn- add-annotation [^clojure.asm.AnnotationVisitor av name v]
   (cond
    (vector? v) (let [avec (.visitArray av name)]
