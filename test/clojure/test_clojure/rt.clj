@@ -29,7 +29,7 @@
 (deftest error-messages
   (testing "binding a core var that already refers to something"
     (should-print-err-message
-     #"WARNING: prefers already refers to: #'clojure.core/prefers in namespace: .*\r?\n"
+     #"Warning: prefers already refers to: #'clojure.core/prefers in namespace: .*\r?\n"
      (defn prefers [] (throw (RuntimeException. "rebound!")))))
   (testing "reflection cannot resolve field"
     (should-print-err-message
