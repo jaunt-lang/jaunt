@@ -207,6 +207,9 @@ public class Compiler implements Opcodes {
   // boolean flag
   static final public Var IN_DEPRECATED = Var.create(RT.F).setDynamic();
 
+  // Var
+  static final public Var DEFINING_VAR = Var.create(null).setDynamic();
+
   static final public Keyword disableLocalsClearingKey = Keyword.intern("disable-locals-clearing");
   static final public Keyword directLinkingKey = Keyword.intern("direct-linking");
   static final public Keyword elideMetaKey = Keyword.intern("elide-meta");
@@ -214,6 +217,7 @@ public class Compiler implements Opcodes {
   static final public Keyword warnOnDeprecatedKey = Keyword.intern("warn-on-deprecated");
   static final public Keyword warnOnEarmuffsKey = Keyword.intern("warn-on-earmuffs");
   static final public Keyword warnOnAccessKey = Keyword.intern("warn-on-access-violation");
+  static final public Keyword warnOnStaleKey = Keyword.intern("warn-on-stale");
   static final public Keyword pedanticKey = Keyword.intern("pedantic");
 
   static final public Var COMPILER_OPTIONS;
@@ -226,7 +230,8 @@ public class Compiler implements Opcodes {
     Object compilerOptions =
       RT.assoc(null, warnOnEarmuffsKey, RT.T)
       .assoc(warnOnDeprecatedKey, RT.T)
-      .assoc(warnOnAccessKey, RT.T);
+      .assoc(warnOnAccessKey, RT.T)
+      .assoc(warnOnStaleKey, RT.T);
 
     for (Map.Entry e : System.getProperties().entrySet()) {
       String name = (String) e.getKey();
@@ -337,6 +342,10 @@ public class Compiler implements Opcodes {
 
   static boolean warnOnAccessViolation() {
     return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnAccessKey));
+  }
+
+  static boolean warnOnStale() {
+    return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnStaleKey));
   }
 
   static boolean isDeprecated(Var v) {
@@ -551,7 +560,8 @@ public class Compiler implements Opcodes {
         mm = (IPersistentMap) elideMeta(mm);
         Expr meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
         try {
-          Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey))));
+          Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey)),
+                                        DEFINING_VAR, v));
           return new DefExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(),
                              v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
                              meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
@@ -6479,7 +6489,9 @@ public class Compiler implements Opcodes {
         RT.errPrintWriter().println("Warning: using private var in other ns: " + v.toString() + loc);
       }
 
-      if (v.isStale()) {
+      if (v.isStale()
+          && !Util.equals(v, DEFINING_VAR.get())
+          && warnOnStale()) {
         RT.errPrintWriter().println("Warning: using stale var: " + v.toString()
                                     + String.format(" (var: %d, ns: %d)", v.getRev(), v.ns.getRev()) + loc);
       }
