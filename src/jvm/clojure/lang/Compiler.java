@@ -392,6 +392,7 @@ public class Compiler implements Opcodes {
     public final int line;
     public final int column;
     final static Method bindRootMethod = Method.getMethod("void bindRoot(Object)");
+    final static Method resetRevMethod = Method.getMethod("void resetRev()");
     final static Method setTagMethod = Method.getMethod("void setTag(clojure.lang.Symbol)");
     final static Method setMetaMethod = Method.getMethod("void setMeta(clojure.lang.IPersistentMap)");
     final static Method setDynamicMethod = Method.getMethod("clojure.lang.Var setDynamic(boolean)");
@@ -428,6 +429,8 @@ public class Compiler implements Opcodes {
       try {
         if (initProvided) {
           var.bindRoot(init.eval());
+        } else {
+          var.resetRev();
         }
         if (meta != null) {
           IPersistentMap metaMap = (IPersistentMap) meta.eval();
@@ -477,6 +480,9 @@ public class Compiler implements Opcodes {
           init.emit(C.EXPRESSION, objx, gen);
         }
         gen.invokeVirtual(VAR_TYPE, bindRootMethod);
+      } else {
+        gen.dup();
+        gen.invokeVirtual(VAR_TYPE, resetRevMethod);
       }
 
       if (context == C.STATEMENT) {
@@ -508,6 +514,7 @@ public class Compiler implements Opcodes {
           throw Util.runtimeException("First argument to def must be a Symbol");
         }
         Symbol sym = (Symbol) RT.second(form);
+        boolean initProvided = RT.count(form) == 3;
         Var v = lookupVar(sym, true);
         if (v == null) {
           throw Util.runtimeException("Can't refer to qualified var that doesn't exist");
@@ -535,6 +542,7 @@ public class Compiler implements Opcodes {
                                      +"but its name suggests otherwise. Please either indicate ^:dynamic %1$s or change the name. (%2$s:%3$d)\n",
                                      sym, RT.SOURCE_PATH.get(), RT.LINE.get());
         }
+        boolean isPrivate = RT.booleanCast(RT.get(mm, privateKey));
         if (RT.booleanCast(RT.get(mm, arglistsKey))) {
           IPersistentMap vm = v.meta();
           //vm = (IPersistentMap) RT.assoc(vm,staticKey,RT.T);
