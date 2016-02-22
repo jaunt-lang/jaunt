@@ -68,9 +68,14 @@
                (or *print-dup*
                    (and *print-meta* *print-readably*)))
       (.write w "^")
-      (if (and (= (count m) 1) (:tag m))
-        (pr-on (:tag m) w)
-        (pr-on m w))
+      (let [m (if (instance? clojure.lang.Var o)
+                (dissoc m
+                        :clojure.core.compiler/uses
+                        :clojure.core.compiler/reaches)
+                m)]
+        (if (and (= (count m) 1) (:tag m))
+          (pr-on (:tag m) w)
+          (pr-on m w)))
       (.write w " "))))
 
 (defn print-simple [o, ^Writer w]
