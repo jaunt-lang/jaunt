@@ -166,7 +166,7 @@ public class RT {
 //                                                  Symbol.intern("SortedSet"), "java.util.SortedSet"
       );
 
-// single instance of UTF-8 Charset, so as to avoid catching UnsupportedCharsetExceptions everywhere
+  // single instance of UTF-8 Charset, so as to avoid catching UnsupportedCharsetExceptions everywhere
   static public Charset UTF8 = Charset.forName("UTF-8");
 
   static Object readTrueFalseUnknown(String s) {
@@ -277,11 +277,13 @@ public class RT {
                Symbol.intern("*math-context*"),
                null).setOnce().setDynamic();
 
-  static Keyword LINE_KEY = Keyword.intern(null, "line");
-  static Keyword COLUMN_KEY = Keyword.intern(null, "column");
-  static Keyword FILE_KEY = Keyword.intern(null, "file");
-  static Keyword DECLARED_KEY = Keyword.intern(null, "declared");
-  static Keyword DOC_KEY = Keyword.intern(null, "doc");
+  public static final Keyword LINE_KEY = Keyword.intern(null, "line");
+  public static final Keyword COLUMN_KEY = Keyword.intern(null, "column");
+  public static final Keyword FILE_KEY = Keyword.intern(null, "file");
+  public static final Keyword DECLARED_KEY = Keyword.intern(null, "declared");
+  public static final Keyword DOC_KEY = Keyword.intern(null, "doc");
+  public static final Keyword USES_KEY = Keyword.intern("clojure.core.compiler", "uses");
+  public static final Keyword REACHES_KEY = Keyword.intern("clojure.core.compiler", "reaches");
 
   final static public Var USE_CONTEXT_CLASSLOADER =
     Var.intern(CLOJURE_NS,

@@ -160,14 +160,15 @@ public class Compiler implements Opcodes {
   final static Type IPERSISTENTMAP_TYPE = Type.getType(IPersistentMap.class);
   final static Type IOBJ_TYPE = Type.getType(IObj.class);
   final static Type TUPLE_TYPE = Type.getType(Tuple.class);
-  final static Method createTupleMethods[] = {Method.getMethod("clojure.lang.IPersistentVector create()"),
-                                              Method.getMethod("clojure.lang.IPersistentVector create(Object)"),
-                                              Method.getMethod("clojure.lang.IPersistentVector create(Object,Object)"),
-                                              Method.getMethod("clojure.lang.IPersistentVector create(Object,Object,Object)"),
-                                              Method.getMethod("clojure.lang.IPersistentVector create(Object,Object,Object,Object)"),
-                                              Method.getMethod("clojure.lang.IPersistentVector create(Object,Object,Object,Object,Object)"),
-                                              Method.getMethod("clojure.lang.IPersistentVector create(Object,Object,Object,Object,Object,Object)")
-                                             };
+  final static Method createTupleMethods[] = {
+    Method.getMethod("clojure.lang.IPersistentVector create()"),
+    Method.getMethod("clojure.lang.IPersistentVector create(Object)"),
+    Method.getMethod("clojure.lang.IPersistentVector create(Object,Object)"),
+    Method.getMethod("clojure.lang.IPersistentVector create(Object,Object,Object)"),
+    Method.getMethod("clojure.lang.IPersistentVector create(Object,Object,Object,Object)"),
+    Method.getMethod("clojure.lang.IPersistentVector create(Object,Object,Object,Object,Object)"),
+    Method.getMethod("clojure.lang.IPersistentVector create(Object,Object,Object,Object,Object,Object)")
+  };
 
   private static final Type[][] ARG_TYPES;
 //private static final Type[] EXCEPTION_TYPES = {Type.getType(Exception.class)};
@@ -194,45 +195,50 @@ public class Compiler implements Opcodes {
   }
 
 
-//symbol->localbinding
+  //symbol->localbinding
   static final public Var LOCAL_ENV = Var.create(null).setDynamic();
 
-//vector<localbinding>
+  //vector<localbinding>
   static final public Var LOOP_LOCALS = Var.create().setDynamic();
 
-//Label
+  //Label
   static final public Var LOOP_LABEL = Var.create().setDynamic();
 
-//vector<object>
+  //vector<object>
   static final public Var CONSTANTS = Var.create().setDynamic();
 
-//IdentityHashMap
+  //IdentityHashMap
   static final public Var CONSTANT_IDS = Var.create().setDynamic();
 
-//vector<keyword>
+  //vector<keyword>
   static final public Var KEYWORD_CALLSITES = Var.create().setDynamic();
 
-//vector<var>
+  //vector<var>
   static final public Var PROTOCOL_CALLSITES = Var.create().setDynamic();
 
-//set<var>
+  //set<var>
   static final public Var VAR_CALLSITES = Var.create().setDynamic();
 
-//keyword->constid
+  //keyword->constid
   static final public Var KEYWORDS = Var.create().setDynamic();
 
-//var->constid
+  //var->constid
   static final public Var VARS = Var.create().setDynamic();
 
-//FnFrame
+  // set<Var>, if bound.
+  // bound at the def level
+  // added as Var metadata
+  static final public Var USE_SET = Var.create().setDynamic();
+
+  //FnFrame
   static final public Var METHOD = Var.create(null).setDynamic();
 
-//null or not
+  //null or not
   static final public Var IN_CATCH_FINALLY = Var.create(null).setDynamic();
 
   static final public Var NO_RECUR = Var.create(null).setDynamic();
 
-//DynamicClassLoader
+  //DynamicClassLoader
   static final public Var LOADER = Var.create().setDynamic();
 
   // boolean flag
@@ -416,7 +422,54 @@ public class Compiler implements Opcodes {
       return Symbol.intern(v.ns.name.name, v.sym.name);
     }
     return null;
+  }
 
+  static public PersistentHashSet getUsedVars(Var v) {
+    return (PersistentHashSet) RT.get(v.meta(), RT.USES_KEY, PersistentHashSet.EMPTY);
+  }
+
+  static public PersistentHashSet getReachedVars(Var v) {
+    return getReachedVars(v, PersistentHashSet.EMPTY);
+  }
+
+  static public PersistentHashSet getReachedVars(Var v, PersistentHashSet acc) {
+    PersistentHashSet reaches = null;
+    reaches = (PersistentHashSet) RT.get(v.meta(), RT.REACHES_KEY);
+    if (reaches != null) {
+      return reaches;
+    } else {
+      reaches = PersistentHashSet.EMPTY;
+
+      // merge the reach sets of used vars
+      for (Object o : getUsedVars(v)) { // Set<Var>
+        Var uv = (Var) o; // statically safe
+        if (!acc.contains(uv)) {
+          acc = (PersistentHashSet) acc.cons(uv);
+          reaches = (PersistentHashSet) acc.cons(uv);
+          for (Object o1 : getReachedVars(uv, acc)) {
+            reaches = (PersistentHashSet) reaches.cons(o1);
+          }
+        }
+      }
+
+      // save the reach set
+      v.alterMeta(Var.assoc, RT.list(RT.REACHES_KEY, reaches));
+
+      return reaches;
+    }
+  }
+
+  static PersistentHashSet reachesStaleVars(Var v) {
+    PersistentHashSet acc = PersistentHashSet.EMPTY;
+
+    for (Object o : getReachedVars(v)) {
+      Var rv = (Var) o;
+      if (rv.isStale()) {
+        acc = (PersistentHashSet) acc.cons(rv);
+      }
+    }
+
+    return (PersistentHashSet) acc.disjoin(v);
   }
 
   static class DefExpr implements Expr {
@@ -601,23 +654,20 @@ public class Compiler implements Opcodes {
         if (docstring != null) {
           mm = (IPersistentMap) RT.assoc(mm, RT.DOC_KEY, docstring);
         }
-//      mm = mm.without(RT.DOC_KEY)
-//          .without(Keyword.intern(null, "arglists"))
-//          .without(RT.FILE_KEY)
-//          .without(RT.LINE_KEY)
-//          .without(RT.COLUMN_KEY)
-//          .without(Keyword.intern(null, "ns"))
-//          .without(Keyword.intern(null, "name"))
-//          .without(Keyword.intern(null, "added"))
-//          .without(Keyword.intern(null, "static"));
         mm = (IPersistentMap) elideMeta(mm);
-        Expr meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
         try {
           Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey)),
-                                        DEFINING_VAR, v));
+                                        DEFINING_VAR, v,
+                                        USE_SET, PersistentHashSet.EMPTY));
+          C ctx = context == C.EVAL ? context : C.EXPRESSION;
+          Expr initExpr = analyze(ctx, RT.third(form), v.sym.name);
+
+          PersistentHashSet uses = (PersistentHashSet) USE_SET.get();
+          mm = (IPersistentMap) RT.assoc(mm, RT.USES_KEY, uses);
+          Expr meta = mm.count() == 0 ? null : analyze(ctx, mm);
+
           return new DefExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(),
-                             v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
-                             meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
+                             v, initExpr, meta, initProvided, isDynamic, shadowsCoreMapping);
         } finally {
           Var.popThreadBindings();
         }
@@ -6829,11 +6879,19 @@ public class Compiler implements Opcodes {
         RT.errPrintWriter().println("Warning: using private var in other ns: " + v.toString() + loc);
       }
 
-      if (v.isStale()
-          && !Util.equals(v, DEFINING_VAR.get())
-          && warnOnStale()) {
-        RT.errPrintWriter().println("Warning: using stale var: " + v.toString()
-                                    + String.format(" (var: %d, ns: %d)", v.getRev(), v.ns.getRev()) + loc);
+      if (warnOnStale()) {
+        if (v.isStale()
+            && !Util.equals(v, DEFINING_VAR.get())) {
+          RT.errPrintWriter().println("Warning: using stale var: " + v.toString()
+                                      + String.format(" (var rev: %d, ns rev: %d)", v.getRev(), v.ns.getRev()) + loc);
+        }
+
+        PersistentHashSet stales = reachesStaleVars(v);
+        if (!stales.isEmpty()) {
+          RT.errPrintWriter().println(
+            String.format("Warning: var: %s reaches stale vars: %s %s",
+                          v.toString(), stales.toString(), loc));
+        }
       }
 
       registerVar(v);
@@ -6998,6 +7056,9 @@ public class Compiler implements Opcodes {
   private static void registerVar(Var var) {
     if (!VARS.isBound()) {
       return;
+    }
+    if (USE_SET.isBound()) {
+      USE_SET.set(((APersistentSet)USE_SET.get()).cons(var));
     }
     IPersistentMap varsMap = (IPersistentMap) VARS.deref();
     Object id = RT.get(varsMap, var);
