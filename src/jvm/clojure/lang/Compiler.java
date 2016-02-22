@@ -63,7 +63,6 @@ public class Compiler implements Opcodes {
   static final Keyword methodMapKey = Keyword.intern("method-map");
   static final Keyword deprecatedKey = Keyword.intern("deprecated");
   static final Keyword privateKey = Keyword.intern("private");
-  static final Keyword usedKey = Keyword.intern("uses");
   static final Keyword varArgsKey = Keyword.intern("&");
   static final Keyword retKey = Keyword.intern("rettag");
   static final Keyword formKey = Keyword.intern("form");
@@ -192,6 +191,11 @@ public class Compiler implements Opcodes {
 
   //var->constid
   static final public Var VARS = Var.create().setDynamic();
+
+  // set<Var>, if bound.
+  // bound at the def level
+  // added as Var metadata
+  static final public Var USE_SET = Var.create().setDynamic();
 
   //FnFrame
   static final public Var METHOD = Var.create(null).setDynamic();
@@ -381,6 +385,62 @@ public class Compiler implements Opcodes {
     return null;
   }
 
+  static public IPersistentSet getUsedVars(Var v) {
+    IPersistentSet uses = PersistentHashSet.EMPTY;
+
+    if(v.isBound()) {
+      Object o = v.get();
+      if(o instanceof AFn) {
+        IPersistentMap meta = RT.meta(o);
+        uses = (IPersistentSet) RT.get(meta, RT.USES_KEY);
+      }
+      if(uses == null) {
+        uses = (IPersistentSet) RT.get(RT.meta(v), RT.USES_KEY, PersistentHashSet.EMPTY);
+      }
+    }
+
+    return uses;
+  }
+
+  static public IPersistentSet getReachedVars(Var v) {
+    IPersistentSet acc = getUsedVars(v);
+    PersistentQueue worklist = PersistentQueue.EMPTY;
+
+    for(Object o : acc) {
+      worklist = worklist.cons(o);
+    }
+
+    acc = (IPersistentSet) acc.cons(v);
+
+    Object o;
+    while((o = worklist.peek()) != null) {
+      worklist = worklist.pop();
+      IPersistentSet newbies = getUsedVars((Var) o);
+
+      for(Object n : newbies) {
+        if(!acc.contains(n)) {
+          acc = (IPersistentSet) acc.cons(n);
+          worklist = worklist.cons(n);
+        }
+      }
+    }
+
+    return acc;
+  }
+
+  static IPersistentSet reachesStaleVars(Var v) {
+    PersistentHashSet acc = PersistentHashSet.EMPTY;
+
+    for (Object o : getReachedVars(v)) {
+      Var rv = (Var) o;
+      if (rv.isStale()) {
+        acc = (PersistentHashSet) acc.cons(rv);
+      }
+    }
+
+    return (PersistentHashSet) acc.disjoin(v);
+  }
+
   static class DefExpr implements Expr {
     public final Var var;
     public final Expr init;
@@ -556,23 +616,15 @@ public class Compiler implements Opcodes {
         if (docstring != null) {
           mm = (IPersistentMap) RT.assoc(mm, RT.DOC_KEY, docstring);
         }
-//      mm = mm.without(RT.DOC_KEY)
-//          .without(Keyword.intern("arglists"))
-//          .without(RT.FILE_KEY)
-//          .without(RT.LINE_KEY)
-//          .without(RT.COLUMN_KEY)
-//          .without(Keyword.intern("ns"))
-//          .without(Keyword.intern("name"))
-//          .without(Keyword.intern("added"))
-//          .without(Keyword.intern("static"));
         mm = (IPersistentMap) elideMeta(mm);
-        Expr meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
         try {
           Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey)),
                                         DEFINING_VAR, v));
+          C ctx = context == C.EVAL ? context : C.EXPRESSION;
+          Expr initExpr = analyze(ctx, RT.third(form), v.sym.name);
+          Expr meta = mm.count() == 0 ? null : analyze(ctx, mm);
           return new DefExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(),
-                             v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
-                             meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
+                             v, initExpr, meta, initProvided, isDynamic, shadowsCoreMapping);
         } finally {
           Var.popThreadBindings();
         }
@@ -3503,7 +3555,7 @@ public class Compiler implements Opcodes {
     private boolean hasPrimSigs;
     private boolean hasMeta;
     private boolean hasEnclosingMethod;
-    //  String superName = null;
+    private PersistentHashSet uses;
 
     public FnExpr(Object tag) {
       super(tag);
@@ -3590,6 +3642,7 @@ public class Compiler implements Opcodes {
             ,CONSTANT_IDS, new IdentityHashMap()
             ,KEYWORDS, PersistentHashMap.EMPTY
             ,VARS, PersistentHashMap.EMPTY
+	    ,USE_SET, PersistentHashSet.EMPTY
             ,KEYWORD_CALLSITES, PersistentVector.EMPTY
             ,PROTOCOL_CALLSITES, PersistentVector.EMPTY
             ,VAR_CALLSITES, emptyVarCallSites()
@@ -3673,16 +3726,19 @@ public class Compiler implements Opcodes {
         fn.keywordCallsites = (IPersistentVector) KEYWORD_CALLSITES.deref();
         fn.protocolCallsites = (IPersistentVector) PROTOCOL_CALLSITES.deref();
         fn.varCallsites = (IPersistentSet) VAR_CALLSITES.deref();
+        fn.uses = (PersistentHashSet) USE_SET.deref();
+
         fn.constantsID = RT.nextID();
       } finally {
         Var.popThreadBindings();
       }
-      fn.hasPrimSigs = prims.size() > 0;
 
-      PersistentHashSet usedVars = PersistentHashSet.EMPTY;
-      for (Object o : ((APersistentMap) fn.vars).keySet()) {
-        usedVars = (PersistentHashSet) usedVars.cons(o);
+      // propagate var use info up
+      if (USE_SET.isBound()) {
+        USE_SET.set(RT.union(fn.uses, (Seqable) USE_SET.get()));
       }
+
+      fn.hasPrimSigs = prims.size() > 0;
 
       if (!noMeta) {
         fmeta = fmeta
@@ -3691,7 +3747,7 @@ public class Compiler implements Opcodes {
                 .without(RT.FILE_KEY)
                 .without(retKey)
                 //.assoc(arglistsKey, RT.list(QUOTE, arities))
-                .assoc(usedKey, RT.list(QUOTE, usedVars));
+                .assoc(RT.USES_KEY, RT.list(QUOTE, fn.uses));
       } else {
         fmeta = null;
       }
@@ -5612,9 +5668,7 @@ public class Compiler implements Opcodes {
       for (int i = 0; i < bindingInits.count(); i++) {
         BindingInit bi = (BindingInit) bindingInits.nth(i);
         Expr e = bi.init;
-        if (e instanceof MetaExpr) {
-          e = ((MetaExpr) e).expr;
-        }
+        e = e instanceof MetaExpr ? ((MetaExpr)e).expr : e;
         ObjExpr fe = (ObjExpr) e;
         gen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ILOAD), bi.binding.idx);
         fe.emitLetFnInits(gen, objx, lbset);
@@ -6497,11 +6551,19 @@ public class Compiler implements Opcodes {
         RT.errPrintWriter().println("Warning: using private var in other ns: " + v.toString() + loc);
       }
 
-      if (v.isStale()
-          && !Util.equals(v, DEFINING_VAR.get())
-          && warnOnStale()) {
-        RT.errPrintWriter().println("Warning: using stale var: " + v.toString()
-                                    + String.format(" (var: %d, ns: %d)", v.getRev(), v.ns.getRev()) + loc);
+      if (warnOnStale()) {
+        if (v.isStale()
+            && !Util.equals(v, DEFINING_VAR.get())) {
+          RT.errPrintWriter().println("Warning: using stale var: " + v.toString()
+                                      + String.format(" (var rev: %d, ns rev: %d)", v.getRev(), v.ns.getRev()) + loc);
+        }
+
+        IPersistentSet stales = reachesStaleVars(v);
+        if (RT.seq(stales) != null) {
+          RT.errPrintWriter().println(
+            String.format("Warning: var: %s reaches stale vars: %s %s",
+                          v.toString(), stales.toString(), loc));
+        }
       }
 
       registerVar(v);
@@ -6664,6 +6726,9 @@ public class Compiler implements Opcodes {
   private static void registerVar(Var var) {
     if (!VARS.isBound()) {
       return;
+    }
+    if (USE_SET.isBound()) {
+      USE_SET.set(((APersistentSet)USE_SET.get()).cons(var));
     }
     IPersistentMap varsMap = (IPersistentMap) VARS.deref();
     Object id = RT.get(varsMap, var);
@@ -7497,13 +7562,12 @@ public class Compiler implements Opcodes {
       return RT.vector(name,RT.seq(paramTypes));
     }
 
-    static NewInstanceMethod parse(ObjExpr objx, ISeq form, Symbol thistag,
-                                   Map overrideables) {
+    static NewInstanceMethod parse(ObjExpr objx, ISeq form, Symbol thistag, Map overrideables) {
       //(methodname [this-name args*] body...)
       //this-name might be nil
       NewInstanceMethod method = new NewInstanceMethod(objx, (ObjMethod) METHOD.deref());
       Symbol dotname = (Symbol)RT.first(form);
-      Symbol name = (Symbol) Symbol.intern(null,munge(dotname.name)).withMeta(RT.meta(dotname));
+      Symbol name = (Symbol) Symbol.intern(null, munge(dotname.name)).withMeta(RT.meta(dotname));
       IPersistentVector parms = (IPersistentVector) RT.second(form);
       if (parms.count() == 0) {
         throw new IllegalArgumentException("Must supply at least one argument for 'this' in: " + dotname);
@@ -7529,7 +7593,7 @@ public class Compiler implements Opcodes {
 
         //register 'this' as local 0
         if (thisName != null) {
-          registerLocal((thisName == null) ? dummyThis:thisName,thistag, null,false);
+          registerLocal((thisName == null) ? dummyThis : thisName,thistag, null, false);
         } else {
           getAndIncLocalNum();
         }

@@ -44,6 +44,9 @@ public class RT {
   final static Keyword DOC_KEY = Keyword.intern("doc");
   final static Keyword UNKNOWN_KEY = Keyword.intern("unknown");
 
+  public static final Keyword USES_KEY = Keyword.intern("clojure.core.compiler", "uses");
+  public static final Keyword REACHES_KEY = Keyword.intern("clojure.core.compiler", "reaches");
+
   final static Symbol LOAD_FILE = Symbol.intern("load-file");
   final static Symbol IN_NAMESPACE = Symbol.intern("in-ns");
   final static Symbol NAMESPACE = Symbol.intern("ns");
