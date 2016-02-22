@@ -90,3 +90,36 @@ distributed under the Apache License, in /licenses/apache.txt
 
 This program uses the ASM bytecode engineering library which is
 distributed under the license in /licenses/inria.txt
+
+## FAQ
+
+> Will you support $LIBRARY/$PRODUCT?
+
+No. They may work just fine, and you're welcome to offer changes
+continuing or preserving support as well as to assist in preventing
+breakages but no degree of compatibility with Clojure, Cognitect
+product or surrounding ecosystem is guaranteed or represented.
+
+> Will you add $FEATURE/$PATCH from Clojure?
+
+No. Under the EPL you may port changes from Clojure to
+Clojarr. However I make no promises of merging or porting upstream
+changes.
+
+> Will you add $FEATURE to the language?
+
+Maybe. For the most part, it seems that `clojure.core` is shall we say
+"right sized". In the Scheme tradition, the compiler works and the
+core is large enough that users can and have built just about
+everything else you could want as a library. This leads me to believe
+that for the most part adding features to the language isn't called
+for.
+
+That said, I don't think the language is perfect. The Java
+implementation could use some spit and shoeshine in my present
+estimation. The compiler could be smarter. The various "internal" APIs
+could be reviewed, documented and published so that users can rely on
+them. There are some things which clearly deserve to be added such as
+type predicates which are nearly universally defined by users, but I
+expect this project to largely be one of refinement rather than one of
+novel development.
