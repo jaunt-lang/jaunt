@@ -36,13 +36,34 @@ be accepted if there is a good reason for them.
 ## Administration
 
 Currently, Clojarr is administered at my (Reid McKenzie's) sole
-discretion. Pull requests, issues and email are all considered requests for
-work/support and will only be adressed when and if it suits me to address them
-or an explicit support contract has been issued.
+discretion. Contributions, bug reports, and feature requests are
+welcomed.
 
-This is not to say that contributions, bug reports, and feature requests are
-not welcome, only to clearly state my expectations for the project and its
-management.
+It must be stated this is a hobby project for me. I'll respond to
+issues and pull requests as I have free time to consider and address
+them.
+ 
+The EPL license reads
+
+> THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
+> CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
+> LIMITATION, ANY WARRANTIES OR CONDITIONS OF ... FITNESS FOR A
+> PARTICULAR PURPOSE.
+
+And that is the extent of the guarantees I offer with regards to this
+software. It is my goal to maintain Clojarr in such a way that
+[CIDER](https://github.com/clojure-emacs/cider) works, and that most
+compatibility with Clojure is maintained but this is not a hard
+guarantee. If you want a Clojure compatible language, you're gonna
+have to use Clojure.
+
+In the future when there are other active contributors, it is my
+desire to hand off issues and patch reviews to volunteer contributors
+as they may choose to donate time. The precise mechanism by which
+contributors may approve changes is undecided, but the goal is for
+significant contributors who have demonstrated that they share some
+degree of respect for compatibility will be able to approve and merge
+changes without my involvement.
 
 ## Contributing
 
