@@ -9,23 +9,23 @@
 ;; Originally contributed by Stephen C. Gilardi
 
 (ns ^{:doc "Top-level main function for Clojure REPL and scripts."
-       :author "Stephen C. Gilardi and Rich Hickey"}
-  clojure.main
+      :author "Stephen C. Gilardi and Rich Hickey"}
+ clojure.main
   (:refer-clojure :exclude [with-bindings])
   (:import (clojure.lang Compiler Compiler$CompilerException
                          LineNumberingPushbackReader RT))
   ;;(:use [clojure.repl :only (demunge root-cause stack-element-str)])
-  )
+)
 
 (declare main)
 
 ;;;;;;;;;;;;;;;;;;; redundantly copied from clojure.repl to avoid dep ;;;;;;;;;;;;;;
 #_(defn root-cause [x] x)
 #_(defn stack-element-str
-  "Returns a (possibly unmunged) string representation of a StackTraceElement"
-  {:added "1.3"}
-  [^StackTraceElement el]
-  (.getClassName el))
+    "Returns a (possibly unmunged) string representation of a StackTraceElement"
+    {:added "1.3"}
+    [^StackTraceElement el]
+    (.getClassName el))
 
 (defn demunge
   "Given a string representation of a fn class,
@@ -84,7 +84,7 @@
              *2                       nil
              *3                       nil
              *e                       nil
-             *compiler-options*       *compiler-options*] 
+             *compiler-options*       *compiler-options*]
      ~@body))
 
 (defn repl-prompt
@@ -102,9 +102,9 @@
   [s]
   (let [c (.read s)]
     (cond
-     (= c (int \newline)) :line-start
-     (= c -1) :stream-end
-     :else (do (.unread s c) :body))))
+      (= c (int \newline)) :line-start
+      (= c -1) :stream-end
+      :else (do (.unread s c) :body))))
 
 (defn skip-whitespace
   "Skips whitespace characters on stream s. Returns :line-start, :stream-end,
@@ -118,11 +118,11 @@
   [s]
   (loop [c (.read s)]
     (cond
-     (= c (int \newline)) :line-start
-     (= c -1) :stream-end
-     (= c (int \;)) (do (.readLine s) :line-start)
-     (or (Character/isWhitespace (char c)) (= c (int \,))) (recur (.read s))
-     :else (do (.unread s c) :body))))
+      (= c (int \newline)) :line-start
+      (= c -1) :stream-end
+      (= c (int \;)) (do (.readLine s) :line-start)
+      (or (Character/isWhitespace (char c)) (= c (int \,))) (recur (.read s))
+      :else (do (.unread s c) :body))))
 
 (defn repl-read
   "Default :read hook for repl. Reads from *in* which must either be an
@@ -237,34 +237,34 @@ by default when a new command-line REPL is started."} repl-requires
           (try
             (let [read-eval *read-eval*
                   input (with-read-known (read request-prompt request-exit))]
-             (or (#{request-prompt request-exit} input)
-                 (let [value (binding [*read-eval* read-eval] (eval input))]
-                   (print value)
-                   (set! *3 *2)
-                   (set! *2 *1)
-                   (set! *1 value))))
-           (catch Throwable e
-             (caught e)
-             (set! *e e))))]
+              (or (#{request-prompt request-exit} input)
+                  (let [value (binding [*read-eval* read-eval] (eval input))]
+                    (print value)
+                    (set! *3 *2)
+                    (set! *2 *1)
+                    (set! *1 value))))
+            (catch Throwable e
+              (caught e)
+              (set! *e e))))]
     (with-bindings
-     (try
-      (init)
-      (catch Throwable e
-        (caught e)
-        (set! *e e)))
-     (prompt)
-     (flush)
-     (loop []
-       (when-not 
-       	 (try (identical? (read-eval-print) request-exit)
-	  (catch Throwable e
-	   (caught e)
-	   (set! *e e)
-	   nil))
-         (when (need-prompt)
-           (prompt)
-           (flush))
-         (recur))))))
+      (try
+        (init)
+        (catch Throwable e
+          (caught e)
+          (set! *e e)))
+      (prompt)
+      (flush)
+      (loop []
+        (when-not
+         (try (identical? (read-eval-print) request-exit)
+              (catch Throwable e
+                (caught e)
+                (set! *e e)
+                nil))
+          (when (need-prompt)
+            (prompt)
+            (flush))
+          (recur))))))
 
 (defn load-script
   "Loads Clojure source from a file or resource given its path. Paths
@@ -285,12 +285,12 @@ by default when a new command-line REPL is started."} repl-requires
   [str]
   (let [eof (Object.)
         reader (LineNumberingPushbackReader. (java.io.StringReader. str))]
-      (loop [input (with-read-known (read reader false eof))]
-        (when-not (= input eof)
-          (let [value (eval input)]
-            (when-not (nil? value)
-              (prn value))
-            (recur (with-read-known (read reader false eof))))))))
+    (loop [input (with-read-known (read reader false eof))]
+      (when-not (= input eof)
+        (let [value (eval input)]
+          (when-not (nil? value)
+            (prn value))
+          (recur (with-read-known (read reader false eof))))))))
 
 (defn- init-dispatch
   "Returns the handler associated with an init opt"
@@ -415,12 +415,12 @@ java -cp clojure.jar clojure.main -i init.clj script.clj args...")
   classpath. Classpath-relative paths have prefix of @ or @/"
   [& args]
   (try
-   (if args
-     (loop [[opt arg & more :as args] args inits []]
-       (if (init-dispatch opt)
-         (recur more (conj inits [opt arg]))
-         ((main-dispatch opt) args inits)))
-     (repl-opt nil nil))
-   (finally 
-     (flush))))
+    (if args
+      (loop [[opt arg & more :as args] args inits []]
+        (if (init-dispatch opt)
+          (recur more (conj inits [opt arg]))
+          ((main-dispatch opt) args inits)))
+      (repl-opt nil nil))
+    (finally
+      (flush))))
 

@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 ;;; walk.clj - generic tree walker with replacement
 
@@ -18,9 +18,9 @@
 ;; * December 9, 2008: first version
 
 
-(ns 
-  ^{:author "Stuart Sierra",
-     :doc "This file defines a generic tree walker for Clojure data
+(ns
+ ^{:author "Stuart Sierra",
+   :doc "This file defines a generic tree walker for Clojure data
 structures.  It takes any data structure (list, vector, map, set,
 seq), calls a function on every element, and uses the return value
 of the function in place of the original.  This makes it fairly
@@ -30,7 +30,7 @@ the examples.
 Note: \"walk\" supports all Clojure data structures EXCEPT maps
 created with sorted-map-by.  There is no (obvious) way to retrieve
 the sorting function."}
-  clojure.walk)
+ clojure.walk)
 
 (defn walk
   "Traverses form, an arbitrary data structure.  inner and outer are
@@ -41,13 +41,13 @@ the sorting function."}
   {:added "1.1"}
   [inner outer form]
   (cond
-   (list? form) (outer (apply list (map inner form)))
-   (instance? clojure.lang.IMapEntry form) (outer (vec (map inner form)))
-   (seq? form) (outer (doall (map inner form)))
-   (instance? clojure.lang.IRecord form)
-     (outer (reduce (fn [r x] (conj r (inner x))) form form))
-   (coll? form) (outer (into (empty form) (map inner form)))
-   :else (outer form)))
+    (list? form) (outer (apply list (map inner form)))
+    (instance? clojure.lang.IMapEntry form) (outer (vec (map inner form)))
+    (seq? form) (outer (doall (map inner form)))
+    (instance? clojure.lang.IRecord form)
+    (outer (reduce (fn [r x] (conj r (inner x))) form form))
+    (coll? form) (outer (into (empty form) (map inner form)))
+    :else (outer form)))
 
 (defn postwalk
   "Performs a depth-first, post-order traversal of form.  Calls f on
@@ -62,7 +62,6 @@ the sorting function."}
   {:added "1.1"}
   [f form]
   (walk (partial prewalk f) identity (f form)))
-
 
 ;; Note: I wanted to write:
 ;;

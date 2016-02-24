@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 (ns clojure.test-clojure.data-structures-interop
   (:require [clojure.test :refer :all]
@@ -81,51 +81,51 @@
                                                 ['array-map  (gen-array-map gen/symbol gen/int)]
                                                 ['sorted-map (gen-sorted-map gen/symbol gen/int)]])
                                  (fn [[s g]] (gen/tuple (gen/return s) g)))]
-    (instance? java.util.NoSuchElementException (exaust-iterator-forward (.iterator x)))))
+                (instance? java.util.NoSuchElementException (exaust-iterator-forward (.iterator x)))))
 
 (defspec array-iterator-throws-exception-on-exaustion 100
   (prop/for-all [arr (gen-array)]
-    (let [iter (clojure.lang.ArrayIter/createFromObject arr)]
-      (instance? java.util.NoSuchElementException (exaust-iterator-forward iter)))))
+                (let [iter (clojure.lang.ArrayIter/createFromObject arr)]
+                  (instance? java.util.NoSuchElementException (exaust-iterator-forward iter)))))
 
 (defspec list-iterator-throws-exception-on-forward-exaustion 50
   (prop/for-all [[_ x] (gen/bind (gen/elements [['vector    (gen/vector gen/int)]
                                                 ['subvec    (gen-subvec (gen/vector gen/int))]
                                                 ['vector-of (gen-gvec)]])
                                  (fn [[s g]] (gen/tuple (gen/return s) g)))]
-    (instance? java.util.NoSuchElementException (exaust-iterator-forward (.listIterator x)))))
+                (instance? java.util.NoSuchElementException (exaust-iterator-forward (.listIterator x)))))
 
 (defspec list-iterator-throws-exception-on-backward-exaustion 50
   (prop/for-all [[_ x] (gen/bind (gen/elements [['vector    (gen/vector gen/int)]
                                                 ['subvec    (gen-subvec (gen/vector gen/int))]
                                                 ['vector-of (gen-gvec)]])
                                  (fn [[s g]] (gen/tuple (gen/return s) g)))]
-    (instance? java.util.NoSuchElementException (exaust-iterator-backward (.listIterator x)))))
+                (instance? java.util.NoSuchElementException (exaust-iterator-backward (.listIterator x)))))
 
 (defspec map-keyset-iterator-throws-exception-on-exaustion 50
   (prop/for-all [[_ m] (gen/bind (gen/elements [['hash-map   (gen/hash-map gen/symbol gen/int)
                                                  'array-map  (gen-array-map gen/symbol gen/int)
                                                  'sorted-map (gen-sorted-map gen/symbol gen/int)]])
                                  (fn [[s g]] (gen/tuple (gen/return s) g)))]
-    (let [iter (.iterator (.keySet m))]
-      (instance? java.util.NoSuchElementException (exaust-iterator-forward iter)))))
+                (let [iter (.iterator (.keySet m))]
+                  (instance? java.util.NoSuchElementException (exaust-iterator-forward iter)))))
 
 (defspec map-values-iterator-throws-exception-on-exaustion 50
   (prop/for-all [[_ m] (gen/bind (gen/elements [['hash-map   (gen/hash-map gen/symbol gen/int)
                                                  'array-map  (gen-array-map gen/symbol gen/int)
                                                  'sorted-map (gen-sorted-map gen/symbol gen/int)]])
                                  (fn [[s g]] (gen/tuple (gen/return s) g)))]
-    (let [iter (.iterator (.values m))]
-      (instance? java.util.NoSuchElementException (exaust-iterator-forward iter)))))
+                (let [iter (.iterator (.values m))]
+                  (instance? java.util.NoSuchElementException (exaust-iterator-forward iter)))))
 
 (defspec map-keys-iterator-throws-exception-on-exaustion 50
   (prop/for-all [m (gen-sorted-map gen/symbol gen/int)]
-    (instance? java.util.NoSuchElementException (exaust-iterator-forward (.keys m)))))
+                (instance? java.util.NoSuchElementException (exaust-iterator-forward (.keys m)))))
 
 (defspec map-vals-iterator-throws-exception-on-exaustion 50
   (prop/for-all [m (gen-sorted-map gen/symbol gen/int)]
-    (instance? java.util.NoSuchElementException (exaust-iterator-forward (.vals m)))))
+                (instance? java.util.NoSuchElementException (exaust-iterator-forward (.vals m)))))
 
 (defspec map-reverse-iterator-throws-exception-on-exaustion 50
   (prop/for-all [m (gen-sorted-map gen/symbol gen/int)]
-    (instance? java.util.NoSuchElementException (exaust-iterator-forward (.reverseIterator m)))))
+                (instance? java.util.NoSuchElementException (exaust-iterator-forward (.reverseIterator m)))))

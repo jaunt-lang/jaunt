@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 ;;; template.clj - anonymous functions that pre-evaluate sub-expressions
 
@@ -23,8 +23,8 @@
 
 
 (ns ^{:doc "Macros that expand to repeated copies of a template expression."
-       :author "Stuart Sierra"}
-  clojure.template
+      :author "Stuart Sierra"}
+ clojure.template
   (:require [clojure.walk :as walk]))
 
 (defn apply-template
@@ -51,5 +51,5 @@
            ;=> (do (+ 4 2) (+ 5 3))"
   [argv expr & values]
   (let [c (count argv)]
-    `(do ~@(map (fn [a] (apply-template argv expr a)) 
+    `(do ~@(map (fn [a] (apply-template argv expr a))
                 (partition c values)))))

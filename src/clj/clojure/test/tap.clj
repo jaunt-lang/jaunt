@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 ;;; test_is/tap.clj: Extension to test for TAP output
 
@@ -37,8 +37,8 @@
 
     (with-tap-output
      (run-tests 'my.cool.library))"
-       :author "Stuart Sierra"}
-  clojure.test.tap
+      :author "Stuart Sierra"}
+ clojure.test.tap
   (:require [clojure.test :as t]
             [clojure.stacktrace :as stack]))
 
@@ -62,7 +62,7 @@
   [msg]
   (println "ok" msg))
 
-(defn print-tap-fail 
+(defn print-tap-fail
   "Prints a TAP 'not ok' line.  msg is a string, with no line breaks"
   {:added "1.1"}
   [msg]
@@ -73,7 +73,7 @@
 
 (defmethod tap-report :default [data]
   (t/with-test-out
-   (print-tap-diagnostic (pr-str data))))
+    (print-tap-diagnostic (pr-str data))))
 
 (defn print-diagnostics [data]
   (when (seq t/*testing-contexts*)
@@ -86,33 +86,32 @@
     (do
       (print-tap-diagnostic
        (str "  actual:"
-        (with-out-str
-          (if (instance? Throwable (:actual data))
-            (stack/print-cause-trace (:actual data) t/*stack-trace-depth*)
-            (prn (:actual data)))))))))
+            (with-out-str
+              (if (instance? Throwable (:actual data))
+                (stack/print-cause-trace (:actual data) t/*stack-trace-depth*)
+                (prn (:actual data)))))))))
 
 (defmethod tap-report :pass [data]
   (t/with-test-out
-   (t/inc-report-counter :pass)
-   (print-tap-pass (t/testing-vars-str data))
-   (print-diagnostics data)))
+    (t/inc-report-counter :pass)
+    (print-tap-pass (t/testing-vars-str data))
+    (print-diagnostics data)))
 
 (defmethod tap-report :error [data]
   (t/with-test-out
-   (t/inc-report-counter :error)
-   (print-tap-fail (t/testing-vars-str data))
-   (print-diagnostics data)))
+    (t/inc-report-counter :error)
+    (print-tap-fail (t/testing-vars-str data))
+    (print-diagnostics data)))
 
 (defmethod tap-report :fail [data]
   (t/with-test-out
-   (t/inc-report-counter :fail)
-   (print-tap-fail (t/testing-vars-str data))
-   (print-diagnostics data)))
+    (t/inc-report-counter :fail)
+    (print-tap-fail (t/testing-vars-str data))
+    (print-diagnostics data)))
 
 (defmethod tap-report :summary [data]
   (t/with-test-out
-   (print-tap-plan (+ (:pass data) (:fail data) (:error data)))))
-
+    (print-tap-plan (+ (:pass data) (:fail data) (:error data)))))
 
 (defmacro with-tap-output
   "Execute body with modified test reporting functions that produce

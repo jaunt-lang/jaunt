@@ -1,36 +1,35 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-(ns 
-  ^{:author "Stuart Sierra, Chas Emerick, Stuart Halloway",
-     :doc "This file defines polymorphic I/O utility functions for Clojure."}
-    clojure.java.io
-    (:require clojure.string)
-    (:import 
-     (java.io Reader InputStream InputStreamReader PushbackReader
-              BufferedReader File OutputStream
-              OutputStreamWriter BufferedWriter Writer
-              FileInputStream FileOutputStream ByteArrayOutputStream
-              StringReader ByteArrayInputStream
-              BufferedInputStream BufferedOutputStream
-              CharArrayReader Closeable)
-     (java.net URI URL MalformedURLException Socket URLDecoder URLEncoder)))
-
-(def
-    ^{:doc "Type object for a Java primitive byte array."
-      :private true
-      }
- byte-array-type (class (make-array Byte/TYPE 0)))
+(ns
+ ^{:author "Stuart Sierra, Chas Emerick, Stuart Halloway",
+   :doc "This file defines polymorphic I/O utility functions for Clojure."}
+ clojure.java.io
+  (:require clojure.string)
+  (:import
+   (java.io Reader InputStream InputStreamReader PushbackReader
+            BufferedReader File OutputStream
+            OutputStreamWriter BufferedWriter Writer
+            FileInputStream FileOutputStream ByteArrayOutputStream
+            StringReader ByteArrayInputStream
+            BufferedInputStream BufferedOutputStream
+            CharArrayReader Closeable)
+   (java.net URI URL MalformedURLException Socket URLDecoder URLEncoder)))
 
 (def
-    ^{:doc "Type object for a Java primitive char array."
-      :private true}
- char-array-type (class (make-array Character/TYPE 0)))
+  ^{:doc "Type object for a Java primitive byte array."
+    :private true}
+  byte-array-type (class (make-array Byte/TYPE 0)))
+
+(def
+  ^{:doc "Type object for a Java primitive char array."
+    :private true}
+  char-array-type (class (make-array Character/TYPE 0)))
 
 (defprotocol ^{:added "1.2"} Coercions
   "Coerce between various 'resource-namish' things."
@@ -45,11 +44,11 @@
   nil
   (as-file [_] nil)
   (as-url [_] nil)
-  
+
   String
   (as-file [s] (File. s))
-  (as-url [s] (URL. s))  
-  
+  (as-url [s] (URL. s))
+
   File
   (as-file [f] f)
   (as-url [f] (.toURL (.toURI f)))
@@ -72,7 +71,7 @@
    be unequivocally converted to the requested kind of stream.
 
    Common options include
-   
+
      :append    true to open stream in append mode
      :encoding  string name of encoding to use, e.g. \"UTF-8\".
 
@@ -182,101 +181,101 @@
 (extend BufferedInputStream
   IOFactory
   (assoc default-streams-impl
-    :make-input-stream (fn [x opts] x)
-    :make-reader inputstream->reader))
+         :make-input-stream (fn [x opts] x)
+         :make-reader inputstream->reader))
 
 (extend InputStream
   IOFactory
   (assoc default-streams-impl
-    :make-input-stream (fn [x opts] (BufferedInputStream. x))
-    :make-reader inputstream->reader))
+         :make-input-stream (fn [x opts] (BufferedInputStream. x))
+         :make-reader inputstream->reader))
 
 (extend Reader
   IOFactory
   (assoc default-streams-impl
-    :make-reader (fn [x opts] (BufferedReader. x))))
+         :make-reader (fn [x opts] (BufferedReader. x))))
 
 (extend BufferedReader
   IOFactory
   (assoc default-streams-impl
-    :make-reader (fn [x opts] x)))
+         :make-reader (fn [x opts] x)))
 
 (extend Writer
   IOFactory
   (assoc default-streams-impl
-    :make-writer (fn [x opts] (BufferedWriter. x))))
+         :make-writer (fn [x opts] (BufferedWriter. x))))
 
 (extend BufferedWriter
   IOFactory
   (assoc default-streams-impl
-    :make-writer (fn [x opts] x)))
+         :make-writer (fn [x opts] x)))
 
 (extend OutputStream
   IOFactory
   (assoc default-streams-impl
-    :make-output-stream (fn [x opts] (BufferedOutputStream. x))
-    :make-writer outputstream->writer))
+         :make-output-stream (fn [x opts] (BufferedOutputStream. x))
+         :make-writer outputstream->writer))
 
 (extend BufferedOutputStream
   IOFactory
   (assoc default-streams-impl
-    :make-output-stream (fn [x opts] x)
-    :make-writer outputstream->writer))
+         :make-output-stream (fn [x opts] x)
+         :make-writer outputstream->writer))
 
 (extend File
   IOFactory
   (assoc default-streams-impl
-    :make-input-stream (fn [^File x opts] (make-input-stream (FileInputStream. x) opts))
-    :make-output-stream (fn [^File x opts] (make-output-stream (FileOutputStream. x (append? opts)) opts))))
+         :make-input-stream (fn [^File x opts] (make-input-stream (FileInputStream. x) opts))
+         :make-output-stream (fn [^File x opts] (make-output-stream (FileOutputStream. x (append? opts)) opts))))
 
 (extend URL
   IOFactory
   (assoc default-streams-impl
-    :make-input-stream (fn [^URL x opts]
-                         (make-input-stream
-                          (if (= "file" (.getProtocol x))
-                            (FileInputStream. (as-file x))
-                            (.openStream x)) opts))
-    :make-output-stream (fn [^URL x opts]
-                          (if (= "file" (.getProtocol x))
-                            (make-output-stream (as-file x) opts)
-                            (throw (IllegalArgumentException. (str "Can not write to non-file URL <" x ">")))))))
+         :make-input-stream (fn [^URL x opts]
+                              (make-input-stream
+                               (if (= "file" (.getProtocol x))
+                                 (FileInputStream. (as-file x))
+                                 (.openStream x)) opts))
+         :make-output-stream (fn [^URL x opts]
+                               (if (= "file" (.getProtocol x))
+                                 (make-output-stream (as-file x) opts)
+                                 (throw (IllegalArgumentException. (str "Can not write to non-file URL <" x ">")))))))
 
 (extend URI
   IOFactory
   (assoc default-streams-impl
-    :make-input-stream (fn [^URI x opts] (make-input-stream (.toURL x) opts))
-    :make-output-stream (fn [^URI x opts] (make-output-stream (.toURL x) opts))))
+         :make-input-stream (fn [^URI x opts] (make-input-stream (.toURL x) opts))
+         :make-output-stream (fn [^URI x opts] (make-output-stream (.toURL x) opts))))
 
 (extend String
   IOFactory
   (assoc default-streams-impl
-    :make-input-stream (fn [^String x opts]
-                         (try
-                          (make-input-stream (URL. x) opts)
-                          (catch MalformedURLException e
-                            (make-input-stream (File. x) opts))))
-    :make-output-stream (fn [^String x opts]
-                          (try
-                           (make-output-stream (URL. x) opts)
-                           (catch MalformedURLException err
-                             (make-output-stream (File. x) opts))))))
+         :make-input-stream (fn [^String x opts]
+                              (try
+                                (make-input-stream (URL. x) opts)
+                                (catch MalformedURLException e
+                                  (make-input-stream (File. x) opts))))
+         :make-output-stream (fn [^String x opts]
+                               (try
+                                 (make-output-stream (URL. x) opts)
+                                 (catch MalformedURLException err
+                                   (make-output-stream (File. x) opts))))))
 
 (extend Socket
   IOFactory
   (assoc default-streams-impl
-    :make-input-stream (fn [^Socket x opts] (make-input-stream (.getInputStream x) opts))
-    :make-output-stream (fn [^Socket x opts] (make-output-stream (.getOutputStream x) opts))))
+         :make-input-stream (fn [^Socket x opts] (make-input-stream (.getInputStream x) opts))
+         :make-output-stream (fn [^Socket x opts] (make-output-stream (.getOutputStream x) opts))))
 
 (extend byte-array-type
   IOFactory
   (assoc default-streams-impl
-    :make-input-stream (fn [x opts] (make-input-stream (ByteArrayInputStream. x) opts))))
+         :make-input-stream (fn [x opts] (make-input-stream (ByteArrayInputStream. x) opts))))
 
 (extend char-array-type
   IOFactory
   (assoc default-streams-impl
-    :make-reader (fn [x opts] (make-reader (CharArrayReader. x) opts))))
+         :make-reader (fn [x opts] (make-reader (CharArrayReader. x) opts))))
 
 (extend Object
   IOFactory
@@ -285,17 +284,17 @@
 (extend nil
   IOFactory
   (assoc default-streams-impl
-    :make-reader (fn [x opts]
-                   (throw (IllegalArgumentException.
-                           (str "Cannot open <" (pr-str x) "> as a Reader."))))
-    :make-writer (fn [x opts]
-                   (throw (IllegalArgumentException.
-                           (str "Cannot open <" (pr-str x) "> as a Writer."))))))
+         :make-reader (fn [x opts]
+                        (throw (IllegalArgumentException.
+                                (str "Cannot open <" (pr-str x) "> as a Reader."))))
+         :make-writer (fn [x opts]
+                        (throw (IllegalArgumentException.
+                                (str "Cannot open <" (pr-str x) "> as a Writer."))))))
 
 (defmulti
   ^{:doc "Internal helper for copy"
-     :private true
-     :arglists '([input output opts])}
+    :private true
+    :arglists '([input output opts])}
   do-copy
   (fn [input output opts] [(type input) (type output)]))
 
@@ -397,9 +396,9 @@
 
     :buffer-size  buffer size to use, default is 1024.
     :encoding     encoding to use if converting between
-                  byte and char streams.   
+                  byte and char streams.
 
-  Does not close any streams except those it opens itself 
+  Does not close any streams except those it opens itself
   (on a File)."
   {:added "1.2"}
   [input output & opts]
@@ -420,12 +419,12 @@
    versions treat the first argument as parent and subsequent args as
    children relative to the parent."
   {:added "1.2"}
-  ([arg]                      
-     (as-file arg))
-  ([parent child]             
-     (File. ^File (as-file parent) ^String (as-relative-path child)))
+  ([arg]
+   (as-file arg))
+  ([parent child]
+   (File. ^File (as-file parent) ^String (as-relative-path child)))
   ([parent child & more]
-     (reduce file (file parent child) more)))
+   (reduce file (file parent child) more)))
 
 (defn delete-file
   "Delete file f. Raise an exception if it fails unless silently is true."

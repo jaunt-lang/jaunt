@@ -1,14 +1,14 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 (ns ^{:doc "XML reading/writing."
-       :author "Rich Hickey"}
-  clojure.xml
+      :author "Rich Hickey"}
+ clojure.xml
   (:import (org.xml.sax ContentHandler Attributes SAXException)
            (javax.xml.parsers SAXParser SAXParserFactory)))
 
@@ -69,8 +69,7 @@
            (endPrefixMapping [prefix])
            (ignorableWhitespace [ch start length])
            (processingInstruction [target data])
-           (skippedEntity [name])
-           ))))
+           (skippedEntity [name])))))
 
 (defn startparse-sax [s ch]
   (.. SAXParserFactory (newInstance) (newSAXParser) (parse s ch)))
@@ -85,12 +84,12 @@
   {:added "1.0"}
   ([s] (parse s startparse-sax))
   ([s startparse]
-    (binding [*stack* nil
-              *current* (struct element)
-              *state* :between
-              *sb* nil]
-      (startparse s content-handler)
-      ((:content *current*) 0)))) 
+   (binding [*stack* nil
+             *current* (struct element)
+             *state* :between
+             *sb* nil]
+     (startparse s content-handler)
+     ((:content *current*) 0))))
 
 (defn emit-element [e]
   (if (instance? String e)
@@ -98,15 +97,15 @@
     (do
       (print (str "<" (name (:tag e))))
       (when (:attrs e)
-	(doseq [attr (:attrs e)]
-	  (print (str " " (name (key attr)) "='" (val attr)"'"))))
+        (doseq [attr (:attrs e)]
+          (print (str " " (name (key attr)) "='" (val attr) "'"))))
       (if (:content e)
-	(do
-	  (println ">")
-	  (doseq [c (:content e)]
-	    (emit-element c))
-	  (println (str "</" (name (:tag e)) ">")))
-	(println "/>")))))
+        (do
+          (println ">")
+          (doseq [c (:content e)]
+            (emit-element c))
+          (println (str "</" (name (:tag e)) ">")))
+        (println "/>")))))
 
 (defn emit [x]
   (println "<?xml version='1.0' encoding='UTF-8'?>")
