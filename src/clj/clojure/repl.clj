@@ -142,19 +142,23 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
   [x]
   (when-let [v (resolve x)]
     (when-let [filepath (:file (meta v))]
-      (when-let [strm (.getResourceAsStream (RT/baseLoader) filepath)]
-        (with-open [rdr (LineNumberReader. (InputStreamReader. strm))]
-          (dotimes [_ (dec (:line (meta v)))] (.readLine rdr))
-          (let [text (StringBuilder.)
-                pbr (proxy [PushbackReader] [rdr]
-                      (read [] (let [i (proxy-super read)]
-                                 (.append text (char i))
-                                 i)))
-                read-opts (if (.endsWith ^String filepath "cljc") {:read-cond :allow} {})]
-            (if (= :unknown *read-eval*)
-              (throw (IllegalStateException. "Unable to read source while *read-eval* is :unknown."))
-              (read read-opts (PushbackReader. pbr)))
-            (str text)))))))
+      (binding [*ns* (. v ns)]
+        (when-let [strm (.getResourceAsStream (RT/baseLoader) filepath)]
+          (with-open [rdr (LineNumberReader. (InputStreamReader. strm))]
+            (dotimes [_ (dec (:line (meta v)))]
+              (.readLine rdr))
+            (let [text      (StringBuilder.)
+                  pbr       (proxy [PushbackReader] [rdr]
+                              (read [] (let [i (proxy-super read)]
+                                         (.append text (char i))
+                                         i)))
+                  read-opts (if (.endsWith ^String filepath "cljc")
+                              {:read-cond :allow} {})]
+              (if (= :unknown *read-eval*)
+                (throw (IllegalStateException.
+                        "Unable to read source while *read-eval* is :unknown."))
+                (read read-opts (PushbackReader. pbr)))
+              (str text))))))))
 
 (defmacro source
   "Prints the source code for the given symbol, if it can find it.
