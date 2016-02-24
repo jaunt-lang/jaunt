@@ -12,6 +12,7 @@
 
 (deftest test-source
   (is (= "(defn foo [])" (source-fn 'clojure.test-clojure.repl.example/foo)))
+  (is (= "(defn qux [] ::s/foo)" (source-fn 'clojure.test-clojure.repl.example/qux)))
   (is (= (platform-newlines "(defn foo [])\n") (with-out-str (source clojure.test-clojure.repl.example/foo))))
   (is (nil? (source-fn 'non-existent-fn))))
 
@@ -23,8 +24,8 @@
 
 (deftest test-dir
   (is (thrown? Exception (dir-fn 'non-existent-ns)))
-  (is (= '[bar foo] (dir-fn 'clojure.test-clojure.repl.example)))
-  (is (= (platform-newlines "bar\nfoo\n") (with-out-str (dir clojure.test-clojure.repl.example)))))
+  (is (= '[bar foo qux] (dir-fn 'clojure.test-clojure.repl.example)))
+  (is (= (platform-newlines "bar\nfoo\nqux\n") (with-out-str (dir clojure.test-clojure.repl.example)))))
 
 (deftest test-apropos
   (testing "with a regular expression"
