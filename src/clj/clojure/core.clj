@@ -4109,7 +4109,7 @@
                 (ns-map ns))))
 
 ;; FIXME: not really how I want to do this in the long run but correct for now.
-;; See arrdem/clojarr#21
+;; See jaunt-lang/jaunt#21
 (defn ^:private warn-deprecated? []
   (or (:pedantic *compiler-options*)
       (:warn-on-deprecated *compiler-options*)))

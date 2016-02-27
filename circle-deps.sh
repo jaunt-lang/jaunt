@@ -17,9 +17,9 @@ then
   mvn versions:set -DgenerateBackupPoms=false -DnewVersion=whatever
   git checkout pom.xml
 
-  # purge clojarr from m2
+  # purge jaunt from m2
   # no reason to leave those lying about
-   rm -r "$M2/repository/me/arrdem/clojarr/"
+   rm -r "$M2/repository/org/jaunt-lang/jaunt/"
   
   # leave the flag file behind
   touch "$FILE"

@@ -2,7 +2,7 @@
 
   <description>
     Build with "ant" and then start the
-    REPL with: "java -cp clojarr.jar clojure.main".
+    REPL with: "java -cp jaunt.jar clojure.main".
 
     Note: You may need to run the antsetup.sh script included.
   </description>
@@ -27,8 +27,8 @@
   <property name="clojure.version.label" value="${pom.project.version}"/>
   <property name="version.properties" value="${build}/clojure/version.properties"/>
 
-  <property name="clojure_jar" location="clojarr-${clojure.version.label}.jar"/>
-  <property name="clojure_noversion_jar" location="clojarr.jar"/>
+  <property name="clojure_jar" location="jaunt-${clojure.version.label}.jar"/>
+  <property name="clojure_noversion_jar" location="jaunt.jar"/>
 
   <property name="directlinking" value="true"/>
 
