@@ -1,9 +1,9 @@
-Contributing to Clojarr
+Contributing to Jaunt
 
 :+1::tada: First off, thanks for taking the time to contribute! :tada::+1:
 
-The following is a set of guidelines for contributing to Clojarr which is hosted at
-[arrdem/jaunt](https://github.com/arrdem/jaunt) on GitHub.  These are just guidelines, not rules,
+The following is a set of guidelines for contributing to Jaunt which is hosted at
+[jaunt-lang/jaunt](https://github.com/jaunt-lang/jaunt) on GitHub.  These are just guidelines, not rules,
 use your best judgment and feel free to propose changes to this document in a pull request.
 
 ## What should I know before I get started?

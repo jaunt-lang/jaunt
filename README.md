@@ -85,7 +85,7 @@ product or surrounding ecosystem is guaranteed or represented.
 
 > Will you add $FEATURE/$PATCH from Clojure?
 
-No. Under the EPL you may port changes from Clojure to Clojarr. However I make no promises of
+No. Under the EPL you may port changes from Clojure to Jaunt. However I make no promises of
 merging or porting upstream changes.
 
 > Will you add $FEATURE to the language?
