@@ -3,19 +3,19 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>me.arrdem</groupId>
-  <artifactId>clojarr</artifactId>
-  <name>clojarr</name>
+  <groupId>org.jaunt-lang</groupId>
+  <artifactId>jaunt</artifactId>
+  <name>jaunt</name>
   <packaging>jar</packaging>
   <version>1.9.0-master-SNAPSHOT</version>
 
-  <url>https://github.com/arrdem/clojarr</url>
+  <url>https://github.com/jaunt-lang/jaunt</url>
   <description>arrdem flavored Clojure</description>
 
   <developers>
     <developer>
       <name>Reid 'arrdem' McKenzie</name>
-      <email>me+clojarr@arrdem.com</email>
+      <email>me+jaunt@arrdem.com</email>
       <timezone>-5</timezone>
     </developer>
   </developers>
@@ -29,9 +29,9 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:git@github.com:arrdem/clojarr.git</connection>
-    <developerConnection>scm:git:git@github.com:arrdem/clojarr.git</developerConnection>
-    <url>git@github.com:arrdem/clojarr.git</url>
+    <connection>scm:git:git@github.com:jaunt-lang/jaunt.git</connection>
+    <developerConnection>scm:git:git@github.com:jaunt-lang/jaunt.git</developerConnection>
+    <url>git@github.com:jaunt-lang/jaunt.git</url>
   </scm>
 
   <distributionManagement>
