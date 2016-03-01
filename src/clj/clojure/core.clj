@@ -4017,6 +4017,12 @@
           (recur ret (next es)))
         ret)))
 
+(defn ns?
+  "Type predicate. Returns true if o is a Namespace."
+  {:added  "1.9"
+   :static true}
+  [o] (instance? clojure.lang.Namespace o))
+
 (defn find-ns
   "Returns the namespace named by the symbol or nil if it doesn't exist."
   {:added "1.0"
@@ -4051,9 +4057,9 @@
   {:added "1.0"
    :static true}
   ^clojure.lang.Namespace [x]
-  (if (instance? clojure.lang.Namespace x)
-    x
-    (or (find-ns x) (throw (Exception. (str "No namespace: " x " found"))))))
+  (if (ns? x) x
+    (or (find-ns x)
+        (throw (Exception. (str "No namespace: " x " found"))))))
 
 (defn ns-name
   "Returns the name of the namespace, a symbol."
