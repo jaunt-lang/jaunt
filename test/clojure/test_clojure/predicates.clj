@@ -19,100 +19,104 @@
 
 (def myvar 42)
 
-(def sample-data {
-  :nil nil
+(def sample-data
+  {
+   :nil            nil
 
-  :bool-true true
-  :bool-false false
+   :bool-true      true
+   :bool-false     false
 
-  :byte   (byte 7)
-  :short  (short 7)
-  :int    (int 7)
-  :long   (long 7)
-  :bigint (bigint 7)
-  :float  (float 7)
-  :double (double 7)
-  :bigdec (bigdec 7)
+   :byte           (byte 7)
+   :short          (short 7)
+   :int            (int 7)
+   :long           (long 7)
+   :bigint         (bigint 7)
+   :float          (float 7)
+   :double         (double 7)
+   :bigdec         (bigdec 7)
 
-  :ratio 2/3
+   :ratio          2/3
 
-  :character \a
-  :symbol 'abc
-  :keyword :kw
+   :character      \a
+   :symbol         'abc
+   :keyword        :kw
 
-  :empty-string ""
-  :empty-regex #""
-  :empty-list ()
-  :empty-lazy-seq (lazy-seq nil)
-  :empty-vector []
-  :empty-map {}
-  :empty-set #{}
-  :empty-array (into-array [])
+   :empty-string   ""
+   :empty-regex    #""
+   :empty-list     ()
+   :empty-lazy-seq (lazy-seq nil)
+   :empty-vector   []
+   :empty-map      {}
+   :empty-set      #{}
+   :empty-array    (into-array [])
 
-  :string "abc"
-  :regex #"a*b"
-  :list '(1 2 3)
-  :lazy-seq (lazy-seq [1 2 3])
-  :vector [1 2 3]
-  :map {:a 1 :b 2 :c 3}
-  :set #{1 2 3}
-  :array (into-array [1 2 3])
+   :string         "abc"
+   :regex          #"a*b"
+   :list           '(1 2 3)
+   :lazy-seq       (lazy-seq [1 2 3])
+   :vector         [1 2 3]
+   :map            {:a 1 :b 2 :c 3}
+   :set            #{1 2 3}
+   :array          (into-array [1 2 3])
 
-  :fn (fn [x] (* 2 x))
+   :fn             (fn [x] (* 2 x))
 
-  :class java.util.Date
-  :object (new java.util.Date)
+   :class          java.util.Date
+   :object         (new java.util.Date)
 
-  :var (var myvar)
-  :delay (delay (+ 1 2))
-})
+   :var            (var myvar)
+   :delay          (delay (+ 1 2))
+   :ns             (the-ns 'clojure.core)
+   })
 
 
-(def type-preds {
-  nil? [:nil]
+(def type-preds
+  {
+   nil?      [:nil]
 
-  true?  [:bool-true]
-  false? [:bool-false]
-  ; boolean?
+   true?     [:bool-true]
+   false?    [:bool-false]
+   ;; boolean?
 
-  integer?  [:byte :short :int :long :bigint]
-  float?    [:float :double]
-  decimal?  [:bigdec]
-  ratio?    [:ratio]
-  rational? [:byte :short :int :long :bigint :ratio :bigdec]
-  number?   [:byte :short :int :long :bigint :ratio :bigdec :float :double]
+   integer?  [:byte :short :int :long :bigint]
+   float?    [:float :double]
+   decimal?  [:bigdec]
+   ratio?    [:ratio]
+   rational? [:byte :short :int :long :bigint :ratio :bigdec]
+   number?   [:byte :short :int :long :bigint :ratio :bigdec :float :double]
 
-  ; character?
-  symbol?  [:symbol]
-  keyword? [:keyword]
+   ;; character?
+   symbol?   [:symbol]
+   keyword?  [:keyword]
 
-  string? [:empty-string :string]
-  ; regex?
+   string?   [:empty-string :string]
+   ;; regex?
 
-  list?   [:empty-list   :list]
-  vector? [:empty-vector :vector]
-  map?    [:empty-map    :map]
-  set?    [:empty-set    :set]
+   list?     [:empty-list   :list]
+   vector?   [:empty-vector :vector]
+   map?      [:empty-map    :map]
+   set?      [:empty-set    :set]
 
-  coll? [:empty-list     :list
-         :empty-lazy-seq :lazy-seq
-         :empty-vector   :vector
-         :empty-map      :map
-         :empty-set      :set]
+   coll?     [:empty-list     :list
+              :empty-lazy-seq :lazy-seq
+              :empty-vector   :vector
+              :empty-map      :map
+              :empty-set      :set]
 
-  seq?  [:empty-list     :list
-         :empty-lazy-seq :lazy-seq]
-  ; array?
+   seq?      [:empty-list     :list
+              :empty-lazy-seq :lazy-seq]
+   ;; array?
 
-  fn?  [:fn]
-  ifn? [:fn
-        :empty-vector :vector :empty-map :map :empty-set :set
-        :keyword :symbol :var]
+   fn?       [:fn]
+   ifn?      [:fn
+              :empty-vector :vector :empty-map :map :empty-set :set
+              :keyword :symbol :var]
 
-  class? [:class]
-  var?   [:var]
-  delay? [:delay]
-})
+   class?    [:class]
+   var?      [:var]
+   delay?    [:delay]
+   ns?       [:ns]
+   })
 
 
 ;; Test all type predicates against all data types
