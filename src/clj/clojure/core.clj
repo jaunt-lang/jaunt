@@ -1655,7 +1655,7 @@
           (map #(str ", " %) (rest valid-keys)))))))
 
 ;;multimethods
-(def global-hierarchy)
+(def ^:private global-hierarchy)
 
 (defmacro defmulti
   "Creates a new multimethod with the associated dispatch function.
@@ -5309,7 +5309,7 @@
 
 (defn- descriptor [^Class c] (clojure.asm.Type/getDescriptor c))
 
-(declare process-annotation)
+(declare ^:private process-annotation)
 (defn- add-annotation [^clojure.asm.AnnotationVisitor av name v]
   (cond
    (vector? v) (let [avec (.visitArray av name)]
