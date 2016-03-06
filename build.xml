@@ -7,6 +7,8 @@
     Note: You may need to run the antsetup.sh script included.
   </description>
 
+  <property environment="env"/>
+  
   <property name="src" location="src"/>
   <property name="test" location="test"/>
   <property name="jsrc" location="${src}/jvm"/>
@@ -19,16 +21,18 @@
   <property name="target" location="target"/>
   <property name="build" location="${target}/classes"/>
   <property name="test-classes" location="${target}/test-classes"/>
-  <property name="dist" location="dist"/>
   <property file="maven-classpath.properties"/>
+    <condition property="dist" value="${env.CIRCLE_ARTIFACTS}" else="dist">
+    <isset property="env.CIRCLE_ARTIFACTS"/>
+  </condition>
 
   <!-- Get the version string out of the POM -->
   <xmlproperty file="pom.xml" prefix="pom"/>
   <property name="clojure.version.label" value="${pom.project.version}"/>
   <property name="version.properties" value="${build}/clojure/version.properties"/>
 
-  <property name="clojure_jar" location="jaunt-${clojure.version.label}.jar"/>
-  <property name="clojure_noversion_jar" location="jaunt.jar"/>
+  <property name="clojure_jar" location="${dist}/jaunt-${clojure.version.label}.jar"/>
+  <property name="clojure_noversion_jar" location="${dist}/jaunt.jar"/>
 
   <property name="directlinking" value="true"/>
 
