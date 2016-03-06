@@ -1,5 +1,7 @@
 # Jaunt
 
+[![Join the chat at https://gitter.im/jaunt-lang/jaunt](https://badges.gitter.im/jaunt-lang/jaunt.svg)](https://gitter.im/jaunt-lang/jaunt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ### Build Status
 
 Branch | Status
