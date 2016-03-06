@@ -7,7 +7,7 @@
   <artifactId>jaunt</artifactId>
   <name>jaunt</name>
   <packaging>jar</packaging>
-  <version>1.9.0-master-SNAPSHOT</version>
+  <version>1.9.0-RC1</version>
 
   <url>https://github.com/jaunt-lang/jaunt</url>
   <description>arrdem flavored Clojure</description>
