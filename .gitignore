@@ -7,3 +7,7 @@ maven-classpath
 maven-classpath.properties
 .idea/
 src/resources/clojure
+user.clj
+*.html
+.lein-env
+*.iml
