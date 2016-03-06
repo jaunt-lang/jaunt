@@ -1,13 +1,17 @@
 # Jaunt
 
+[![License EPL 1.0](https://img.shields.io/badge/license-EPL_1-green.svg)](https://www.eclipse.org/legal/epl-v10.html)
+[![Patreon Donate](https://img.shields.io/badge/patreon-donate-yellow.svg)](https://patreon.com/arrdem)
 [![Join the chat at https://gitter.im/jaunt-lang/jaunt](https://badges.gitter.im/jaunt-lang/jaunt.svg)](https://gitter.im/jaunt-lang/jaunt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
+[![Twitter Follow](https://img.shields.io/twitter/follow/jauntlang.svg?style=social)](https://twitter.com/jaunt-lang)
 ### Build Status
 
-Branch | Status
-----------|--------
-`master` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/master.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/master) |
-`develop` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop)
+Branch | Status | Version
+----------|--------|--------
+`master` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/master.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/master) | ![Release Version](https://img.shields.io/github/release/jaunt-lang/jaunt.svg)
+`develop` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop) | [![Snapshot Version](https://img.shields.io/clojars/v/org.jaunt-lang/jaunt.svg)](https://clojars.org/org.jaunt-lang/jaunt)
+
+## What
 
 > The reasonable man adapts himself to the world: the unreasonable one
 > persists in trying to adapt the world to himself. Therefore all
@@ -15,11 +19,12 @@ Branch | Status
 >
 > ~ George Bernard Shaw, _Maxims for Revolutionists_ 1903
 
-## What
-
 Jaunt is a hard fork of Clojure. Rich Hickey wrote Clojure to be the language he wanted, and
 administers it in the way that he wants. This is awesome, but I (Reid McKenzie) disagree with enough
 of the choices made in the language and its administration that I've forked to go my own way.
+
+See [the thesis blog post](https://www.arrdem.com/2016/02/22/clojarr_-_a_friendly_clojure_fork/) for
+more on this.
 
 ## Goals
 
@@ -58,7 +63,15 @@ merge changes without my involvement.
 
 This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md).  By
 participating, you are expected to uphold this code.  Please report unacceptable behavior to
-[me+jaunt+coc@arrdem.com](mailto:me+jaunt+coc@arrdem.com).
+[me+jaunt+coc@arrdem.com](mailto:me+jaunt+coc@arrdem.com). See [CONTRIBUTING.md](CONTRIBUTING.md)
+for more information about this project's development process.
+
+### Donations
+
+You can support the development of Jaunt and related tooling via
+[Patreon](https://www.patreon.com/arrdem). Note that choosing to contribute represents blanket
+support for this and other projects, and does not constitute a contract for support or
+[for a tee shirt](https://groups.google.com/forum/#!msg/seajure/GLqhj_2915A/E0crn6zHLi0J).
 
 ## Legal
 
@@ -76,6 +89,10 @@ License, in [/etc/licenses/apache.txt](etc/licenses/apache.txt)
 
 This program uses the ASM bytecode engineering library which is distributed under the license in
 [/etc/licenses/inria.txt](etc/licenses/inria.txt)
+
+## Change Log
+
+An extensive changelog is available [here](CHANGELOG.md).
 
 ## FAQ
 
