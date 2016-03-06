@@ -1,6 +1,15 @@
 ## Change Log
 
 ### upcoming
+- [#86](https://github.com/jaunt-lang/jaunt/pull/86) Fix false changelog linter failures on develop, master, release/* (@arrdem).
+- [#84](https://github.com/jaunt-lang/jaunt/pull/84) Whole bag of project changes (@arrdem).
+  - Set the project base version to 1.9.0.
+  - Emit CircleCI artifact jars on a successful build.
+  - Randomly (p 50%) refresh deps on CircleCI because Maven is awful.
+  - Add a linter checking that changelog entries have been added.
+  - Move the licenses into /etc/licenses.
+  - Move the scripts into /etc/bin.
+  - Remove some project cruft.
 - [#78](https://github.com/jaunt-lang/jaunt/pull/78) Clean up warnings from #62 (@arrdem).
   - Fix warning that `clojure.core/global-higherarchy` looses `^:private` during reloading due to a
     forward declaration lacking the appropriate tag.
