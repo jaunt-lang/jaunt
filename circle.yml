@@ -14,6 +14,7 @@ dependencies:
 test:
   pre:
     - bash check-whitespace.sh
+    - bash check-changelog.sh
   post:
     - ant jar
 
