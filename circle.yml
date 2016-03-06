@@ -6,15 +6,15 @@ dependencies:
   cache_directories:
     - ~/bin
   pre:
-    - bash make-astyle.sh
-    - bash circle-deps.sh
+    - bash etc/bin/make-astyle.sh
+    - bash etc/bin/circle-deps.sh
   post:
     - mvn dependency:resolve-plugins
 
 test:
   pre:
-    - bash check-whitespace.sh
-    - bash check-changelog.sh
+    - bash etc/bin/check-whitespace.sh
+    - bash etc/bin/check-changelog.sh
   post:
     - ant jar
 
