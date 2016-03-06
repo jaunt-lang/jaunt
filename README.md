@@ -64,7 +64,7 @@ participating, you are expected to uphold this code.  Please report unacceptable
 
 Jaunt is (c) Reid McKenzie. All rights reserved. The use and distribution terms for this software
 are covered by the Eclipse Public License 1.0 (EPL)
-([/licenses/epl-v10.txt](licenses/epl-v10.txt)). By using this software in any fashion, you are
+([/etc/licenses/epl-v10.txt](etc/licenses/epl-v10.txt)). By using this software in any fashion, you are
 agreeing to be bound by the terms of this license.
 
 You must not remove this notice, or any other, from this software.
@@ -72,10 +72,10 @@ You must not remove this notice, or any other, from this software.
 Jaunt is derived directly from Clojure, (c) Rich Hickey, also distributed under the EPL.
 
 This program uses the Guava Murmur3 hash implementation which is distributed under the Apache
-License, in [/licenses/apache.txt](licenses/apache.txt)
+License, in [/etc/licenses/apache.txt](etc/licenses/apache.txt)
 
 This program uses the ASM bytecode engineering library which is distributed under the license in
-[/licenses/inria.txt](licenses/inria.txt)
+[/etc/licenses/inria.txt](etc/licenses/inria.txt)
 
 ## FAQ
 
