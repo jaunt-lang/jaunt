@@ -29,3 +29,7 @@ deployment:
     commands:
       - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)
       - mvn -s settings.xml deploy
+
+notify:
+  webhooks:
+    - url: https://webhooks.gitter.im/e/568057f9a2c7ed9fb7f1
