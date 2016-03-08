@@ -28,6 +28,21 @@
     the `Var` is bound.
   - `clojure.core/defonce` now returns the defined `Var` same as `def`.
   - Add tests of `clojure.core/defonce` with regards to all of the above behavior.
+- [#60](https://github.com/jaunt-lang/jaunt/pull/60) Versioned namespaces in support of reloading (@arrdem).
+  - This changeset reworks the namespace macro and namespace system to provide better reloading
+    support with fewer gotchas requiring a repl restart.
+    - Namespace aliases are now cleared when reloading. This enables users to `(:require :as ...)`
+      reusing names without restarting the system.
+    - Namespaces now have a concept of version, being the number of times they have been
+      reset/reevaluated (`clojure.lang.Namespace.getRev()`).
+    - Vars track the version of the Namespace in which they are defined, synchronizing versions
+      whenever their root binding is altered say by a `def` form.
+    - Namespace bound Vars can now report if they were defined in the current version of their
+      parent Namespace (`clojure.lang.Var.isStale()`).
+    - The compiler emits warnings when analyzing uses of Vars which are not up to date with their
+      parent Namespace. This allows users to detect uses of deleted defs without a system
+      restart. This warning is controlled by the compiler flag `:warn-on-stale`, which is `true` by
+      default.
 - [#87](https://github.com/jaunt-lang/jaunt/pull/87) Send build notifications to gitter (@arrdem).
 - [#86](https://github.com/jaunt-lang/jaunt/pull/86) Fix false changelog linter failures on develop, master, release/* (@arrdem).
 - [#84](https://github.com/jaunt-lang/jaunt/pull/84) Whole bag of project changes (@arrdem).
