@@ -243,7 +243,7 @@
                        `(entrySet [this#] (set this#)))])
       ]
      (let [[i m] (-> [interfaces methods] irecord eqhash iobj ilookup imap ijavamap)]
-       `(deftype* ~(symbol (name (ns-name *ns*)) (name tagname)) ~classname ~(conj hinted-fields '__meta '__extmap)
+       `(deftype* ~(symbol (name *ns*) (name tagname)) ~classname ~(conj hinted-fields '__meta '__extmap)
           :implements ~(vec i) 
           ~@(mapcat identity opts)
           ~@m))))))
@@ -287,8 +287,8 @@
     (when (seq non-syms)
       (throw (clojure.lang.Compiler$CompilerException.
               *file*
-              (.deref clojure.lang.Compiler/LINE)
-              (.deref clojure.lang.Compiler/COLUMN)
+              *line*
+              *column*
               (AssertionError.
                (str "defrecord and deftype fields must be symbols, "
                     *ns* "." name " had: "
@@ -399,7 +399,7 @@
   [tagname cname fields interfaces methods opts]
   (let [classname (with-meta (symbol (str (namespace-munge *ns*) "." cname)) (meta cname))
         interfaces (conj interfaces 'clojure.lang.IType)]
-    `(deftype* ~(symbol (name (ns-name *ns*)) (name tagname)) ~classname ~fields
+    `(deftype* ~(symbol (name *ns*) (name tagname)) ~classname ~fields
        :implements ~interfaces 
        ~@(mapcat identity opts)
        ~@methods)))

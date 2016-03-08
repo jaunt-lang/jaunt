@@ -179,6 +179,13 @@
  vector? (fn ^:static vector? [x] (instance? clojure.lang.IPersistentVector x)))
 
 (def
+ ^{:arglists '([x])
+   :doc "Return true if x is a Var"
+   :added "1.0"
+   :static true}
+  var? (fn ^:static var? [x] (instance? clojure.lang.Var x)))
+
+(def
  ^{:arglists '([map key val] [map key val & kvs])
    :doc "assoc[iate]. When applied to a map, returns a new map of the
     same (hashed/sorted) type, that contains the mapping of key(s) to
@@ -200,22 +207,41 @@
 
 ;;;;;;;;;;;;;;;;; metadata ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def
- ^{:arglists '([obj])
-   :doc "Returns the metadata of obj, returns nil if there is no metadata."
-   :added "1.0"
-   :static true}
- meta (fn ^:static meta [x]
-        (if (instance? clojure.lang.IMeta x)
-          (. ^clojure.lang.IMeta x (meta)))))
+  ^{:arglists '([obj])
+    :doc      "Returns the metadata of obj, returns nil if there is no metadata."
+    :added    "1.0"
+    :static   true}
+  meta
+  (fn meta [x]
+    (if (instance? clojure.lang.IMeta x)
+      (. ^clojure.lang.IMeta x (meta)))))
 
 (def
- ^{:arglists '([^clojure.lang.IObj obj m])
-   :doc "Returns an object of the same type and value as obj, with
+  ^{:arglists '([^clojure.lang.IObj obj m])
+    :doc      "Returns an object of the same type and value as obj, with
     map m as its metadata."
-   :added "1.0"
-   :static true}
- with-meta (fn ^:static with-meta [^clojure.lang.IObj x m]
-             (. x (withMeta m))))
+    :added    "1.0"
+    :static   true}
+  with-meta
+  (fn with-meta [^clojure.lang.IObj x m]
+    (. x (withMeta m))))
+
+(def
+  ^{:doc   "Checks to see if the supplied object is marked deprecated."
+    :added "1.9"}
+  deprecated?
+  (fn [o]
+    (let [d' (clojure.lang.RT/booleanCast (:deprecated (meta o)))]
+      (if d' d'
+          (if (var? o)
+            (deprecated? (.ns ^clojure.lang.Var o)))))))
+
+(def
+  ^{:doc   "Checks to see if the supplied object is marked private."
+    :added "1.9"}
+  private?
+  (fn [o]
+    (clojure.lang.RT/booleanCast (:deprecated (meta o)))))
 
 (def ^{:private true :dynamic true}
   assert-valid-fdecl (fn [fdecl]))
@@ -1629,7 +1655,7 @@
           (map #(str ", " %) (rest valid-keys)))))))
 
 ;;multimethods
-(def global-hierarchy)
+(def ^:private global-hierarchy)
 
 (defmacro defmulti
   "Creates a new multimethod with the associated dispatch function.
@@ -3556,8 +3582,6 @@
        (number? x) (BigDecimal/valueOf (long x))
        :else (BigDecimal. x)))
 
-(def ^:dynamic ^{:private true} print-initialized false)
-
 (defmulti print-method (fn [x writer]
                          (let [t (get (meta x) :type)]
                            (if (keyword? t) t (class x)))))
@@ -3993,6 +4017,12 @@
           (recur ret (next es)))
         ret)))
 
+(defn ns?
+  "Type predicate. Returns true if o is a Namespace."
+  {:added  "1.9"
+   :static true}
+  [o] (instance? clojure.lang.Namespace o))
+
 (defn find-ns
   "Returns the namespace named by the symbol or nil if it doesn't exist."
   {:added "1.0"
@@ -4027,16 +4057,16 @@
   {:added "1.0"
    :static true}
   ^clojure.lang.Namespace [x]
-  (if (instance? clojure.lang.Namespace x)
-    x
-    (or (find-ns x) (throw (Exception. (str "No namespace: " x " found"))))))
+  (if (ns? x) x
+    (or (find-ns x)
+        (throw (Exception. (str "No namespace: " x " found"))))))
 
 (defn ns-name
   "Returns the name of the namespace, a symbol."
-  {:added "1.0"
+  {:added  "1.0"
    :static true}
-  [ns]
-  (.getName (the-ns ns)))
+  ^clojure.lang.Symbol [ns]
+  (.name ^clojure.lang.Namespace (the-ns ns)))
 
 (defn ns-map
   "Returns a map of all the mappings for the namespace."
@@ -4084,6 +4114,15 @@
                                  (= ns (.ns v))))
                 (ns-map ns))))
 
+;; FIXME: not really how I want to do this in the long run but correct for now.
+;; See jaunt-lang/jaunt#21
+(defn ^:private warn-deprecated? []
+  (or (:pedantic *compiler-options*)
+      (:warn-on-deprecated *compiler-options*)))
+
+(defn ^:private errwriter []
+  (clojure.lang.RT/errPrintWriter))
+
 (defn refer
   "refers to all public vars of ns, subject to filters.
   filters can include at most one each of:
@@ -4101,25 +4140,48 @@
   clashes. Use :use in the ns macro in preference to calling this directly."
   {:added "1.0"}
   [ns-sym & filters]
-    (let [ns (or (find-ns ns-sym) (throw (new Exception (str "No namespace: " ns-sym))))
-          fs (apply hash-map filters)
-          nspublics (ns-publics ns)
-          rename (or (:rename fs) {})
-          exclude (set (:exclude fs))
-          to-do (if (= :all (:refer fs))
-                  (keys nspublics)
-                  (or (:refer fs) (:only fs) (keys nspublics)))]
-      (when (and to-do (not (instance? clojure.lang.Sequential to-do)))
-        (throw (new Exception ":only/:refer value must be a sequential collection of symbols")))
-      (doseq [sym to-do]
-        (when-not (exclude sym)
-          (let [v (nspublics sym)]
-            (when-not v
-              (throw (new java.lang.IllegalAccessError
-                          (if (get (ns-interns ns) sym)
-                            (str sym " is not public")
-                            (str sym " does not exist")))))
-            (. *ns* (refer (or (rename sym) sym) v)))))))
+  (let [ns        (or (find-ns ns-sym) (throw (new Exception (str "No namespace: " ns-sym))))
+        fs        (apply hash-map filters)
+        nspublics (ns-publics ns)
+        all       (keys nspublics)
+        rename    (:rename fs {})
+        exclude   (set (:exclude fs))
+        refer     (:refer fs)
+        only      (:only fs)
+        op        (cond (= :all refer) :all
+                        refer          :refer
+                        only           :only
+                        :else          :all)
+        to-do     (cond (= op :all)   all
+                        (= op :refer) refer
+                        (= op :only)  only
+                        :else         all)
+        d-ctx     (deprecated? *ns*)
+        *err*     (errwriter)]
+    (when (and to-do
+               (not (instance? clojure.lang.Sequential to-do)))
+      (throw (Exception. ":only/:refer value must be a sequential collection of symbols")))
+    (when (and (= op :all)
+               (not d-ctx)
+               (warn-deprecated?)
+               (deprecated? ns))
+      (.println *err* (str "Warning: referring vars from deprecated ns: " (name ns)
+                           " (" *file* ":" *line* ":" *column* ")")))
+    (doseq [sym to-do]
+      (when-not (exclude sym)
+        (let [v (nspublics sym)]
+          (when-not v
+            (throw (new java.lang.IllegalAccessError
+                        (if (get (ns-interns ns) sym)
+                          (str sym " is not public")
+                          (str sym " does not exist")))))
+          (when (and (deprecated? v)
+                     (not d-ctx)
+                     (warn-deprecated?)
+                     (not= op :all))
+            (.println *err* (str "Warning: referring deprecated var: " v
+                                 " (" *file* ":" *line* ":" *column* ")")))
+          (. *ns* (refer (or (rename sym) sym) v)))))))
 
 (defn ns-refers
   "Returns a map of the refer mappings for the namespace."
@@ -4139,7 +4201,14 @@
   {:added "1.0"
    :static true}
   [alias namespace-sym]
-  (.addAlias *ns* alias (the-ns namespace-sym)))
+  (let [other (the-ns namespace-sym)
+        *err* (errwriter)]
+    (when (and (not (deprecated? *ns*))
+               (warn-deprecated?)
+               (deprecated? other))
+      (.println *err* (str "Warning: aliasing deprecated ns: " (name namespace-sym)
+                           " (" *file* ":" *line* ":" *column* ")")))
+    (.addAlias *ns* alias other)))
 
 (defn ns-aliases
   "Returns a map of the aliases for the namespace."
@@ -4953,10 +5022,7 @@
   {:added "1.0"
    :deprecated "1.1"}
   [url]
-  (println "WARNING: add-classpath is deprecated")
   (clojure.lang.RT/addURL url))
-
-
 
 (defn hash
   "Returns the hash code of its argument. Note this is the hash code
@@ -5248,7 +5314,7 @@
 
 (defn- descriptor [^Class c] (clojure.asm.Type/getDescriptor c))
 
-(declare process-annotation)
+(declare ^:private process-annotation)
 (defn- add-annotation [^clojure.asm.AnnotationVisitor av name v]
   (cond
    (vector? v) (let [avec (.visitArray av name)]
@@ -5619,9 +5685,16 @@
   else expr is unevaluated"
   {:added "1.0"}
   [name expr]
-  `(let [v# (def ~name)]
-     (when-not (.hasRoot v#)
-       (def ~name ~expr))))
+  (assert-args
+   (symbol? name) "Name must be a symbol."
+   (not (namespace name)) "Cannot define namespace qualified symbols.")
+  `(let [v# (clojure.lang.Var/intern
+             ^clojure.lang.Namespace *ns*
+             ^clojure.lang.Symbol '~name)]
+     (when-not (or (.isOnce v#)
+                   (.hasRoot v#))
+       (def ~(with-meta name (assoc (meta name) :once true)) ~expr))
+     v#))
 
 ;;;;;;;;;;; require/use/load, contributed by Stephen C. Gilardi ;;;;;;;;;;;;;;;;;;
 
@@ -5652,8 +5725,8 @@
       (.setStackTrace exception trace)
       (throw (clojure.lang.Compiler$CompilerException.
               *file*
-              (.deref clojure.lang.Compiler/LINE)
-              (.deref clojure.lang.Compiler/COLUMN)
+              *line*
+              *column*
               exception)))))
 
 (defn- libspec?
@@ -5742,7 +5815,7 @@
         (throw-if (and need-ns (not (find-ns lib)))
                   "namespace '%s' not found" lib))
       (when (and need-ns *loading-verbosely*)
-        (printf "(clojure.core/in-ns '%s)\n" (ns-name *ns*)))
+        (printf "(clojure.core/in-ns '%s)\n" (name *ns*)))
       (when as
         (when *loading-verbosely*
           (printf "(clojure.core/alias '%s '%s)\n" as lib))
@@ -5883,7 +5956,7 @@
   (doseq [^String path paths]
     (let [^String path (if (.startsWith path "/")
                           path
-                          (str (root-directory (ns-name *ns*)) \/ path))]
+                          (str (root-directory (name *ns*)) \/ path))]
       (when *loading-verbosely*
         (printf "(clojure.core/load \"%s\")\n" path)
         (flush))
@@ -6153,18 +6226,34 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; var documentation ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(alter-meta! #'*agent* assoc :added "1.0")
 (alter-meta! #'in-ns assoc :added "1.0")
 (alter-meta! #'load-file assoc :added "1.0")
 
 (defmacro add-doc-and-meta {:private true} [name docstring meta]
   `(alter-meta! (var ~name) merge (assoc ~meta :doc ~docstring)))
 
+(add-doc-and-meta *agent*
+  "The agent currently running an action on this thread, else nil"
+  {:added "1.0"
+   :tag   clojure.lang.Agent})
+
 (add-doc-and-meta *file*
   "The path of the file being evaluated, as a String.
 
   When there is no file, e.g. in the REPL, the value is not defined."
   {:added "1.0"})
+
+(add-doc-and-meta *line*
+  "The line number into *file* of the top level form being evaluated.
+
+  Integer valued, 0 by default."
+  {:added "1.9"})
+
+(add-doc-and-meta *column*
+  "The column number into *file*:*line* of the top level form being evaluated.
+
+  Integer valued, 0 by default."
+  {:added "1.9"})
 
 (add-doc-and-meta *command-line-args*
   "A sequence of the supplied command line arguments, or nil if
@@ -6200,9 +6289,15 @@
 (add-doc-and-meta *compiler-options*
   "A map of keys to options.
   Note, when binding dynamically make sure to merge with previous value.
+
   Supported options:
   :elide-meta - a collection of metadata keys to elide during compilation.
   :disable-locals-clearing - set to true to disable clearing, useful for using a debugger
+  :warn-on-deprecated - on by default. Switches warnings for using ^:deprecated vars.
+  :warn-on-access-violation - on by default. Switches warnings for using ^:private vars from other namespaces.
+  :warn-on-earmuffs - on by default. Switches warnings for non-dynamic earmuffed vars.
+  :pedantic - off by default. Enables all warning switches.
+
   Alpha, subject to change."
   {:added "1.4"})
 

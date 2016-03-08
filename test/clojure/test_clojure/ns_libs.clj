@@ -27,8 +27,34 @@
 ; loaded-libs
 
 (deftest test-alias
-	(is (thrown-with-msg? Exception #"No namespace: epicfail found" (alias 'bogus 'epicfail))))
-	
+  (is (thrown-with-msg? Exception #"No namespace: epicfail found" (alias 'bogus 'epicfail)))
+  (is (let [err (with-out-str
+                  (binding [*err* *out*
+                            *ns*  *ns*]
+                    (eval '(do (ns exporter-d {:deprecated true})
+                               (def otherd 3)
+                               (ns importer-d)
+                               (alias 'e 'exporter-d)))))]
+        (re-find #"aliasing deprecated ns:" err))))
+
+(deftest test-refer
+  (is (let [err (with-out-str
+                  (binding [*err* *out*
+                            *ns*  *ns*]
+                    (eval '(do (ns exporter-r1 {:deprecated true})
+                               (def otherd 3)
+                               (ns importer-r1)
+                               (refer 'exporter-r1 :only '(otherd))))))]
+        (re-find #"referring deprecated var:" err)))
+  (is (let [err (with-out-str
+                  (binding [*err* *out*
+                            *ns*  *ns*]
+                    (eval '(do (ns exporter-r2)
+                               (def ^:deprecated otherd 3)
+                               (ns importer-r2)
+                               (refer 'exporter-r2 :only '(otherd))))))]
+        (re-find #"referring deprecated var:" err))))
+
 (deftest test-require
          (is (thrown? Exception (require :foo)))
          (is (thrown? Exception (require))))

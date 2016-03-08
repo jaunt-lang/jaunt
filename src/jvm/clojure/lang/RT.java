@@ -232,7 +232,10 @@ public class RT {
   final static Var IN_NS_VAR = Var.intern(CLOJURE_NS, Symbol.intern("in-ns"), F);
   final static Var NS_VAR = Var.intern(CLOJURE_NS, Symbol.intern("ns"), F);
   final static Var FN_LOADER_VAR = Var.intern(CLOJURE_NS, Symbol.intern("*fn-loader*"), null).setDynamic();
-  static final Var PRINT_INITIALIZED = Var.intern(CLOJURE_NS, Symbol.intern("print-initialized"));
+  static final Var PRINT_INITIALIZED =
+    Var.intern(CLOJURE_NS,
+               Symbol.intern("print-initialized"),
+               F).setPublic(false).setDynamic();
   static final Var PR_ON = Var.intern(CLOJURE_NS, Symbol.intern("pr-on"));
 //final static Var IMPORTS = Var.intern(CLOJURE_NS, Symbol.intern("*imports*"), DEFAULT_IMPORTS);
   final static IFn inNamespace = new AFn() {
@@ -273,6 +276,13 @@ public class RT {
     }
   }
 
+  public static String getPos() {
+    return String.format("(%s:%d:%d)",
+                         Compiler.SOURCE_PATH.get(),
+                         Compiler.LINE.get(),
+                         Compiler.COLUMN.get());
+  }
+
   static public final Object[] EMPTY_ARRAY = new Object[] {};
   static public final Comparator DEFAULT_COMPARATOR = new DefaultComparator();
 
@@ -305,8 +315,6 @@ public class RT {
     Symbol namesym = Symbol.intern("name");
     OUT.setTag(Symbol.intern("java.io.Writer"));
     CURRENT_NS.setTag(Symbol.intern("clojure.lang.Namespace"));
-    AGENT.setMeta(map(DOC_KEY, "The agent currently running an action on this thread, else nil"));
-    AGENT.setTag(Symbol.intern("clojure.lang.Agent"));
     MATH_CONTEXT.setTag(Symbol.intern("java.math.MathContext"));
     Var nv = Var.intern(CLOJURE_NS, NAMESPACE, bootNamespace);
     nv.setMacro();
@@ -463,9 +471,8 @@ public class RT {
       Symbol USER = Symbol.intern("user");
       Symbol CLOJURE = Symbol.intern("clojure.core");
 
-      Var in_ns = var("clojure.core", "in-ns");
       Var refer = var("clojure.core", "refer");
-      in_ns.invoke(USER);
+      IN_NS_VAR.invoke(USER);
       refer.invoke(CLOJURE);
       maybeLoadResourceScript("user.clj");
 

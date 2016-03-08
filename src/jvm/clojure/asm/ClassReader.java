@@ -1675,7 +1675,8 @@ public class ClassReader {
       }
     }
     int i = 1;
-    loop: while (true) {
+    loop:
+    while (true) {
       int j = i;
       switch (desc.charAt(i++)) {
       case 'Z':

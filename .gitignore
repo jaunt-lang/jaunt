@@ -6,4 +6,8 @@ nbproject/private/
 maven-classpath
 maven-classpath.properties
 .idea/
-settings.xml
+src/resources/clojure
+user.clj
+*.html
+.lein-env
+*.iml

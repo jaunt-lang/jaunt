@@ -1,0 +1,10 @@
+style=java
+indent=spaces=2
+pad-header
+add-brackets
+convert-tabs
+suffix=none
+recursive
+convert-tabs
+max-code-length=140
+lineend=linux

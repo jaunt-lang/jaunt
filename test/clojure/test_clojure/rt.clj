@@ -29,7 +29,7 @@
 (deftest error-messages
   (testing "binding a core var that already refers to something"
     (should-print-err-message
-     #"WARNING: prefers already refers to: #'clojure.core/prefers in namespace: .*\r?\n"
+     #"Warning: prefers already refers to: #'clojure.core/prefers in namespace: .*\r?\n"
      (defn prefers [] (throw (RuntimeException. "rebound!")))))
   (testing "reflection cannot resolve field"
     (should-print-err-message
@@ -103,3 +103,34 @@
                    (.refer ns 'subset? #'clojure.set/intersection)))
       (is (nil? ('subset? (ns-publics ns))))
       (is (= #'clojure.set/subset? ('subset? (ns-refers ns)))))))
+
+(defmacro silenced [& forms]
+  `(binding [*err* (new java.io.StringWriter)]
+     ~@forms))
+
+(deftest var-meta-tests
+  (testing "Var.resetMeta should clear flags, getters"
+    (let [v (def a-test-v)]
+      (do (silenced
+           (.resetMeta v {}))
+          (is (.isPublic v))
+          (is (not (.isDynamic v)))
+          (is (not (.isMacro v))))
+
+      (do (silenced
+           (.resetMeta v {:private true}))
+          (is (not (.isPublic v)))
+          (is (not (.isDynamic v)))
+          (is (not (.isMacro v))))
+
+      (do (silenced
+           (.resetMeta v {:dynamic true}))
+          (is (.isPublic v))
+          (is (.isDynamic v))
+          (is (not (.isMacro v))))
+
+      (do (silenced
+           (.resetMeta v {:macro true}))
+          (is (.isPublic v))
+          (is (not (.isDynamic v)))
+          (is (.isMacro v))))))

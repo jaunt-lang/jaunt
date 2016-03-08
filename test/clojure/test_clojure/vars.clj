@@ -25,6 +25,26 @@
       (eval `(binding [a 4] a)) 4     ; regression in Clojure SVN r1370
   ))
 
+(deftest defonce-test
+  (let [_ (clojure.lang.Namespace/findOrCreate 'defonce-test)
+        v (clojure.lang.Var/find 'defonce-test/a)]
+    (binding [*ns* *ns*]
+      (is (= 3
+             (eval '(do (ns defonce-test)
+                        (defonce b 3)
+                        (defonce b 1)
+                        b))))
+      (is (eval '(do (ns defonce-test)
+                     (let [v (def a 3)]
+                       (and (= (defonce a 4) v)
+                            (= a 3))))))
+      (is (eval '(do (ns defonce-test)
+                     (def ^:once a 3)
+                     (defonce ^:foo a nil)
+                     (and (.isOnce (var a))
+                          (:once (meta (var a)))
+                          (not (:foo (meta (var a)))))))))))
+
 ; var-get var-set alter-var-root [var? (predicates.clj)]
 ; with-in-str with-out-str
 ; with-open
@@ -98,3 +118,16 @@
     (with-redefs [dynamic-var 3]
       (is (= 2 dynamic-var))))
   (is (= 1 dynamic-var)))
+
+(defmacro capturing-line-column [& forms]
+  (let [info (meta &form)]
+    `(let [~'mline   ~(:line info)
+           ~'mcolumn ~(:column info)]
+       ~@forms)))
+
+(capturing-line-column
+ (let [vline   *line*
+       vcolumn *column*]
+   (deftest line-column-test
+     (is (= vline mline))
+     (is (= vcolumn mcolumn)))))

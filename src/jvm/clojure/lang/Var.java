@@ -15,7 +15,9 @@ package clojure.lang;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-public final class Var extends ARef implements IFn, IRef, Settable {
+public final class Var
+  extends ARef
+  implements IFn, IRef, Settable, Named {
 
   static class TBox {
 
@@ -61,7 +63,6 @@ public final class Var extends ARef implements IFn, IRef, Settable {
     protected Object clone() {
       return new Frame(this.bindings, null);
     }
-
   }
 
   static final ThreadLocal<Frame> dvals = new ThreadLocal<Frame>() {
@@ -74,20 +75,25 @@ public final class Var extends ARef implements IFn, IRef, Settable {
   static public volatile int rev = 0;
 
   static Keyword privateKey = Keyword.intern(null, "private");
-  static IPersistentMap privateMeta = new PersistentArrayMap(new Object[] {privateKey, Boolean.TRUE});
+  static Keyword dynamicKey = Keyword.intern(null, "dynamic");
+  static Keyword onceKey = Keyword.intern(null, "once");
   static Keyword macroKey = Keyword.intern(null, "macro");
   static Keyword nameKey = Keyword.intern(null, "name");
   static Keyword nsKey = Keyword.intern(null, "ns");
-//static Keyword tagKey = Keyword.intern(null, "tag");
+
+  static IPersistentMap privateMeta = new PersistentArrayMap(new Object[] {privateKey, Boolean.TRUE});
 
   volatile Object root;
 
-  volatile boolean dynamic = false;
+  volatile boolean _dynamic = false;
+  volatile boolean _private = false;
+  volatile boolean _once = false;
+  volatile boolean _macro = false;
   transient final AtomicBoolean threadBound;
   public final Symbol sym;
   public final Namespace ns;
 
-//IPersistentMap _meta;
+  private IPersistentMap _meta;
 
   public static Object getThreadBindingFrame() {
     return dvals.get();
@@ -101,18 +107,44 @@ public final class Var extends ARef implements IFn, IRef, Settable {
     dvals.set((Frame) frame);
   }
 
-  public Var setDynamic() {
-    this.dynamic = true;
-    return this;
+  synchronized public IPersistentMap meta() {
+    return _meta;
   }
 
-  public Var setDynamic(boolean b) {
-    this.dynamic = b;
-    return this;
+  synchronized public IPersistentMap alterMeta(IFn alter, ISeq args)  {
+    _meta = alterMetaHook((IPersistentMap)alter.applyTo(new Cons(_meta, args)));
+    return _meta;
   }
 
-  public final boolean isDynamic() {
-    return dynamic;
+  synchronized public IPersistentMap resetMeta(IPersistentMap m) {
+    _meta = alterMetaHook(m);
+    return m;
+  }
+
+  synchronized private IPersistentMap alterMetaHook(IPersistentMap m) {
+    boolean dp = RT.booleanCast(m.valAt(dynamicKey));
+    if (isDynamic() && !dp)
+      RT.errPrintWriter().println(
+        String.format("Warning: Var %s loosing ^:dynamic %s",
+                      toString(), RT.getPos()));
+    this._dynamic = dp;
+
+    boolean pp = RT.booleanCast(m.valAt(privateKey));
+    if (_private && !pp)
+      RT.errPrintWriter().println(
+        String.format("Warning: Var %s loosing ^:private %s",
+                      toString(), RT.getPos()));
+    this._private = pp;
+
+    boolean op = RT.booleanCast(m.valAt(onceKey));
+    if (_once && !op)
+      RT.errPrintWriter().println(
+        String.format("Warning: Var %s loosing ^:once %s",
+                      toString(), RT.getPos()));
+    this._once = op;
+
+    this._macro = RT.booleanCast(m.valAt(macroKey));
+    return m;
   }
 
   public static Var intern(Namespace ns, Symbol sym, Object root) {
@@ -127,12 +159,22 @@ public final class Var extends ARef implements IFn, IRef, Settable {
     return dvout;
   }
 
-
   public String toString() {
     if (ns != null) {
-      return "#'" + ns.name + "/" + sym;
+      return "#'" + getNamespace() + "/" + getName();
     }
-    return "#<Var: " + (sym != null ? sym.toString() : "--unnamed--") + ">";
+    return "#<Var: " + getName() + ">";
+  }
+
+  public String getName() {
+    return (sym != null ? sym.toString() : "--unnamed--");
+  }
+
+  public String getNamespace() {
+    if (ns != null) {
+      return ns.getName();
+    }
+    return null;
   }
 
   public static Var find(Symbol nsQualifiedSym) {
@@ -161,7 +203,6 @@ public final class Var extends ARef implements IFn, IRef, Settable {
   public static Var intern(Namespace ns, Symbol sym) {
     return ns.intern(sym);
   }
-
 
   public static Var create() {
     return new Var(null, null);
@@ -242,20 +283,56 @@ public final class Var extends ARef implements IFn, IRef, Settable {
     resetMeta(m.assoc(nameKey, sym).assoc(nsKey, ns));
   }
 
-  public void setMacro() {
-    alterMeta(assoc, RT.list(macroKey, RT.T));
+  public Var setDynamic() {
+    return setDynamic(true);
+  }
+
+  public Var setDynamic(boolean b) {
+    resetMeta(meta().assoc(dynamicKey, b));
+    return this;
+  }
+
+  public final boolean isDynamic() {
+    return _dynamic;
+  }
+
+  public Var setMacro() {
+    return setMacro(true);
+  }
+
+  private Var setMacro(boolean b) {
+    resetMeta(meta().assoc(macroKey, b));
+    return this;
   }
 
   public boolean isMacro() {
-    return RT.booleanCast(meta().valAt(macroKey));
+    return _macro;
   }
 
-//public void setExported(boolean state){
-//  _meta = _meta.assoc(privateKey, state);
-//}
+  public Var setPublic() {
+    return setPublic(true);
+  }
+
+  public Var setPublic(boolean b) {
+    resetMeta(meta().assoc(privateKey, !b));
+    return this;
+  }
 
   public boolean isPublic() {
-    return !RT.booleanCast(meta().valAt(privateKey));
+    return !_private;
+  }
+
+  public Var setOnce() {
+    return setOnce(true);
+  }
+
+  public Var setOnce(boolean state) {
+    resetMeta(meta().assoc(onceKey, state));
+    return this;
+  }
+
+  public boolean isOnce() {
+    return _once;
   }
 
   final public Object getRawRoot() {
@@ -274,7 +351,7 @@ public final class Var extends ARef implements IFn, IRef, Settable {
     return !(root instanceof Unbound);
   }
 
-//binding root always clears macro flag
+  //binding root always clears macro flag
   synchronized public void bindRoot(Object root) {
     validate(getValidator(), root);
     Object oldroot = this.root;
@@ -303,7 +380,7 @@ public final class Var extends ARef implements IFn, IRef, Settable {
     Object oldroot = root;
     this.root = newRoot;
     ++rev;
-    notifyWatches(oldroot,newRoot);
+    notifyWatches(oldroot, newRoot);
   }
 
   synchronized public Object alterRoot(IFn fn, ISeq args) {
@@ -312,7 +389,7 @@ public final class Var extends ARef implements IFn, IRef, Settable {
     Object oldroot = root;
     this.root = newRoot;
     ++rev;
-    notifyWatches(oldroot,newRoot);
+    notifyWatches(oldroot, newRoot);
     return newRoot;
   }
 
@@ -322,7 +399,7 @@ public final class Var extends ARef implements IFn, IRef, Settable {
     for (ISeq bs = bindings.seq(); bs != null; bs = bs.next()) {
       IMapEntry e = (IMapEntry) bs.first();
       Var v = (Var) e.key();
-      if (!v.dynamic) {
+      if (!v.isDynamic()) {
         throw new IllegalStateException(String.format("Can't dynamically bind non-dynamic var: %s/%s", v.ns, v.sym));
       }
       v.validate(v.getValidator(), e.val());

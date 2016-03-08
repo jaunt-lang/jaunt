@@ -1,3 +1,35 @@
 machine:
   java:
     version: oraclejdk8
+
+dependencies:
+  cache_directories:
+    - ~/bin
+  pre:
+    - bash etc/bin/make-astyle.sh
+    - bash etc/bin/circle-deps.sh
+  post:
+    - mvn dependency:resolve-plugins
+
+test:
+  pre:
+    - bash etc/bin/check-whitespace.sh
+    - bash etc/bin/check-changelog.sh
+  post:
+    - ant jar
+
+deployment:
+  staging:
+    branch: /develop/
+    commands:
+      - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)-SNAPSHOT
+      - mvn -s settings.xml deploy
+  release:
+    tag: /v[0-9]+(\.[0-9]+)*(-.+)?/
+    commands:
+      - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)
+      - mvn -s settings.xml deploy
+
+notify:
+  webhooks:
+    - url: https://webhooks.gitter.im/e/568057f9a2c7ed9fb7f1
