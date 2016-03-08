@@ -5680,6 +5680,9 @@
   else expr is unevaluated"
   {:added "1.0"}
   [name expr]
+  (assert-args
+   (symbol? name) "Name must be a symbol."
+   (not (namespace name)) "Cannot define namespace qualified symbols.")
   `(let [v# (clojure.lang.Var/intern
              ^clojure.lang.Namespace *ns*
              ^clojure.lang.Symbol '~name)]
