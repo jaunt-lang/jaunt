@@ -1,6 +1,14 @@
 ## Change Log
 
 ### upcoming
+- [#89](https://github.com/jaunt-lang/jaunt/pull/89) Add ^:once support to Vars (@arrdem).
+  - This changeset enables analysis tooling to distinguish between `Var`s which are bound 'once' and
+    those which are simply bound.
+  - Add `clojure.lang.Var.isOnce()`, `clojure.lang.Var.setOnce()`, `clojure.lang.Var.setOnce(bool)`.
+  - Refactor `clojure.core/defonce` to use `isOnce` and set `^:once` rather than simply checking if
+    the `Var` is bound.
+  - `clojure.core/defonce` now returns the defined `Var` same as `def`.
+  - Add tests of `clojure.core/defonce` with regards to all of the above behavior.
 - [#87](https://github.com/jaunt-lang/jaunt/pull/87) Send build notifications to gitter (@arrdem).
 - [#86](https://github.com/jaunt-lang/jaunt/pull/86) Fix false changelog linter failures on develop, master, release/* (@arrdem).
 - [#84](https://github.com/jaunt-lang/jaunt/pull/84) Whole bag of project changes (@arrdem).
