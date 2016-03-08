@@ -5680,9 +5680,16 @@
   else expr is unevaluated"
   {:added "1.0"}
   [name expr]
-  `(let [v# (def ~name)]
-     (when-not (.hasRoot v#)
-       (def ~name ~expr))))
+  (assert-args
+   (symbol? name) "Name must be a symbol."
+   (not (namespace name)) "Cannot define namespace qualified symbols.")
+  `(let [v# (clojure.lang.Var/intern
+             ^clojure.lang.Namespace *ns*
+             ^clojure.lang.Symbol '~name)]
+     (when-not (or (.isOnce v#)
+                   (.hasRoot v#))
+       (def ~(with-meta name (assoc (meta name) :once true)) ~expr))
+     v#))
 
 ;;;;;;;;;;; require/use/load, contributed by Stephen C. Gilardi ;;;;;;;;;;;;;;;;;;
 
