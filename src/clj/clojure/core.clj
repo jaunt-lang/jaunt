@@ -4120,6 +4120,9 @@
   (or (:pedantic *compiler-options*)
       (:warn-on-deprecated *compiler-options*)))
 
+(defn ^:private errwriter []
+  (clojure.lang.RT/errPrintWriter))
+
 (defn refer
   "refers to all public vars of ns, subject to filters.
   filters can include at most one each of:
@@ -4153,7 +4156,8 @@
                         (= op :refer) refer
                         (= op :only)  only
                         :else         all)
-        d-ctx     (deprecated? *ns*)]
+        d-ctx     (deprecated? *ns*)
+        *err*     (errwriter)]
     (when (and to-do
                (not (instance? clojure.lang.Sequential to-do)))
       (throw (Exception. ":only/:refer value must be a sequential collection of symbols")))
@@ -4161,8 +4165,8 @@
                (not d-ctx)
                (warn-deprecated?)
                (deprecated? ns))
-      (.write *err* (str "Warning: referring vars from deprecated ns: " (name ns)
-                         " (" *file* ":" *line* ":" *column* ")\n")))
+      (.println *err* (str "Warning: referring vars from deprecated ns: " (name ns)
+                           " (" *file* ":" *line* ":" *column* ")")))
     (doseq [sym to-do]
       (when-not (exclude sym)
         (let [v (nspublics sym)]
@@ -4175,8 +4179,8 @@
                      (not d-ctx)
                      (warn-deprecated?)
                      (not= op :all))
-            (.write *err* (str "Warning: referring deprecated var: " v
-                               " (" *file* ":" *line* ":" *column* ")\n")))
+            (.println *err* (str "Warning: referring deprecated var: " v
+                                 " (" *file* ":" *line* ":" *column* ")")))
           (. *ns* (refer (or (rename sym) sym) v)))))))
 
 (defn ns-refers
@@ -4197,12 +4201,13 @@
   {:added "1.0"
    :static true}
   [alias namespace-sym]
-  (let [other (the-ns namespace-sym)]
+  (let [other (the-ns namespace-sym)
+        *err* (errwriter)]
     (when (and (not (deprecated? *ns*))
                (warn-deprecated?)
                (deprecated? other))
-      (.write *err* (str "Warning: aliasing deprecated ns: " (name namespace-sym)
-                         " (" *file* ":" *line* ":" *column* ")\n")))
+      (.println *err* (str "Warning: aliasing deprecated ns: " (name namespace-sym)
+                           " (" *file* ":" *line* ":" *column* ")")))
     (.addAlias *ns* alias other)))
 
 (defn ns-aliases
