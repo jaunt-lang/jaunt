@@ -322,6 +322,19 @@ public final class Var
     return !_private;
   }
 
+  public Var setOnce() {
+    return setOnce(true);
+  }
+
+  public Var setOnce(boolean state) {
+    resetMeta(meta().assoc(onceKey, state));
+    return this;
+  }
+
+  public boolean isOnce() {
+    return _once;
+  }
+
   final public Object getRawRoot() {
     return root;
   }
