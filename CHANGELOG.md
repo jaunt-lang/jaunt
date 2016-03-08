@@ -1,6 +1,7 @@
 ## Change Log
 
 ### upcoming
+- [#92](https://github.com/jaunt-lang/jaunt/pull/92) Fix refer/alias warnings not displaying at the REPL (@arrdem).
 - [#89](https://github.com/jaunt-lang/jaunt/pull/89) Add ^:once support to Vars (@arrdem).
   - This changeset enables analysis tooling to distinguish between `Var`s which are bound 'once' and
     those which are simply bound.
