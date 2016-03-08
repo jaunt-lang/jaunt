@@ -1,6 +1,8 @@
 ## Change Log
 
 ### upcoming
+- [#94](https://github.com/jaunt-lang/jaunt/pull/94) Provide a thread binding of *compiler-options* so it may be set! (@arrdem).
+- [#93](https://github.com/jaunt-lang/jaunt/pull/93) Display the correct project name in the REPL banner (@arrdem).
 - [#92](https://github.com/jaunt-lang/jaunt/pull/92) Fix refer/alias warnings not displaying at the REPL (@arrdem).
 - [#89](https://github.com/jaunt-lang/jaunt/pull/89) Add ^:once support to Vars (@arrdem).
   - This changeset enables analysis tooling to distinguish between `Var`s which are bound 'once' and
