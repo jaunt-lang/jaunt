@@ -5688,7 +5688,8 @@
              ^clojure.lang.Symbol '~name)]
      (when-not (or (.isOnce v#)
                    (.hasRoot v#))
-       (def ~(with-meta name (assoc (meta name) :once true)) ~expr))))
+       (def ~(with-meta name (assoc (meta name) :once true)) ~expr))
+     v#))
 
 ;;;;;;;;;;; require/use/load, contributed by Stephen C. Gilardi ;;;;;;;;;;;;;;;;;;
 
