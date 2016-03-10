@@ -191,7 +191,7 @@
         <configuration>
           <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
-          <generateGitPropertiesFilename>src/resources/clojure/git.properties</generateGitPropertiesFilename>
+          <generateGitPropertiesFilename>src/resources/jaunt/git.properties</generateGitPropertiesFilename>
         </configuration>
       </plugin>
       <plugin>
