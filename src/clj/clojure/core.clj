@@ -6899,7 +6899,7 @@
      :incremental  (Integer/valueOf ^String incremental)
      :interim      (.endsWith ^String qualifier "-SNAPSHOT")
      :qualifiers   (->> (.split ^String qualifier "-")
-                        (filter (complement empty?))
+                        (filter not-empty)
                         set)
      ::raw-version v}))
 
