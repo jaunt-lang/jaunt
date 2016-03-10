@@ -6884,6 +6884,12 @@
   []
   "1.8.0")
 
+(defn- load-properties [path]
+  {:pre [(string? path)]}
+  (with-open [version-stream (.getResourceAsStream (clojure.lang.RT/baseLoader) path)]
+    (doto (new java.util.Properties)
+      (.load version-stream))))
+
 (defn- parse-version [v]
   {:pre [(string? v)]}
   (let [[_ major minor incremental qualifier]
@@ -6897,19 +6903,13 @@
                         set)
      ::raw-version v}))
 
-(defn- read-version-properties [p]
-  (-> (with-open [version-stream
-                  (.getResourceAsStream (clojure.lang.RT/baseLoader) p)]
-        (doto (new java.util.Properties)
-          (.load version-stream)))
+(defn- read-version-properties [path]
+  (-> (load-properties path)
       (.getProperty "version")
       (parse-version)))
 
-(defn- read-git-properties [p]
-  (let [m    (with-open [version-stream
-                         (.getResourceAsStream (clojure.lang.RT/baseLoader) p)]
-               (doto (new java.util.Properties)
-                 (.load version-stream)))
+(defn- read-git-properties [path]
+  (let [m    (load-properties path)
         prop (partial get m)]
     {::build {:dirty (Boolean/valueOf (prop "git.dirty"))
               :date  (-> (new java.text.SimpleDateFormat "dd.MM.yyyy '@' HH:mm:ss z")
