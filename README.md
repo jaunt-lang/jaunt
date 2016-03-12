@@ -1,9 +1,12 @@
-# Jaunt
-
 [![License EPL 1.0](https://img.shields.io/badge/license-EPL_1-green.svg)](https://www.eclipse.org/legal/epl-v10.html)
 [![Patreon Donate](https://img.shields.io/badge/patreon-donate-yellow.svg)](https://patreon.com/arrdem)
 [![Join the chat at https://gitter.im/jaunt-lang/jaunt](https://badges.gitter.im/jaunt-lang/jaunt.svg)](https://gitter.im/jaunt-lang/jaunt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Twitter Follow](https://img.shields.io/twitter/follow/jauntlang.svg?style=social)](https://twitter.com/jaunt-lang)
+
+<p align="center">
+  <img src="etc/img/gh-banner.png" alt="Jaunt logo" />
+</p>
+
 ### Build Status
 
 Branch | Status | Version
