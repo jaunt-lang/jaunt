@@ -144,3 +144,11 @@
   (are [x] (not (string? x))
     (new java.lang.StringBuilder "abc")
     (new java.lang.StringBuffer "xyz")))
+
+(deftest private-tests
+  (is (private? (def ^:private foo0)))
+  (is (private? #'clojure.core/assert-valid-fdecl)))
+
+(deftest deprecated-tests
+  (is (deprecated? (def ^:deprecated foo1)))
+  (is (deprecated? #'clojure.core/agent-errors)))

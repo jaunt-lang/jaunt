@@ -241,7 +241,7 @@
     :added "1.9"}
   private?
   (fn [o]
-    (clojure.lang.RT/booleanCast (:deprecated (meta o)))))
+    (clojure.lang.RT/booleanCast (:private (meta o)))))
 
 (def ^{:private true :dynamic true}
   assert-valid-fdecl (fn [fdecl]))
