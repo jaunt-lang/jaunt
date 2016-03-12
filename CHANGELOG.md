@@ -1,6 +1,7 @@
 ## Change Log
 
 ### upcoming
+- [#98](https://github.com/jaunt-lang/jaunt/pull/98) Add and use a logo (@arrdem).
 - [#94](https://github.com/jaunt-lang/jaunt/pull/94) Provide a thread binding of *compiler-options* so it may be set! (@arrdem).
 - [#93](https://github.com/jaunt-lang/jaunt/pull/93) Display the correct project name in the REPL banner (@arrdem).
 - [#92](https://github.com/jaunt-lang/jaunt/pull/92) Fix refer/alias warnings not displaying at the REPL (@arrdem).
