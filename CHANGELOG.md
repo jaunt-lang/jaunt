@@ -1,6 +1,10 @@
 ## Change Log
 
 ### upcoming
+- [#99](https://github.com/jaunt-lang/jaunt/pull/99) Bugfix: make `private?` check `^:private` (@arrdem).
+  - Fix `private?` to check the correct metadata
+  - Add tests of `private?`
+  - Add tests of `deprecated?`
 - [#98](https://github.com/jaunt-lang/jaunt/pull/98) Add and use a logo (@arrdem).
 - [#94](https://github.com/jaunt-lang/jaunt/pull/94) Provide a thread binding of *compiler-options* so it may be set! (@arrdem).
 - [#93](https://github.com/jaunt-lang/jaunt/pull/93) Display the correct project name in the REPL banner (@arrdem).
