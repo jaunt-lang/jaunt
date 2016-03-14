@@ -1,7 +1,7 @@
 [![License EPL 1.0](https://img.shields.io/badge/license-EPL_1-green.svg)](https://www.eclipse.org/legal/epl-v10.html)
 [![Patreon Donate](https://img.shields.io/badge/patreon-donate-yellow.svg)](https://patreon.com/arrdem)
 [![Join the chat at https://gitter.im/jaunt-lang/jaunt](https://badges.gitter.im/jaunt-lang/jaunt.svg)](https://gitter.im/jaunt-lang/jaunt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Twitter Follow](https://img.shields.io/twitter/follow/jauntlang.svg?style=social)](https://twitter.com/jaunt-lang)
+[![Twitter Follow](https://img.shields.io/twitter/follow/jauntlang.svg?style=social)](https://twitter.com/jauntlang)
 
 <p align="center">
   <img src="etc/img/gh-banner.png" alt="Jaunt logo" />
@@ -28,6 +28,50 @@ of the choices made in the language and its administration that I've forked to g
 
 See [the thesis blog post](https://www.arrdem.com/2016/02/22/clojarr_-_a_friendly_clojure_fork/) for
 more on this.
+
+## Getting Started
+
+Jaunt should be supported by [Leiningen](https://github.com/technomancy/leiningen),
+[Inlein](https://github.com/hyPiRion/inlein), [CIDER](https://github.com/clojure-emacs/cider) (0.12
+or later), and [Cursive](https://cursive-ide.com/).
+
+### With Leiningen
+
+All that's required in order to use Jaunt in a leiningen project is to provide a profile wherein
+Jaunt is listed as a dependency, and Clojure is listed as an exclusion. A minimal `project.clj`
+which uses only Jaunt would be as such:
+
+```clojure
+(defproject some-jaunt-project "0.1.0-SNAPSHOT"
+  :exclusions [org.clojure/clojure]
+  :dependencies [[org.jaunt-lang/jaunt "1.9.0-RC4"]])
+```
+
+Simply jacking in with CIDER or via `lein repl` or starting a Cursive repl will drop you straight
+into a Jaunt environment.
+
+### With Inlien
+
+All you need is a `jaunt.clj` like this
+
+```clojure
+'{:dependencies [[org.jaunt-lang/jaunt "1.9.0-RC4"]
+                 [reply "0.3.7"
+                  :exclusions [net.cgrand/parsley
+                               org.clojure/clojure]]
+                 [net.cgrand/parsley "0.9.3"
+                  :exclusions [org.clojure/clojure]]]
+  :jvm-opts     ["-XX:+TieredCompilation" "-XX:TieredStopAtLevel=1" "-Dfile.encoding=UTF-8"]}
+
+(reply.ReplyMain/main (into-array String ["--standalone"]))
+```
+
+`inlein jaunt.clj` will then drop you straight into a repl just like `lein repl`.
+
+### With Boot
+
+Unfortunately boot is not yet supported. Pull requests detailing usage with boot would be most
+welcome.
 
 ## Goals
 
@@ -98,7 +142,6 @@ This program uses the ASM bytecode engineering library which is distributed unde
 An extensive changelog is available [here](CHANGELOG.md).
 
 ## FAQ
-
 > Will you support $LIBRARY/$PRODUCT?
 
 No. They may work just fine, and you're welcome to offer changes continuing or preserving support as
