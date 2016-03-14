@@ -1,6 +1,7 @@
 ## Change Log
 
 ### upcoming
+- [#101](https://github.com/jaunt-lang/jaunt/pull/99) Add small (64px, 128px) logos (@arrdem).
 - [#99](https://github.com/jaunt-lang/jaunt/pull/99) Bugfix: make `private?` check `^:private` (@arrdem).
   - Fix `private?` to check the correct metadata
   - Add tests of `private?`
