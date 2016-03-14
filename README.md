@@ -1,7 +1,7 @@
 [![License EPL 1.0](https://img.shields.io/badge/license-EPL_1-green.svg)](https://www.eclipse.org/legal/epl-v10.html)
 [![Patreon Donate](https://img.shields.io/badge/patreon-donate-yellow.svg)](https://patreon.com/arrdem)
 [![Join the chat at https://gitter.im/jaunt-lang/jaunt](https://badges.gitter.im/jaunt-lang/jaunt.svg)](https://gitter.im/jaunt-lang/jaunt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Twitter Follow](https://img.shields.io/twitter/follow/jauntlang.svg?style=social)](https://twitter.com/jaunt-lang)
+[![Twitter Follow](https://img.shields.io/twitter/follow/jauntlang.svg?style=social)](https://twitter.com/jauntlang)
 
 <p align="center">
   <img src="etc/img/gh-banner.png" alt="Jaunt logo" />
@@ -98,6 +98,13 @@ This program uses the ASM bytecode engineering library which is distributed unde
 An extensive changelog is available [here](CHANGELOG.md).
 
 ## FAQ
+> What can be a minimal Leiningen **project.clj** so I can get going quickly with CIDER?
+In order for the CIDER middleware to recognise you are using Jaunt(by letting it ignore warnings regarding Clojure's version), you must explicitly exlude **org.clojure/clojure**:
+```clojure
+(defproject some-jaunt-project "0.1.0-SNAPSHOT"
+  :dependencies [[org.jaunt-lang/jaunt "1.9.0-RC4"]]
+  :exclusions [[org.clojure/clojure]])
+```
 
 > Will you support $LIBRARY/$PRODUCT?
 
