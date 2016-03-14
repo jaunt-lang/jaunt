@@ -29,6 +29,50 @@ of the choices made in the language and its administration that I've forked to g
 See [the thesis blog post](https://www.arrdem.com/2016/02/22/clojarr_-_a_friendly_clojure_fork/) for
 more on this.
 
+## Getting Started
+
+Jaunt should be supported by [Leiningen](https://github.com/technomancy/leiningen),
+[Inlein](https://github.com/hyPiRion/inlein), [CIDER](https://github.com/clojure-emacs/cider) (0.12
+or later), and [Cursive](https://cursive-ide.com/).
+
+### With Leiningen
+
+All that's required in order to use Jaunt in a leiningen project is to provide a profile wherein
+Jaunt is listed as a dependency, and Clojure is listed as an exclusion. A minimal `project.clj`
+which uses only Jaunt would be as such:
+
+```clojure
+(defproject some-jaunt-project "0.1.0-SNAPSHOT"
+  :exclusions [org.clojure/clojure]
+  :dependencies [[org.jaunt-lang/jaunt "1.9.0-RC4"]])
+```
+
+Simply jacking in with CIDER or via `lein repl` or starting a Cursive repl will drop you straight
+into a Jaunt environment.
+
+### With Inlien
+
+All you need is a `jaunt.clj` like this
+
+```clojure
+'{:dependencies [[org.jaunt-lang/jaunt "1.9.0-RC4"]
+                 [reply "0.3.7"
+                  :exclusions [net.cgrand/parsley
+                               org.clojure/clojure]]
+                 [net.cgrand/parsley "0.9.3"
+                  :exclusions [org.clojure/clojure]]]
+  :jvm-opts     ["-XX:+TieredCompilation" "-XX:TieredStopAtLevel=1" "-Dfile.encoding=UTF-8"]}
+
+(reply.ReplyMain/main (into-array String ["--standalone"]))
+```
+
+`inlein jaunt.clj` will then drop you straight into a repl just like `lein repl`.
+
+### With Boot
+
+Unfortunately boot is not yet supported. Pull requests detailing usage with boot would be most
+welcome.
+
 ## Goals
 
 Jaunt is in no small part an experiment in what Clojure would look like if it had a different
@@ -98,14 +142,6 @@ This program uses the ASM bytecode engineering library which is distributed unde
 An extensive changelog is available [here](CHANGELOG.md).
 
 ## FAQ
-> What can be a minimal Leiningen **project.clj** so I can get going quickly with CIDER?
-In order for the CIDER middleware to recognise you are using Jaunt(by letting it ignore warnings regarding Clojure's version), you must explicitly exlude **org.clojure/clojure**:
-```clojure
-(defproject some-jaunt-project "0.1.0-SNAPSHOT"
-  :dependencies [[org.jaunt-lang/jaunt "1.9.0-RC4"]]
-  :exclusions [[org.clojure/clojure]])
-```
-
 > Will you support $LIBRARY/$PRODUCT?
 
 No. They may work just fine, and you're welcome to offer changes continuing or preserving support as
