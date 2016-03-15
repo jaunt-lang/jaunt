@@ -3,7 +3,7 @@
 M2="$HOME/.m2"
 FLAGS="$M2/tags"
 mkdir -p "$FLAGS"
-FILE="$FLAGS/$(cat pom.xml build.xml circle-deps.sh | grep -v "<version>.*</version>" | shasum -a 512 | awk '{print $1}')"
+FILE="$FLAGS/$(cat pom.xml build.xml etc/bin/circle-deps.sh | grep -v "<version>.*</version>" | shasum -a 512 | awk '{print $1}')"
 if [ ! -e "$FILE" ] || (( RANDOM % 2 ==0 ))
 then
   # Do a deploy
