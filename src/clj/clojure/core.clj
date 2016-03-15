@@ -6914,8 +6914,7 @@
     {::build {:dirty (Boolean/valueOf (prop "git.dirty"))
               :date  (-> (new java.text.SimpleDateFormat "dd.MM.yyyy '@' HH:mm:ss z")
                          (.parse (prop "git.build.time")))
-              :git   {:closest-tag (prop "git.closest.tag.name")
-                      :commit      (prop "git.commit.id.abbrev")
+              :git   {:commit      (prop "git.commit.id.abbrev")
                       :branch      (prop "git.branch")}}}))
 
 (defn- ensure-interim [m]
