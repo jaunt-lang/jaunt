@@ -15,6 +15,9 @@ test:
   pre:
     - bash etc/bin/check-whitespace.sh
     - bash etc/bin/check-changelog.sh
+  override:
+    - bash etc/bin/run-tests.sh:
+        parallel: true
   post:
     - ant jar
 
