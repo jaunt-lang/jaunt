@@ -29,7 +29,7 @@
   <!-- Get the version string out of the POM -->
   <xmlproperty file="pom.xml" prefix="pom"/>
   <property name="clojure.version.label" value="${pom.project.version}"/>
-  <property name="version.properties" value="${build}/clojure/version.properties"/>
+  <property name="version.properties" value="${build}/jaunt/version.properties"/>
 
   <property name="clojure_jar" location="${dist}/jaunt-${clojure.version.label}.jar"/>
   <property name="clojure_noversion_jar" location="${dist}/jaunt.jar"/>

@@ -321,7 +321,7 @@ by default when a new command-line REPL is started."} repl-requires
   present"
   [[_ & args] inits]
   (when-not (some #(= eval-opt (init-dispatch (first %))) inits)
-    (println "Jaunt" (clojure-version)))
+    (printf "Jaunt %s (Clojure %s derived)\n" (jaunt-version) (clojure-version)))
   (repl :init (fn []
                 (initialize args inits)
                 (apply require repl-requires)))

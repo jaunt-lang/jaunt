@@ -1,6 +1,7 @@
 ## Change Log
 
 ### upcoming
+- [#95](https://github.com/jaunt-lang/jaunt/pull/95) Introduce `*jaunt-version*`, deprecating `*clojure-version*` (@arrdem).
 - [#101](https://github.com/jaunt-lang/jaunt/pull/99) Add small (64px, 128px) logos (@arrdem).
 - [#99](https://github.com/jaunt-lang/jaunt/pull/99) Bugfix: make `private?` check `^:private` (@arrdem).
   - Fix `private?` to check the correct metadata

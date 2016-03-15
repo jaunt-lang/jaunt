@@ -6861,46 +6861,87 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; clojure version number ;;;;;;;;;;;;;;;;;;;;;;
 
-(let [properties (with-open [version-stream (.getResourceAsStream
-                                             (clojure.lang.RT/baseLoader)
-                                             "clojure/version.properties")]
-                   (doto (new java.util.Properties)
-                     (.load version-stream)))
-      version-string (.getProperty properties "version")
-      [_ major minor incremental qualifier snapshot]
-      (re-matches
-       #"(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9_]+))?(?:-(SNAPSHOT))?"
-       version-string)
-      clojure-version {:major       (Integer/valueOf ^String major)
-                       :minor       (Integer/valueOf ^String minor)
-                       :incremental (Integer/valueOf ^String incremental)
-                       :qualifier   (if (= qualifier "SNAPSHOT") nil qualifier)}]
-  (def ^:dynamic *clojure-version*
-    (if (.contains version-string "SNAPSHOT")
-      (clojure.lang.RT/assoc clojure-version :interim true)
-      clojure-version)))
+(def
+  ^{:dynamic    true
+    :deprecated "FIXME"
+    :added      "1.0"}
+  *clojure-version*
+  "DEPRECATED: replaced by *jaunt-version*
 
-(add-doc-and-meta *clojure-version*
-  "The version info for Clojure core, as a map containing :major :minor 
-  :incremental and :qualifier keys. Feature releases may increment 
-  :minor and/or :major, bugfix releases will increment :incremental. 
-  Possible values of :qualifier include \"GA\", \"SNAPSHOT\", \"RC-x\" \"BETA-x\""
-  {:added "1.0"})
+  The version of Clojure from which this Jaunt build is derived. Version information is encoded as a
+  map containing :major :minor :incremental and :qualifier keys."
+  {:major       1
+   :minor       8
+   :incremental 0
+   :qualifier   nil})
 
-(defn
-  clojure-version 
-  "Returns clojure version as a printable string."
-  {:added "1.0"}
+(defn clojure-version
+  "DEPRECATED: replaced by jaunt-version
+
+  Returns clojure version as a printable string."
+  {:added      "1.0"
+   :deprecated "FIXME"}
   []
-  (str (:major *clojure-version*)
-       "."
-       (:minor *clojure-version*)
-       (when-let [i (:incremental *clojure-version*)]
-         (str "." i))
-       (when-let [q (:qualifier *clojure-version*)]
-         (when (pos? (count q)) (str "-" q)))
-       (when (:interim *clojure-version*)
-         "-SNAPSHOT")))
+  "1.8.0")
+
+(defn- load-properties [path]
+  {:pre [(string? path)]}
+  (with-open [version-stream (.getResourceAsStream (clojure.lang.RT/baseLoader) path)]
+    (doto (new java.util.Properties)
+      (.load version-stream))))
+
+(defn- parse-version [v]
+  {:pre [(string? v)]}
+  (let [[_ major minor incremental qualifier]
+        ,,(re-matches #"^(\d+)\.(\d+)\.(\d+)(-.*)?$" v)]
+    {:major        (Integer/valueOf ^String major)
+     :minor        (Integer/valueOf ^String minor)
+     :incremental  (Integer/valueOf ^String incremental)
+     :interim      (.endsWith ^String qualifier "-SNAPSHOT")
+     :qualifiers   (->> (.split ^String qualifier "-")
+                        (filter not-empty)
+                        set)
+     ::raw-version v}))
+
+(defn- read-version-properties [path]
+  (-> (load-properties path)
+      (.getProperty "version")
+      (parse-version)))
+
+(defn- read-git-properties [path]
+  (let [m    (load-properties path)
+        prop (partial get m)]
+    {::build {:dirty (Boolean/valueOf (prop "git.dirty"))
+              :date  (-> (new java.text.SimpleDateFormat "dd.MM.yyyy '@' HH:mm:ss z")
+                         (.parse (prop "git.build.time")))
+              :git   {:commit      (prop "git.commit.id.abbrev")
+                      :branch      (prop "git.branch")}}}))
+
+(defn- ensure-interim [m]
+  (update m :interim #(or %1 (-> m ::build (get :dirty false)))))
+
+(def
+  ^{:dynamic true
+    :added   "FIXME"}
+  *jaunt-version*
+  "The version number of the Jaunt build.
+
+  :major - integer value of the SemVer major version
+  :minor - integer value of the SemVer minor version
+  :incremental - integer value of the SemVer patch version
+  :interim - boolean indicating whether the build is dirty or a snapshot
+  :qualifiers - a set of strings, being the version qualifiers."
+  (-> (read-version-properties "jaunt/version.properties")
+      (merge (read-git-properties "jaunt/git.properties"))
+      ensure-interim))
+
+(defn jaunt-version
+  "Returns the Jaunt version as a printable string."
+  {:added "FIXME"}
+  []
+  (or (::raw-version *jaunt-version*)
+      (let [{:keys [major minor incremental qualifier]} *jaunt-version*]
+        (format "%d.%d.%d%s" major minor incremental qualifier))))
 
 (defn promise
   "Returns a promise object that can be read with deref/@, and set,
