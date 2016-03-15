@@ -50,7 +50,7 @@ which uses only Jaunt would be as such:
 Simply jacking in with CIDER or via `lein repl` or starting a Cursive repl will drop you straight
 into a Jaunt environment.
 
-### With Inlien
+### With Inlein
 
 All you need is a `jaunt.clj` like this
 
