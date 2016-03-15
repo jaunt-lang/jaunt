@@ -1,6 +1,14 @@
 ## Change Log
 
 ### upcoming
+- [#105](https://github.com/jaunt-lang/jaunt/pull/105) Run CircleCI tests in parallel (@arrdem).
+  - Adds `etc/bin/run-tests.sh`
+    - If on CircleCI, tests will be run "normally" (CircleCI is configured to use two containers
+      when building Jaunt, choose which half of the test suite to run by the the
+      `$CIRCLE_NODE_INDEX` var.)
+    - If not on CircleCI, spawn a pair of subshells simulating CircleCI containers as above, check
+      their exit codes and report back.
+  - Configures CircleCI to use `run-tests.sh`
 - [#95](https://github.com/jaunt-lang/jaunt/pull/95) Introduce `*jaunt-version*`, deprecating `*clojure-version*` (@arrdem).
 - [#101](https://github.com/jaunt-lang/jaunt/pull/99) Add small (64px, 128px) logos (@arrdem).
 - [#99](https://github.com/jaunt-lang/jaunt/pull/99) Bugfix: make `private?` check `^:private` (@arrdem).
