@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 ;;; test.clj: test framework for Clojure
 
@@ -14,10 +14,10 @@
 ;; Thanks to Chas Emerick, Allen Rohner, and Stuart Halloway for
 ;; contributions and suggestions.
 
-(ns 
-  ^{:author "Stuart Sierra, with contributions and suggestions by 
+(ns
+ ^{:author "Stuart Sierra, with contributions and suggestions by
   Chas Emerick, Allen Rohner, and Stuart Halloway",
-     :doc "A unit testing framework.
+   :doc "A unit testing framework.
 
    ASSERTIONS
 
@@ -49,7 +49,7 @@
    \"(is (thrown? c ...))\" form tests if an exception of class c is
    thrown:
 
-   (is (thrown? ArithmeticException (/ 1 0))) 
+   (is (thrown? ArithmeticException (/ 1 0)))
 
    \"(is (thrown-with-msg? c re ...))\" does the same thing and also
    tests that the message on the exception matches the regular
@@ -231,7 +231,7 @@
 
    For additional event types, see the examples in the code.
 "}
-  clojure.test
+ clojure.test
   (:require [clojure.template :as temp]
             [clojure.stacktrace :as stack]
             [clojure.string :as str]))
@@ -250,19 +250,18 @@
   *load-tests* true)
 
 (def ^:dynamic
- ^{:doc "The maximum depth of stack traces to print when an Exception
-  is thrown during a test.  Defaults to nil, which means print the 
+  ^{:doc "The maximum depth of stack traces to print when an Exception
+  is thrown during a test.  Defaults to nil, which means print the
   complete stack trace."
-   :added "1.1"}
- *stack-trace-depth* nil)
-
+    :added "1.1"}
+  *stack-trace-depth* nil)
 
 ;;; GLOBALS USED BY THE REPORTING FUNCTIONS
 
 (def ^:dynamic *report-counters* nil)	  ; bound to a ref of a map in test-ns
 
 (def ^:dynamic *initial-report-counters*  ; used to initialize *report-counters*
-     {:test 0, :pass 0, :fail 0, :error 0})
+  {:test 0, :pass 0, :fail 0, :error 0})
 
 (def ^:dynamic *testing-vars* (list))  ; bound to hierarchy of vars being tested
 
@@ -328,8 +327,8 @@
    'report' will be a map with a :type key.  See the documentation at
    the top of test_is.clj for more information on the types of
    arguments for 'report'."
-     :dynamic true
-     :added "1.1"}
+    :dynamic true
+    :added "1.1"}
   report :type)
 
 (defn- file-and-line
@@ -357,13 +356,13 @@
   (report
    (case
     (:type m)
-    :fail (merge (stacktrace-file-and-line (drop-while
+     :fail (merge (stacktrace-file-and-line (drop-while
                                              #(let [cl-name (.getClassName ^StackTraceElement %)]
                                                 (or (str/starts-with? cl-name "java.lang.")
                                                     (str/starts-with? cl-name "clojure.test$")))
                                              (.getStackTrace (Thread/currentThread)))) m)
-    :error (merge (stacktrace-file-and-line (.getStackTrace ^Throwable (:actual m))) m)
-    m)))
+     :error (merge (stacktrace-file-and-line (.getStackTrace ^Throwable (:actual m))) m)
+     m)))
 
 (defmethod report :default [m]
   (with-test-out (prn m)))
@@ -382,33 +381,31 @@
 
 (defmethod report :error [m]
   (with-test-out
-   (inc-report-counter :error)
-   (println "\nERROR in" (testing-vars-str m))
-   (when (seq *testing-contexts*) (println (testing-contexts-str)))
-   (when-let [message (:message m)] (println message))
-   (println "expected:" (pr-str (:expected m)))
-   (print "  actual: ")
-   (let [actual (:actual m)]
-     (if (instance? Throwable actual)
-       (stack/print-cause-trace actual *stack-trace-depth*)
-       (prn actual)))))
+    (inc-report-counter :error)
+    (println "\nERROR in" (testing-vars-str m))
+    (when (seq *testing-contexts*) (println (testing-contexts-str)))
+    (when-let [message (:message m)] (println message))
+    (println "expected:" (pr-str (:expected m)))
+    (print "  actual: ")
+    (let [actual (:actual m)]
+      (if (instance? Throwable actual)
+        (stack/print-cause-trace actual *stack-trace-depth*)
+        (prn actual)))))
 
 (defmethod report :summary [m]
   (with-test-out
-   (println "\nRan" (:test m) "tests containing"
-            (+ (:pass m) (:fail m) (:error m)) "assertions.")
-   (println (:fail m) "failures," (:error m) "errors.")))
+    (println "\nRan" (:test m) "tests containing"
+             (+ (:pass m) (:fail m) (:error m)) "assertions.")
+    (println (:fail m) "failures," (:error m) "errors.")))
 
 (defmethod report :begin-test-ns [m]
   (with-test-out
-   (println "\nTesting" (ns-name (:ns m)))))
+    (println "\nTesting" (ns-name (:ns m)))))
 
 ;; Ignore these message types:
 (defmethod report :end-test-ns [m])
 (defmethod report :begin-test-var [m])
 (defmethod report :end-test-var [m])
-
-
 
 ;;; UTILITIES FOR ASSERTIONS
 
@@ -446,9 +443,9 @@
            result# (apply ~pred values#)]
        (if result#
          (do-report {:type :pass, :message ~msg,
-                  :expected '~form, :actual (cons ~pred values#)})
+                     :expected '~form, :actual (cons ~pred values#)})
          (do-report {:type :fail, :message ~msg,
-                  :expected '~form, :actual (list '~'not (cons '~pred values#))}))
+                     :expected '~form, :actual (list '~'not (cons '~pred values#))}))
        result#)))
 
 (defn assert-any
@@ -459,12 +456,10 @@
   `(let [value# ~form]
      (if value#
        (do-report {:type :pass, :message ~msg,
-                :expected '~form, :actual value#})
+                   :expected '~form, :actual value#})
        (do-report {:type :fail, :message ~msg,
-                :expected '~form, :actual value#}))
+                   :expected '~form, :actual value#}))
      value#))
-
-
 
 ;;; ASSERTION METHODS
 
@@ -472,7 +467,7 @@
 ;; macro.  These define different kinds of tests, based on the first
 ;; symbol in the test expression.
 
-(defmulti assert-expr 
+(defmulti assert-expr
   (fn [msg form]
     (cond
       (nil? form) :always-fail
@@ -495,9 +490,9 @@
      (let [result# (instance? klass# object#)]
        (if result#
          (do-report {:type :pass, :message ~msg,
-                  :expected '~form, :actual (class object#)})
+                     :expected '~form, :actual (class object#)})
          (do-report {:type :fail, :message ~msg,
-                  :expected '~form, :actual (class object#)}))
+                     :expected '~form, :actual (class object#)}))
        result#)))
 
 (defmethod assert-expr 'thrown? [msg form]
@@ -508,10 +503,10 @@
         body (nthnext form 2)]
     `(try ~@body
           (do-report {:type :fail, :message ~msg,
-                   :expected '~form, :actual nil})
+                      :expected '~form, :actual nil})
           (catch ~klass e#
             (do-report {:type :pass, :message ~msg,
-                     :expected '~form, :actual e#})
+                        :expected '~form, :actual e#})
             e#))))
 
 (defmethod assert-expr 'thrown-with-msg? [msg form]
@@ -528,11 +523,10 @@
             (let [m# (.getMessage e#)]
               (if (re-find ~re m#)
                 (do-report {:type :pass, :message ~msg,
-                         :expected '~form, :actual e#})
+                            :expected '~form, :actual e#})
                 (do-report {:type :fail, :message ~msg,
-                         :expected '~form, :actual e#})))
+                            :expected '~form, :actual e#})))
             e#))))
-
 
 (defmacro try-expr
   "Used by the 'is' macro to catch unexpected exceptions.
@@ -544,8 +538,6 @@
           (do-report {:type :error, :message ~msg,
                       :expected '~form, :actual t#}))))
 
-
-
 ;;; ASSERTION MACROS
 
 ;; You use these in your tests.
@@ -553,7 +545,7 @@
 (defmacro is
   "Generic assertion macro.  'form' is any predicate test.
   'msg' is an optional message to attach to the assertion.
-  
+
   Example: (is (= 4 (+ 2 2)) \"Two plus two should be 4\")
 
   Special forms:
@@ -564,7 +556,7 @@
   (is (thrown-with-msg? c re body)) checks that an instance of c is
   thrown AND that the message on the exception matches (with
   re-find) the regular expression re."
-  {:added "1.1"} 
+  {:added "1.1"}
   ([form] `(is ~form nil))
   ([form msg] `(try-expr ~msg ~form)))
 
@@ -573,10 +565,10 @@
   See clojure.template/do-template for an explanation of
   templates.
 
-  Example: (are [x y] (= x y)  
+  Example: (are [x y] (= x y)
                 2 (+ 1 1)
                 4 (* 2 2))
-  Expands to: 
+  Expands to:
            (do (is (= 2 (+ 1 1)))
                (is (= 4 (* 2 2))))
 
@@ -601,8 +593,6 @@
   `(binding [*testing-contexts* (conj *testing-contexts* ~string)]
      ~@body))
 
-
-
 ;;; DEFINING TESTS
 
 (defmacro with-test
@@ -616,7 +606,6 @@
   (if *load-tests*
     `(doto ~definition (alter-meta! assoc :test (fn [] ~@body)))
     definition))
-
 
 (defmacro deftest
   "Defines a test function with no arguments.  Test functions may call
@@ -633,7 +622,7 @@
   [name & body]
   (when *load-tests*
     `(def ~(vary-meta name assoc :test `(fn [] ~@body))
-          (fn [] (test-var (var ~name))))))
+       (fn [] (test-var (var ~name))))))
 
 (defmacro deftest-
   "Like deftest but creates a private var."
@@ -641,8 +630,7 @@
   [name & body]
   (when *load-tests*
     `(def ~(vary-meta name assoc :test `(fn [] ~@body) :private true)
-          (fn [] (test-var (var ~name))))))
-
+       (fn [] (test-var (var ~name))))))
 
 (defmacro set-test
   "Experimental.
@@ -654,8 +642,6 @@
   [name & body]
   (when *load-tests*
     `(alter-meta! (var ~name) assoc :test (fn [] ~@body))))
-
-
 
 ;;; DEFINING FIXTURES
 
@@ -699,9 +685,6 @@
   [fixtures]
   (reduce compose-fixtures default-fixture fixtures))
 
-
-
-
 ;;; RUNNING TESTS: LOW-LEVEL FUNCTIONS
 
 (defn test-var
@@ -716,7 +699,7 @@
       (try (t)
            (catch Throwable e
              (do-report {:type :error, :message "Uncaught exception, not in assertion."
-                      :expected nil, :actual e})))
+                         :expected nil, :actual e})))
       (do-report {:type :end-test-var, :var v}))))
 
 (defn test-vars
@@ -754,13 +737,11 @@
       (do-report {:type :begin-test-ns, :ns ns-obj})
       ;; If the namespace has a test-ns-hook function, call that:
       (if-let [v (find-var (symbol (str (ns-name ns-obj)) "test-ns-hook"))]
-	((var-get v))
+        ((var-get v))
         ;; Otherwise, just test every var in the namespace.
         (test-all-vars ns-obj))
       (do-report {:type :end-test-ns, :ns ns-obj}))
     @*report-counters*))
-
-
 
 ;;; RUNNING TESTS: HIGH-LEVEL FUNCTIONS
 
@@ -771,10 +752,10 @@
   {:added "1.1"}
   ([] (run-tests *ns*))
   ([& namespaces]
-     (let [summary (assoc (apply merge-with + (map test-ns namespaces))
-                     :type :summary)]
-       (do-report summary)
-       summary)))
+   (let [summary (assoc (apply merge-with + (map test-ns namespaces))
+                        :type :summary)]
+     (do-report summary)
+     summary)))
 
 (defn run-all-tests
   "Runs all tests in all namespaces; prints results.

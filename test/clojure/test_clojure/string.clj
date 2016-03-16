@@ -47,15 +47,15 @@
 
 (deftest t-join
   (are [x coll] (= x (s/join coll))
-       "" nil
-       "" []
-       "1" [1]
-       "12" [1 2])
+    "" nil
+    "" []
+    "1" [1]
+    "12" [1 2])
   (are [x sep coll] (= x (s/join sep coll))
-       "1,2,3" \, [1 2 3]
-       "" \, []
-       "1" \, [1]
-       "1 and-a 2 and-a 3" " and-a " [1 2 3]))
+    "1,2,3" \, [1 2 3]
+    "" \, []
+    "1" \, [1]
+    "1 and-a 2 and-a 3" " and-a " [1 2 3]))
 
 (deftest t-trim-newline
   (is (= "foo" (s/trim-newline "foo\n")))
@@ -89,42 +89,42 @@
 
 (deftest nil-handling
   (are [f args] (thrown? NullPointerException (apply f args))
-       s/reverse [nil]
-       s/replace [nil #"foo" "bar"]
-       s/replace-first [nil #"foo" "bar"]
-       s/re-quote-replacement [nil]
-       s/capitalize [nil]
-       s/upper-case [nil]
-       s/lower-case [nil]
-       s/split [nil #"-"]
-       s/split [nil #"-" 1]
-       s/trim [nil]
-       s/triml [nil]
-       s/trimr [nil]
-       s/trim-newline [nil]))
+    s/reverse [nil]
+    s/replace [nil #"foo" "bar"]
+    s/replace-first [nil #"foo" "bar"]
+    s/re-quote-replacement [nil]
+    s/capitalize [nil]
+    s/upper-case [nil]
+    s/lower-case [nil]
+    s/split [nil #"-"]
+    s/split [nil #"-" 1]
+    s/trim [nil]
+    s/triml [nil]
+    s/trimr [nil]
+    s/trim-newline [nil]))
 
 (deftest char-sequence-handling
   (are [result f args] (let [[^CharSequence s & more] args]
                          (= result (apply f (StringBuffer. s) more)))
-       "paz" s/reverse ["zap"]
-       "foo:bar" s/replace ["foo-bar" \- \:]
-       "ABC" s/replace ["abc" #"\w" s/upper-case]
-       "faa" s/replace ["foo" #"o" (StringBuffer. "a")]
-       "baz::quux" s/replace-first ["baz--quux" #"--" "::"]
-       "baz::quux" s/replace-first ["baz--quux" (StringBuffer. "--") (StringBuffer. "::")]
-       "zim-zam" s/replace-first ["zim zam" #" " (StringBuffer. "-")]
-       "\\\\ \\$" s/re-quote-replacement ["\\ $"]
-       "Pow" s/capitalize ["POW"]
-       "BOOM" s/upper-case ["boom"]
-       "whimper" s/lower-case ["whimPER"]
-       ["foo" "bar"] s/split ["foo-bar" #"-"]
-       "calvino" s/trim ["  calvino  "]
-       "calvino  " s/triml ["  calvino  "]
-       "  calvino" s/trimr ["  calvino  "]
-       "the end" s/trim-newline ["the end\r\n\r\r\n"]
-       true s/blank? [" "]
-       ["a" "b"] s/split-lines ["a\nb"]
-       "fa la la" s/escape ["fo lo lo" {\o \a}]))
+    "paz" s/reverse ["zap"]
+    "foo:bar" s/replace ["foo-bar" \- \:]
+    "ABC" s/replace ["abc" #"\w" s/upper-case]
+    "faa" s/replace ["foo" #"o" (StringBuffer. "a")]
+    "baz::quux" s/replace-first ["baz--quux" #"--" "::"]
+    "baz::quux" s/replace-first ["baz--quux" (StringBuffer. "--") (StringBuffer. "::")]
+    "zim-zam" s/replace-first ["zim zam" #" " (StringBuffer. "-")]
+    "\\\\ \\$" s/re-quote-replacement ["\\ $"]
+    "Pow" s/capitalize ["POW"]
+    "BOOM" s/upper-case ["boom"]
+    "whimper" s/lower-case ["whimPER"]
+    ["foo" "bar"] s/split ["foo-bar" #"-"]
+    "calvino" s/trim ["  calvino  "]
+    "calvino  " s/triml ["  calvino  "]
+    "  calvino" s/trimr ["  calvino  "]
+    "the end" s/trim-newline ["the end\r\n\r\r\n"]
+    true s/blank? [" "]
+    ["a" "b"] s/split-lines ["a\nb"]
+    "fa la la" s/escape ["fo lo lo" {\o \a}]))
 
 (deftest t-escape
   (is (= "&lt;foo&amp;bar&gt;"
@@ -160,14 +160,14 @@
     (is (= nil (s/index-of sb "z" 2)))
     (is (= nil (s/index-of sb \z  2)))
     (is (= nil (s/index-of sb "z" 100))
-    (is (= nil (s/index-of sb "z" -10))))))
+        (is (= nil (s/index-of sb "z" -10))))))
 
 (deftest t-last-index-of
   (let [sb (StringBuffer. "banana")]
     (is (= 4 (s/last-index-of sb "n")))
     (is (= 4 (s/last-index-of sb \n)))
     (is (= 3 (s/last-index-of sb "an")))
-    (is (= 4 (s/last-index-of sb "n" )))
+    (is (= 4 (s/last-index-of sb "n")))
     (is (= 4 (s/last-index-of sb "n" 5)))
     (is (= 4 (s/last-index-of sb \n  5)))
     (is (= 4 (s/last-index-of sb "n" 500)))
@@ -175,7 +175,7 @@
     (is (= nil (s/last-index-of sb "z" 1)))
     (is (= nil (s/last-index-of sb \z  1)))
     (is (= nil (s/last-index-of sb "z" 100))
-    (is (= nil (s/last-index-of sb "z" -10))))))
+        (is (= nil (s/last-index-of sb "z" -10))))))
 
 (deftest t-starts-with?
   (is (s/starts-with? (StringBuffer. "clojure west") "clojure"))
@@ -183,7 +183,7 @@
 
 (deftest t-ends-with?
   (is (s/ends-with? (StringBuffer. "Clojure West") "West")
-  (is (not (s/ends-with? (StringBuffer. "Conj") "West")))))
+      (is (not (s/ends-with? (StringBuffer. "Conj") "West")))))
 
 (deftest t-includes?
   (let [sb (StringBuffer. "Clojure Applied Book")]

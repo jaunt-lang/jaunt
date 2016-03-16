@@ -1,6 +1,8 @@
 machine:
   java:
     version: oraclejdk8
+  environment:
+    _JAVA_OPTIONS: -Xmx2g
 
 dependencies:
   cache_directories:
@@ -15,6 +17,7 @@ test:
   pre:
     - bash etc/bin/check-whitespace.sh
     - bash etc/bin/check-changelog.sh
+    - lein cljfmt check
   override:
     - bash etc/bin/run-tests.sh:
         parallel: true

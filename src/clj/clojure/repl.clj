@@ -1,17 +1,17 @@
-;   Copyright (c) Chris Houser, Dec 2008. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Common Public License 1.0 (http://opensource.org/licenses/cpl.php)
-;   which can be found in the file CPL.TXT at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Chris Houser, Dec 2008. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Common Public License 1.0 (http://opensource.org/licenses/cpl.php)
+;;    which can be found in the file CPL.TXT at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-; Utilities meant to be used interactively at the REPL
+;; Utilities meant to be used interactively at the REPL
 
 (ns
-  ^{:author "Chris Houser, Christophe Grand, Stephen Gilardi, Michel Salim"
-    :doc "Utilities meant to be used interactively at the REPL"}
-  clojure.repl
+ ^{:author "Chris Houser, Christophe Grand, Stephen Gilardi, Michel Salim"
+   :doc "Utilities meant to be used interactively at the REPL"}
+ clojure.repl
   (:import (java.io LineNumberReader InputStreamReader PushbackReader)
            (clojure.lang RT Reflector)))
 
@@ -53,9 +53,9 @@
            :doc "Evaluates the exprs in order, then, in parallel, rebinds
   the bindings of the recursion point to the values of the exprs.
   Execution then jumps back to the recursion point, a loop or fn method."}
-    set! {:forms[(set! var-symbol expr)
-                 (set! (. instance-expr instanceFieldName-symbol) expr)
-                 (set! (. Classname-symbol staticFieldName-symbol) expr)]
+    set! {:forms [(set! var-symbol expr)
+                  (set! (. instance-expr instanceFieldName-symbol) expr)
+                  (set! (. Classname-symbol staticFieldName-symbol) expr)]
           :url "vars#set"
           :doc "Used to set thread-local-bound vars, Java object instance
 fields, and Java class static fields."}
@@ -90,7 +90,7 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
   (if (:special-form m)
     (do
       (println "Special Form")
-      (println " " (:doc m)) 
+      (println " " (:doc m))
       (if (contains? m :url)
         (when (:url m)
           (println (str "\n  Please see http://clojure.org/" (:url m))))
@@ -98,7 +98,7 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
                       (:name m)))))
     (do
       (when (:macro m)
-        (println "Macro")) 
+        (println "Macro"))
       (println " " (:doc m)))))
 
 (defn find-doc
@@ -106,16 +106,16 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
  contains a match for re-string-or-pattern"
   {:added "1.0"}
   [re-string-or-pattern]
-    (let [re (re-pattern re-string-or-pattern)
-          ms (concat (mapcat #(sort-by :name (map meta (vals (ns-interns %))))
-                             (all-ns))
-                     (map namespace-doc (all-ns))
-                     (map special-doc (keys special-doc-map)))]
-      (doseq [m ms
-              :when (and (:doc m)
-                         (or (re-find (re-matcher re (:doc m)))
-                             (re-find (re-matcher re (str (:name m))))))]
-               (print-doc m))))
+  (let [re (re-pattern re-string-or-pattern)
+        ms (concat (mapcat #(sort-by :name (map meta (vals (ns-interns %))))
+                           (all-ns))
+                   (map namespace-doc (all-ns))
+                   (map special-doc (keys special-doc-map)))]
+    (doseq [m ms
+            :when (and (:doc m)
+                       (or (re-find (re-matcher re (:doc m)))
+                           (re-find (re-matcher re (str (:name m))))))]
+      (print-doc m))))
 
 (defmacro doc
   "Prints documentation for a var or special form given its name"
@@ -234,26 +234,26 @@ str-or-pattern."
   {:added "1.3"}
   ([] (pst 12))
   ([e-or-depth]
-     (if (instance? Throwable e-or-depth)
-       (pst e-or-depth 12)
-       (when-let [e *e]
-         (pst (root-cause e) e-or-depth))))
+   (if (instance? Throwable e-or-depth)
+     (pst e-or-depth 12)
+     (when-let [e *e]
+       (pst (root-cause e) e-or-depth))))
   ([^Throwable e depth]
-     (binding [*out* *err*]
-       (println (str (-> e class .getSimpleName) " "
-                     (.getMessage e)
-                     (when-let [info (ex-data e)] (str " " (pr-str info)))))
-       (let [st (.getStackTrace e)
-             cause (.getCause e)]
-         (doseq [el (take depth
-                          (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName %))
-                                  st))]
-           (println (str \tab (stack-element-str el))))
-         (when cause
-           (println "Caused by:")
-           (pst cause (min depth
-                           (+ 2 (- (count (.getStackTrace cause))
-                                   (count st))))))))))
+   (binding [*out* *err*]
+     (println (str (-> e class .getSimpleName) " "
+                   (.getMessage e)
+                   (when-let [info (ex-data e)] (str " " (pr-str info)))))
+     (let [st (.getStackTrace e)
+           cause (.getCause e)]
+       (doseq [el (take depth
+                        (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName %))
+                                st))]
+         (println (str \tab (stack-element-str el))))
+       (when cause
+         (println "Caused by:")
+         (pst cause (min depth
+                         (+ 2 (- (count (.getStackTrace cause))
+                                 (count st))))))))))
 
 ;; ----------------------------------------------------------------------
 ;; Handle Ctrl-C keystrokes
@@ -271,7 +271,7 @@ str-or-pattern."
   ([] (set-break-handler! (thread-stopper)))
   ([f]
    (sun.misc.Signal/handle
-     (sun.misc.Signal. "INT")
-     (proxy [sun.misc.SignalHandler] []
-       (handle [signal]
-         (f (str "-- caught signal " signal)))))))
+    (sun.misc.Signal. "INT")
+    (proxy [sun.misc.SignalHandler] []
+      (handle [signal]
+        (f (str "-- caught signal " signal)))))))

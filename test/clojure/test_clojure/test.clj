@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 ;;; test_clojure/test.clj: unit tests for test.clj
 
@@ -88,11 +88,10 @@
 (declare does-not-exist)
 
 #_(deftest can-test-unbound-symbol
-  (is (= nil does-not-exist) "Should error"))
+    (is (= nil does-not-exist) "Should error"))
 
 #_(deftest can-test-unbound-function
-  (is (does-not-exist) "Should error"))
-
+    (is (does-not-exist) "Should error"))
 
 ;; Here, we create an alternate version of test/report, that
 ;; compares the event with the message, then calls the original

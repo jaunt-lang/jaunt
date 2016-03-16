@@ -1,12 +1,12 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-; Author: Stephen C. Gilardi
+;; Author: Stephen C. Gilardi
 
 ;;  clojure.test-clojure.printer
 ;;
@@ -84,40 +84,40 @@
 
 (deftest print-dup-expected
   (are [x s] (= s (binding [*print-dup* true] (print-str x)))
-       1 "1"
-       1.0 "1.0"
-       1N "1N"
-       (java.math.BigInteger. "1") "#=(java.math.BigInteger. \"1\")"
-       1M "1M"
-       "hi" "\"hi\""))
+    1 "1"
+    1.0 "1.0"
+    1N "1N"
+    (java.math.BigInteger. "1") "#=(java.math.BigInteger. \"1\")"
+    1M "1M"
+    "hi" "\"hi\""))
 
 (deftest print-dup-readable
   (are [form] (let [x form]
                 (= x (read-string (binding [*print-dup* true] (print-str x)))))
-       1
-       1.0
-       1N
-       1M
-       "hi"))
+    1
+    1.0
+    1N
+    1M
+    "hi"))
 
 (def ^{:foo :anything} var-with-meta 42)
 (def ^{:type :anything} var-with-type 666)
 
 (deftest print-var
   (are [x s] (= s (pr-str x))
-       #'pr-str  "#'clojure.core/pr-str"
-       #'var-with-meta "#'clojure.test-clojure.printer/var-with-meta"
-       #'var-with-type "#'clojure.test-clojure.printer/var-with-type"))
+    #'pr-str  "#'clojure.core/pr-str"
+    #'var-with-meta "#'clojure.test-clojure.printer/var-with-meta"
+    #'var-with-type "#'clojure.test-clojure.printer/var-with-type"))
 
 (deftest print-meta
-  (are [x s] (binding [*print-meta* true] 
+  (are [x s] (binding [*print-meta* true]
                (let [pstr (pr-str x)]
                  (and (.endsWith pstr s)
                       (.startsWith pstr "^")
                       (.contains pstr (pr-str (meta x))))))
-       #'pr-str  "#'clojure.core/pr-str"
-       #'var-with-meta "#'clojure.test-clojure.printer/var-with-meta"
-       #'var-with-type "#'clojure.test-clojure.printer/var-with-type"))
+    #'pr-str  "#'clojure.core/pr-str"
+    #'var-with-meta "#'clojure.test-clojure.printer/var-with-meta"
+    #'var-with-type "#'clojure.test-clojure.printer/var-with-type"))
 
 (defn ^:private ednize-stack-trace-element
   [^StackTraceElement ste]
@@ -141,13 +141,13 @@
   (binding [*data-readers* {'error identity}]
     (are [e] (= (-> e Throwable->map ednize-throwable-data)
                 (-> e pr-str read-string))
-         (Exception. "heyo")
-         (Throwable. "I can a throwable"
-                     (Exception. "chain 1"
-                                 (Exception. "chan 2")))
-         (ex-info "an ex-info" {:with "its" :data 29})
-         (Exception. "outer"
-                     (ex-info "an ex-info" {:with "data"}
-                              (Error. "less outer"
-                                      (ex-info "the root"
-                                               {:with "even" :more 'data})))))))
+      (Exception. "heyo")
+      (Throwable. "I can a throwable"
+                  (Exception. "chain 1"
+                              (Exception. "chan 2")))
+      (ex-info "an ex-info" {:with "its" :data 29})
+      (Exception. "outer"
+                  (ex-info "an ex-info" {:with "data"}
+                           (Error. "less outer"
+                                   (ex-info "the root"
+                                            {:with "even" :more 'data})))))))

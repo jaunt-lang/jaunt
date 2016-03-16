@@ -1,17 +1,17 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 (ns ^{:author "Stuart Halloway"
       :added "1.3"
       :doc "Reflection on Host Types
 Alpha - subject to change.
 
-Two main entry points: 
+Two main entry points:
 
 * type-reflect reflects on something that implements TypeReference.
 * reflect (for REPL use) reflects on the class of an instance, or
@@ -38,7 +38,7 @@ Platform implementers must:
 * Create an implementation of Reflector.
 * Create one or more implementations of TypeReference.
 * def default-reflector to be an instance that satisfies Reflector."}
-  clojure.reflect
+ clojure.reflect
   (:require [clojure.set :as set]))
 
 (defprotocol Reflector
@@ -67,7 +67,7 @@ Platform implementers must:
                      and can be a constructor, method, or field.
 
    Keys common to all members:
-   :name             name of the type 
+   :name             name of the type
    :declaring-class  name of the declarer
    :flags            keyword naming boolean attributes of the member
 
@@ -101,11 +101,11 @@ Platform implementers must:
     ;; could make simpler loop of two args: names an
     (if ancestors
       (let [make-ancestor-map (fn [names]
-                            (zipmap names (map refl names)))]
+                                (zipmap names (map refl names)))]
         (loop [reflections (make-ancestor-map (:bases result))]
           (let [ancestors-visited (set (keys reflections))
                 ancestors-to-visit (set/difference (set (mapcat :bases (vals reflections)))
-                                               ancestors-visited)]
+                                                   ancestors-visited)]
             (if (seq ancestors-to-visit)
               (recur (merge reflections (make-ancestor-map ancestors-to-visit)))
               (apply merge-with into result {:ancestors ancestors-visited}

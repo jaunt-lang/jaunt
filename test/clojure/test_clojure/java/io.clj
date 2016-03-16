@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 (ns clojure.test-clojure.java.io
   (:use clojure.test clojure.java.io
@@ -22,19 +22,19 @@
 
 ;; does not work on IBM JDK
 #_(deftest test-spit-and-slurp
-  (let [f (temp-file "clojure.java.io" "test")
-        content (apply str (concat "a" (repeat 500 "\u226a\ud83d\ude03")))]
-    (spit f content)
-    (is (= content (slurp f)))
+    (let [f (temp-file "clojure.java.io" "test")
+          content (apply str (concat "a" (repeat 500 "\u226a\ud83d\ude03")))]
+      (spit f content)
+      (is (= content (slurp f)))
     ;; UTF-16 must be last for the following test
-    (doseq [enc [ "UTF-8" "UTF-16BE" "UTF-16LE" "UTF-16" ]]
-      (spit f content :encoding enc)
-      (is (= content (slurp f :encoding enc))))
-    (testing "deprecated arity"
-      (is (=
-           (platform-newlines "WARNING: (slurp f enc) is deprecated, use (slurp f :encoding enc).\n")
-           (with-out-str
-             (is (= content (slurp f "UTF-16")))))))))
+      (doseq [enc ["UTF-8" "UTF-16BE" "UTF-16LE" "UTF-16"]]
+        (spit f content :encoding enc)
+        (is (= content (slurp f :encoding enc))))
+      (testing "deprecated arity"
+        (is (=
+             (platform-newlines "WARNING: (slurp f enc) is deprecated, use (slurp f :encoding enc).\n")
+             (with-out-str
+               (is (= content (slurp f "UTF-16")))))))))
 
 (deftest test-streams-defaults
   (let [f (temp-file "clojure.java.io" "test-reader-writer")
@@ -46,19 +46,19 @@
       (are [write-to read-from] (= content (do
                                              (spit write-to content :encoding "UTF-8")
                                              (slurp read-from :encoding "UTF-8")))
-           f f
-           (.getAbsolutePath f) (.getAbsolutePath f)
-           (.toURL f) (.toURL f)
-           (.toURI f) (.toURI f)
-           (FileOutputStream. f) (FileInputStream. f)
-           (OutputStreamWriter. (FileOutputStream. f) "UTF-8") (reader f :encoding "UTF-8")
-           f (FileInputStream. f)
-           (writer f :encoding "UTF-8") (InputStreamReader. (FileInputStream. f) "UTF-8"))
+        f f
+        (.getAbsolutePath f) (.getAbsolutePath f)
+        (.toURL f) (.toURL f)
+        (.toURI f) (.toURI f)
+        (FileOutputStream. f) (FileInputStream. f)
+        (OutputStreamWriter. (FileOutputStream. f) "UTF-8") (reader f :encoding "UTF-8")
+        f (FileInputStream. f)
+        (writer f :encoding "UTF-8") (InputStreamReader. (FileInputStream. f) "UTF-8"))
 
       (is (= content (slurp (.getBytes content "UTF-8"))))
       (is (= content (slurp (.toCharArray content))))
       (finally
-       (.delete f)))))
+        (.delete f)))))
 
 (deftest test-streams-nil
   (is (thrown-with-msg? IllegalArgumentException #"Cannot open.*nil" (reader nil)))
@@ -102,7 +102,7 @@
           {:in :cs :out :w}
           {:in :bs :out :o}
           {:in :bs :out :w}]
-         
+
          opts
          [{} {:buffer-size 16} {:buffer-size 256}]]
      (let [{:keys [s o] :as d} (data-fixture "UTF-8")]
@@ -114,27 +114,27 @@
                            (str "combination " test opts))))))
 ;; does not work on IBM JDK
 #_(deftest test-copy-encodings
-  (doseq [enc [ "UTF-8" "UTF-16" "UTF-16BE" "UTF-16LE" ]]
-    (testing (str "from inputstream " enc " to writer UTF-8")
-      (let [{:keys [i s o w bs]} (data-fixture enc)]
-        (copy i w :encoding enc :buffer-size 16)
-        (.flush w)
-        (bytes-should-equal (.getBytes s "UTF-8") (.toByteArray o) "")))
-    (testing (str "from reader UTF-8 to output-stream " enc)
-      (let [{:keys [r o s]} (data-fixture "UTF-8")]
-        (copy r o :encoding enc :buffer-size 16)
-        (bytes-should-equal (.getBytes s enc) (.toByteArray o) "")))))
+    (doseq [enc ["UTF-8" "UTF-16" "UTF-16BE" "UTF-16LE"]]
+      (testing (str "from inputstream " enc " to writer UTF-8")
+        (let [{:keys [i s o w bs]} (data-fixture enc)]
+          (copy i w :encoding enc :buffer-size 16)
+          (.flush w)
+          (bytes-should-equal (.getBytes s "UTF-8") (.toByteArray o) "")))
+      (testing (str "from reader UTF-8 to output-stream " enc)
+        (let [{:keys [r o s]} (data-fixture "UTF-8")]
+          (copy r o :encoding enc :buffer-size 16)
+          (bytes-should-equal (.getBytes s enc) (.toByteArray o) "")))))
 
 (deftest test-as-file
   (are [result input] (= result (as-file input))
-       (File. "foo") "foo"
-       (File. "bar") (File. "bar")
-       (File. "baz") (URL. "file:baz")
-       (File. "bar+baz") (URL. "file:bar+baz")
-       (File. "bar baz qux") (URL. "file:bar%20baz%20qux")
-       (File. "quux") (URI. "file:quux")
-       (File. "abcíd/foo.txt") (URL. "file:abc%c3%add/foo.txt")
-       nil nil))
+    (File. "foo") "foo"
+    (File. "bar") (File. "bar")
+    (File. "baz") (URL. "file:baz")
+    (File. "bar+baz") (URL. "file:bar+baz")
+    (File. "bar baz qux") (URL. "file:bar%20baz%20qux")
+    (File. "quux") (URI. "file:quux")
+    (File. "abcíd/foo.txt") (URL. "file:abc%c3%add/foo.txt")
+    nil nil))
 
 (deftest test-resources-with-spaces
   (let [file-with-spaces (temp-file "test resource 2" "txt")
@@ -147,14 +147,14 @@
 
 (deftest test-file
   (are [result args] (= (File. result) (apply file args))
-       "foo" ["foo"]
-       "foo/bar" ["foo" "bar"]
-       "foo/bar/baz" ["foo" "bar" "baz"]))
+    "foo" ["foo"]
+    "foo/bar" ["foo" "bar"]
+    "foo/bar/baz" ["foo" "bar" "baz"]))
 (deftest test-as-url
   (are [file-part input] (= (URL. (str "file:" file-part)) (as-url input))
-       "foo" "file:foo"
-       "baz" (URL. "file:baz")
-       "quux" (URI. "file:quux"))
+    "foo" "file:foo"
+    "baz" (URL. "file:baz")
+    "quux" (URI. "file:quux"))
   (is (nil? (as-url nil))))
 
 (deftest test-delete-file

@@ -1,6 +1,7 @@
 ## Change Log
 
 ### upcoming
+- [#72](https://github.com/jaunt-lang/jaunt/pull/72) Impose cljfmt linting of clj sources (@arrdem).
 - [#105](https://github.com/jaunt-lang/jaunt/pull/105) Run CircleCI tests in parallel (@arrdem).
   - Adds `etc/bin/run-tests.sh`
     - If on CircleCI, tests will be run "normally" (CircleCI is configured to use two containers

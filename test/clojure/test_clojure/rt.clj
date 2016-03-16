@@ -1,12 +1,12 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-; Author: Stuart Halloway
+;; Author: Stuart Halloway
 
 (ns clojure.test-clojure.rt
   (:require clojure.set)
@@ -17,10 +17,10 @@
   [x]
   (with-out-str
     (try
-     (push-thread-bindings {#'clojure.core/print-initialized false})
-     (clojure.lang.RT/print x *out*)
-     (finally
-      (pop-thread-bindings)))))
+      (push-thread-bindings {#'clojure.core/print-initialized false})
+      (clojure.lang.RT/print x *out*)
+      (finally
+        (pop-thread-bindings)))))
 
 (deftest rt-print-prior-to-print-initialize
   (testing "pattern literals"
@@ -78,7 +78,7 @@
 (deftest last-var-wins-for-core
   (testing "you can replace a core name, with warning"
     (let [ns (temp-ns)
-        replacement (gensym)]
+          replacement (gensym)]
       (with-err-string-writer (intern ns 'prefers replacement))
       (is (= replacement @('prefers (ns-publics ns))))))
   (testing "you can replace a name you defined before"

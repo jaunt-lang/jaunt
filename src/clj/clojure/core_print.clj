@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 (in-ns 'clojure.core)
 
@@ -14,18 +14,18 @@
 
 (set! *warn-on-reflection* true)
 (def ^:dynamic
- ^{:doc "*print-length* controls how many items of each collection the
+  ^{:doc "*print-length* controls how many items of each collection the
   printer will print. If it is bound to logical false, there is no
   limit. Otherwise, it must be bound to an integer indicating the maximum
   number of items of each collection to print. If a collection contains
   more items, the printer will print items up to the limit followed by
   '...' to represent the remaining items. The root binding is nil
   indicating no limit."
-   :added "1.0"}
- *print-length* nil)
+    :added "1.0"}
+  *print-length* nil)
 
 (def ^:dynamic
- ^{:doc "*print-level* controls how many levels deep the printer will
+  ^{:doc "*print-level* controls how many levels deep the printer will
   print nested objects. If it is bound to logical false, there is no
   limit. Otherwise, it must be bound to an integer indicating the maximum
   level to print. Each argument to print is at level 0; if an argument is a
@@ -33,8 +33,8 @@
   collection and is at a level greater than or equal to the value bound to
   *print-level*, the printer prints '#' to represent it. The root binding
   is nil indicating no limit."
-   :added "1.0"}
- *print-level* nil)
+    :added "1.0"}
+  *print-level* nil)
 
 (def ^:dynamic *verbose-defrecords* false)
 
@@ -69,8 +69,8 @@
                    (and *print-meta* *print-readably*)))
       (.write w "^")
       (if (and (= (count m) 1) (:tag m))
-          (pr-on (:tag m) w)
-          (pr-on m w))
+        (pr-on (:tag m) w)
+        (pr-on m w))
       (.write w " "))))
 
 (defn print-simple [o, ^Writer w]
@@ -124,7 +124,7 @@
 (defmethod print-dup Number [o, ^Writer w]
   (print-ctor o
               (fn [o w]
-                  (print-dup (str o) w))
+                (print-dup (str o) w))
               w))
 
 (defmethod print-dup clojure.lang.Fn [o, ^Writer w]
@@ -161,10 +161,8 @@
 (prefer-method print-method clojure.lang.ISeq java.util.Collection)
 (prefer-method print-dup clojure.lang.ISeq java.util.Collection)
 
-
-
 (defmethod print-dup java.util.Collection [o, ^Writer w]
- (print-ctor o #(print-sequential "[" print-dup " " "]" %1 %2) w))
+  (print-ctor o #(print-sequential "[" print-dup " " "]" %1 %2) w))
 
 (defmethod print-dup clojure.lang.IPersistentCollection [o, ^Writer w]
   (print-meta o w)
@@ -176,26 +174,26 @@
 
 (prefer-method print-dup clojure.lang.IPersistentCollection java.util.Collection)
 
-(def ^{:tag String 
+(def ^{:tag String
        :doc "Returns escape string for char or nil if none"
        :added "1.0"}
   char-escape-string
-    {\newline "\\n"
-     \tab  "\\t"
-     \return "\\r"
-     \" "\\\""
-     \\  "\\\\"
-     \formfeed "\\f"
-     \backspace "\\b"})
+  {\newline "\\n"
+   \tab  "\\t"
+   \return "\\r"
+   \" "\\\""
+   \\  "\\\\"
+   \formfeed "\\f"
+   \backspace "\\b"})
 
 (defmethod print-method String [^String s, ^Writer w]
   (if (or *print-dup* *print-readably*)
     (do (.append w \")
-      (dotimes [n (count s)]
-        (let [c (.charAt s n)
-              e (char-escape-string c)]
-          (if e (.write w e) (.append w c))))
-      (.append w \"))
+        (dotimes [n (count s)]
+          (let [c (.charAt s n)
+                e (char-escape-string c)]
+            (if e (.write w e) (.append w c))))
+        (.append w \"))
     (.write w s))
   nil)
 
@@ -206,7 +204,7 @@
   (print-sequential "[" pr-on " " "]" v w))
 
 (defn- print-map [m print-one w]
-  (print-sequential 
+  (print-sequential
    "{"
    (fn [e  ^Writer w]
      (do (print-one (key e) w) (.append w \space) (print-one (val e) w)))
@@ -292,14 +290,14 @@
 
 (def ^{:tag String
        :doc "Returns name string for char or nil if none"
-       :added "1.0"} 
- char-name-string
-   {\newline "newline"
-    \tab "tab"
-    \space "space"
-    \backspace "backspace"
-    \formfeed "formfeed"
-    \return "return"})
+       :added "1.0"}
+  char-name-string
+  {\newline "newline"
+   \tab "tab"
+   \space "space"
+   \backspace "backspace"
+   \formfeed "formfeed"
+   \return "return"})
 
 (defmethod print-method java.lang.Character [^Character c, ^Writer w]
   (if (or *print-dup* *print-readably*)
@@ -365,8 +363,8 @@
                    (.append w \\)
                    (.append w c2)
                    (if qmode
-                      (recur r2 (not= c2 \E))
-                      (recur r2 (= c2 \Q))))
+                     (recur r2 (not= c2 \E))
+                     (recur r2 (= c2 \Q))))
         (= c \") (do
                    (if qmode
                      (.write w "\\E\\\"\\Q")
@@ -394,16 +392,16 @@
                  [true e])))]
     {:status
      (cond
-      (or ex
-          (and (instance? clojure.lang.Agent o)
-               (agent-error o)))
-      :failed
+       (or ex
+           (and (instance? clojure.lang.Agent o)
+                (agent-error o)))
+       :failed
 
-      pending
-      :pending
+       pending
+       :pending
 
-      :else
-      :ready)
+       :else
+       :ready)
 
      :val val}))
 
@@ -442,15 +440,15 @@
   (.write w "#error {\n :cause ")
   (let [{:keys [cause data via trace]} (Throwable->map o)
         print-via #(do (.write w "{:type ")
-		               (print-method (:type %) w)
-					   (.write w "\n   :message ")
-					   (print-method (:message %) w)
-             (when-let [data (:data %)]
-               (.write w "\n   :data ")
-               (print-method data w))
-					   (.write w "\n   :at ")
-					   (print-method (:at %) w)
-					   (.write w "}"))]
+                       (print-method (:type %) w)
+                       (.write w "\n   :message ")
+                       (print-method (:message %) w)
+                       (when-let [data (:data %)]
+                         (.write w "\n   :data ")
+                         (print-method data w))
+                       (.write w "\n   :at ")
+                       (print-method (:at %) w)
+                       (.write w "}"))]
     (print-method cause w)
     (when data
       (.write w "\n :data ")
@@ -458,10 +456,10 @@
     (when via
       (.write w "\n :via\n [")
       (when-let [fv (first via)]
-	    (print-via fv)
+        (print-via fv)
         (doseq [v (rest via)]
           (.write w "\n  ")
-		  (print-via v)))
+          (print-via v)))
       (.write w "]"))
     (when trace
       (.write w "\n :trace\n [")

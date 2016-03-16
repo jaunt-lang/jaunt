@@ -1,12 +1,12 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-; Author: Stephen C. Gilardi
+;; Author: Stephen C. Gilardi
 ;;  scgilardi (gmail)
 ;;  Created 30 October 2008
 ;;
@@ -18,10 +18,9 @@
   (:require [clojure.data.generators :as gen]
             [clojure.test-helper :as helper]))
 
-
-; TODO:
-; ==
-; and more...
+;; TODO:
+;; ==
+;; and more...
 
 
 ;; *** Types ***
@@ -30,21 +29,21 @@
 (deftest Coerced-BigDecimal
   (doseq [v [(bigdec 3) (bigdec (inc (bigint Long/MAX_VALUE)))]]
     (are [x] (true? x)
-     (instance? BigDecimal v)
-     (number? v)
-     (decimal? v)
-     (not (float? v)))))
+      (instance? BigDecimal v)
+      (number? v)
+      (decimal? v)
+      (not (float? v)))))
 
 (deftest BigInteger-conversions
   (doseq [coerce-fn [bigint biginteger]]
-    (doseq [v (map coerce-fn [ Long/MAX_VALUE
+    (doseq [v (map coerce-fn [Long/MAX_VALUE
                               13178456923875639284562345789M
                               13178456923875639284562345789N
                               Float/MAX_VALUE
                               (- Float/MAX_VALUE)
                               Double/MAX_VALUE
                               (- Double/MAX_VALUE)
-                              (* 2 (bigdec Double/MAX_VALUE)) ])]
+                              (* 2 (bigdec Double/MAX_VALUE))])]
       (are [x] (true? x)
         (integer? v)
         (number? v)
@@ -99,55 +98,55 @@
 
 (deftest unchecked-cast-num-obj
   (do-template [prim-array cast]
-    (are [n]
-      (let [a (prim-array 1)]
-        (aset a 0 (cast n)))
-      (Byte. Byte/MAX_VALUE)
-      (Short. Short/MAX_VALUE)
-      (Integer. Integer/MAX_VALUE)
-      (Long. Long/MAX_VALUE)
-      (Float. Float/MAX_VALUE)
-      (Double. Double/MAX_VALUE))
-    byte-array
-    unchecked-byte
-    short-array
-    unchecked-short
-    char-array
-    unchecked-char
-    int-array
-    unchecked-int
-    long-array
-    unchecked-long
-    float-array
-    unchecked-float
-    double-array
-    unchecked-double))
+               (are [n]
+                    (let [a (prim-array 1)]
+                      (aset a 0 (cast n)))
+                 (Byte. Byte/MAX_VALUE)
+                 (Short. Short/MAX_VALUE)
+                 (Integer. Integer/MAX_VALUE)
+                 (Long. Long/MAX_VALUE)
+                 (Float. Float/MAX_VALUE)
+                 (Double. Double/MAX_VALUE))
+               byte-array
+               unchecked-byte
+               short-array
+               unchecked-short
+               char-array
+               unchecked-char
+               int-array
+               unchecked-int
+               long-array
+               unchecked-long
+               float-array
+               unchecked-float
+               double-array
+               unchecked-double))
 
 (deftest unchecked-cast-num-prim
   (do-template [prim-array cast]
-    (are [n]
-      (let [a (prim-array 1)]
-        (aset a 0 (cast n)))
-      Byte/MAX_VALUE
-      Short/MAX_VALUE
-      Integer/MAX_VALUE
-      Long/MAX_VALUE
-      Float/MAX_VALUE
-      Double/MAX_VALUE)
-    byte-array
-    unchecked-byte
-    short-array
-    unchecked-short
-    char-array
-    unchecked-char
-    int-array
-    unchecked-int
-    long-array
-    unchecked-long
-    float-array
-    unchecked-float
-    double-array
-    unchecked-double))
+               (are [n]
+                    (let [a (prim-array 1)]
+                      (aset a 0 (cast n)))
+                 Byte/MAX_VALUE
+                 Short/MAX_VALUE
+                 Integer/MAX_VALUE
+                 Long/MAX_VALUE
+                 Float/MAX_VALUE
+                 Double/MAX_VALUE)
+               byte-array
+               unchecked-byte
+               short-array
+               unchecked-short
+               char-array
+               unchecked-char
+               int-array
+               unchecked-int
+               long-array
+               unchecked-long
+               float-array
+               unchecked-float
+               double-array
+               unchecked-double))
 
 (deftest unchecked-cast-char
   ; in keeping with the checked cast functions, char and Character can only be cast to int
@@ -155,14 +154,13 @@
   (is (let [c (char 0xFFFF)] (unchecked-int c)))) ; force primitive char
 
 (def expected-casts
-  [
-   [:input           [-1            0           1           Byte/MAX_VALUE  Short/MAX_VALUE  Integer/MAX_VALUE  Long/MAX_VALUE         Float/MAX_VALUE    Double/MAX_VALUE]]
+  [[:input           [-1            0           1           Byte/MAX_VALUE  Short/MAX_VALUE  Integer/MAX_VALUE  Long/MAX_VALUE         Float/MAX_VALUE    Double/MAX_VALUE]]
    [char             [:error        (char 0)    (char 1)    (char 127)      (char 32767)     :error             :error                 :error             :error]]
    [unchecked-char   [(char 65535)  (char 0)    (char 1)    (char 127)      (char 32767)     (char 65535)       (char 65535)           (char 65535)       (char 65535)]]
    [byte             [-1            0           1           Byte/MAX_VALUE  :error           :error             :error                 :error             :error]]
    [unchecked-byte   [-1            0           1           Byte/MAX_VALUE  -1               -1                 -1                     -1                 -1]]
    [short            [-1            0           1           Byte/MAX_VALUE  Short/MAX_VALUE  :error             :error                 :error             :error]]
-   [unchecked-short  [-1            0           1           Byte/MAX_VALUE  Short/MAX_VALUE  -1                 -1                     -1                 -1]] 
+   [unchecked-short  [-1            0           1           Byte/MAX_VALUE  Short/MAX_VALUE  -1                 -1                     -1                 -1]]
    [int              [-1            0           1           Byte/MAX_VALUE  Short/MAX_VALUE  Integer/MAX_VALUE  :error                 :error             :error]]
    [unchecked-int    [-1            0           1           Byte/MAX_VALUE  Short/MAX_VALUE  Integer/MAX_VALUE  -1                     Integer/MAX_VALUE  Integer/MAX_VALUE]]
    [long             [-1            0           1           Byte/MAX_VALUE  Short/MAX_VALUE  Integer/MAX_VALUE  Long/MAX_VALUE         :error             :error]]
@@ -178,8 +176,8 @@
     (doseq [[f vals] expectations]
       (let [wrapped (fn [x]
                       (try
-                       (f x)
-                       (catch IllegalArgumentException e :error)))]
+                        (f x)
+                        (catch IllegalArgumentException e :error)))]
         (is (= vals (map wrapped inputs)))))))
 
 ;; *** Functions ***
@@ -188,87 +186,87 @@
 
 (deftest test-add
   (are [x y] (= x y)
-      (+) 0
-      (+ 1) 1
-      (+ 1 2) 3
-      (+ 1 2 3) 6
+    (+) 0
+    (+ 1) 1
+    (+ 1 2) 3
+    (+ 1 2 3) 6
 
-      (+ -1) -1
-      (+ -1 -2) -3
-      (+ -1 +2 -3) -2
+    (+ -1) -1
+    (+ -1 -2) -3
+    (+ -1 +2 -3) -2
 
-      (+ 1 -1) 0
-      (+ -1 1) 0
+    (+ 1 -1) 0
+    (+ -1 1) 0
 
-      (+ 2/3) 2/3
-      (+ 2/3 1) 5/3
-      (+ 2/3 1/3) 1 )
+    (+ 2/3) 2/3
+    (+ 2/3 1) 5/3
+    (+ 2/3 1/3) 1)
 
   (are [x y] (< (- x y) DELTA)
-      (+ 1.2) 1.2
-      (+ 1.1 2.4) 3.5
-      (+ 1.1 2.2 3.3) 6.6 )
+    (+ 1.2) 1.2
+    (+ 1.1 2.4) 3.5
+    (+ 1.1 2.2 3.3) 6.6)
 
   (is (> (+ Integer/MAX_VALUE 10) Integer/MAX_VALUE))  ; no overflow
-  (is (thrown? ClassCastException (+ "ab" "cd"))) )    ; no string concatenation
+  (is (thrown? ClassCastException (+ "ab" "cd"))))    ; no string concatenation
 
 
 (deftest test-subtract
   (is (thrown? IllegalArgumentException (-)))
   (are [x y] (= x y)
-      (- 1) -1
-      (- 1 2) -1
-      (- 1 2 3) -4
+    (- 1) -1
+    (- 1 2) -1
+    (- 1 2 3) -4
 
-      (- -2) 2
-      (- 1 -2) 3
-      (- 1 -2 -3) 6
+    (- -2) 2
+    (- 1 -2) 3
+    (- 1 -2 -3) 6
 
-      (- 1 1) 0
-      (- -1 -1) 0
+    (- 1 1) 0
+    (- -1 -1) 0
 
-      (- 2/3) -2/3
-      (- 2/3 1) -1/3
-      (- 2/3 1/3) 1/3 )
+    (- 2/3) -2/3
+    (- 2/3 1) -1/3
+    (- 2/3 1/3) 1/3)
 
   (are [x y] (< (- x y) DELTA)
-      (- 1.2) -1.2
-      (- 2.2 1.1) 1.1
-      (- 6.6 2.2 1.1) 3.3 )
+    (- 1.2) -1.2
+    (- 2.2 1.1) 1.1
+    (- 6.6 2.2 1.1) 3.3)
 
-  (is (< (- Integer/MIN_VALUE 10) Integer/MIN_VALUE)) )  ; no underflow
+  (is (< (- Integer/MIN_VALUE 10) Integer/MIN_VALUE)))  ; no underflow
 
 
 (deftest test-multiply
   (are [x y] (= x y)
-      (*) 1
-      (* 2) 2
-      (* 2 3) 6
-      (* 2 3 4) 24
+    (*) 1
+    (* 2) 2
+    (* 2 3) 6
+    (* 2 3 4) 24
 
-      (* -2) -2
-      (* 2 -3) -6
-      (* 2 -3 -1) 6
+    (* -2) -2
+    (* 2 -3) -6
+    (* 2 -3 -1) 6
 
-      (* 1/2) 1/2
-      (* 1/2 1/3) 1/6
-      (* 1/2 1/3 -1/4) -1/24 )
+    (* 1/2) 1/2
+    (* 1/2 1/3) 1/6
+    (* 1/2 1/3 -1/4) -1/24)
 
   (are [x y] (< (- x y) DELTA)
-      (* 1.2) 1.2
-      (* 2.0 1.2) 2.4
-      (* 3.5 2.0 1.2) 8.4 )
+    (* 1.2) 1.2
+    (* 2.0 1.2) 2.4
+    (* 3.5 2.0 1.2) 8.4)
 
-  (is (> (* 3 (int (/ Integer/MAX_VALUE 2.0))) Integer/MAX_VALUE)) )  ; no overflow
+  (is (> (* 3 (int (/ Integer/MAX_VALUE 2.0))) Integer/MAX_VALUE)))  ; no overflow
 
 (deftest test-multiply-longs-at-edge
   (are [x] (= x 9223372036854775808N)
-       (*' -1 Long/MIN_VALUE)
-       (*' Long/MIN_VALUE -1)
-       (* -1N Long/MIN_VALUE)
-       (* Long/MIN_VALUE -1N)
-       (* -1 (bigint Long/MIN_VALUE))
-       (* (bigint Long/MIN_VALUE) -1))
+    (*' -1 Long/MIN_VALUE)
+    (*' Long/MIN_VALUE -1)
+    (* -1N Long/MIN_VALUE)
+    (* Long/MIN_VALUE -1N)
+    (* -1 (bigint Long/MIN_VALUE))
+    (* (bigint Long/MIN_VALUE) -1))
   (is (thrown? ArithmeticException (* Long/MIN_VALUE -1)))
   (is (thrown? ArithmeticException (* -1 Long/MIN_VALUE))))
 
@@ -279,35 +277,35 @@
 
 (deftest test-divide
   (are [x y] (= x y)
-      (/ 1) 1
-      (/ 2) 1/2
-      (/ 3 2) 3/2
-      (/ 4 2) 2
-      (/ 24 3 2) 4
-      (/ 24 3 2 -1) -4
+    (/ 1) 1
+    (/ 2) 1/2
+    (/ 3 2) 3/2
+    (/ 4 2) 2
+    (/ 24 3 2) 4
+    (/ 24 3 2 -1) -4
 
-      (/ -1) -1
-      (/ -2) -1/2
-      (/ -3 -2) 3/2
-      (/ -4 -2) 2
-      (/ -4 2) -2 )
+    (/ -1) -1
+    (/ -2) -1/2
+    (/ -3 -2) 3/2
+    (/ -4 -2) 2
+    (/ -4 2) -2)
 
   (are [x y] (< (- x y) DELTA)
-      (/ 4.5 3) 1.5
-      (/ 4.5 3.0 3.0) 0.5 )
+    (/ 4.5 3) 1.5
+    (/ 4.5 3.0 3.0) 0.5)
 
   (is (thrown? ArithmeticException (/ 0)))
   (is (thrown? ArithmeticException (/ 2 0)))
-  (is (thrown? IllegalArgumentException (/))) )
+  (is (thrown? IllegalArgumentException (/))))
 
 (deftest test-divide-bigint-at-edge
   (are [x] (= x (-' Long/MIN_VALUE))
-       (/ Long/MIN_VALUE -1N)
-       (/ (bigint Long/MIN_VALUE) -1)
-       (/ (bigint Long/MIN_VALUE) -1N)
-       (quot Long/MIN_VALUE -1N)
-       (quot (bigint Long/MIN_VALUE) -1)
-       (quot (bigint Long/MIN_VALUE) -1N)))
+    (/ Long/MIN_VALUE -1N)
+    (/ (bigint Long/MIN_VALUE) -1)
+    (/ (bigint Long/MIN_VALUE) -1N)
+    (quot Long/MIN_VALUE -1N)
+    (quot (bigint Long/MIN_VALUE) -1)
+    (quot (bigint Long/MIN_VALUE) -1N)))
 
 ;; mod
 ;; http://en.wikipedia.org/wiki/Modulo_operation
@@ -365,11 +363,7 @@
     (mod 0 -3) 0
 
     ; large args
-    (mod 3216478362187432 432143214) 120355456
-  )
-)
-
-;; rem & quot
+    (mod 3216478362187432 432143214) 120355456));; rem & quot
 ;; http://en.wikipedia.org/wiki/Remainder
 
 (deftest test-rem
@@ -381,7 +375,7 @@
   ; divide by zero
   (is (thrown? ArithmeticException (rem 9 0)))
   (is (thrown? ArithmeticException (rem 0 0)))
-  
+
   (are [x y] (= x y)
     (rem 4 2) 0
     (rem 3 2) 1
@@ -412,62 +406,53 @@
     (rem 2 -5) 2
     (rem -2 5) -2
     (rem -2 -5) -2
-    
+
     ; num = 0, div != 0
     (rem 0 3) 0
-    (rem 0 -3) 0
-  )
-)
-
-(deftest test-quot
+    (rem 0 -3) 0)) (deftest test-quot
   ; wrong number of args
 ;  (is (thrown? IllegalArgumentException (quot)))
 ;  (is (thrown? IllegalArgumentException (quot 1)))
 ;  (is (thrown? IllegalArgumentException (quot 3 2 1)))
 
   ; divide by zero
-  (is (thrown? ArithmeticException (quot 9 0)))
-  (is (thrown? ArithmeticException (quot 0 0)))
-  
-  (are [x y] (= x y)
-    (quot 4 2) 2
-    (quot 3 2) 1
-    (quot 6 4) 1
-    (quot 0 5) 0
+                     (is (thrown? ArithmeticException (quot 9 0)))
+                     (is (thrown? ArithmeticException (quot 0 0)))
 
-    (quot 2 1/2) 4
-    (quot 2/3 1/2) 1
-    (quot 1 2/3) 1
+                     (are [x y] (= x y)
+                       (quot 4 2) 2
+                       (quot 3 2) 1
+                       (quot 6 4) 1
+                       (quot 0 5) 0
 
-    (quot 4.0 2.0) 2.0
-    (quot 4.5 2.0) 2.0
+                       (quot 2 1/2) 4
+                       (quot 2/3 1/2) 1
+                       (quot 1 2/3) 1
+
+                       (quot 4.0 2.0) 2.0
+                       (quot 4.5 2.0) 2.0
 
     ; |num| > |div|, num != k * div
-    (quot 42 5) 8     ; (8 * 5) + 2 == 42
-    (quot 42 -5) -8   ; (-8 * -5) + 2 == 42
-    (quot -42 5) -8   ; (-8 * 5) + -2 == -42
-    (quot -42 -5) 8   ; (8 * -5) + -2 == -42
+                       (quot 42 5) 8     ; (8 * 5) + 2 == 42
+                       (quot 42 -5) -8   ; (-8 * -5) + 2 == 42
+                       (quot -42 5) -8   ; (-8 * 5) + -2 == -42
+                       (quot -42 -5) 8   ; (8 * -5) + -2 == -42
 
     ; |num| > |div|, num = k * div
-    (quot 9 3) 3
-    (quot 9 -3) -3
-    (quot -9 3) -3
-    (quot -9 -3) 3
+                       (quot 9 3) 3
+                       (quot 9 -3) -3
+                       (quot -9 3) -3
+                       (quot -9 -3) 3
 
     ; |num| < |div|
-    (quot 2 5) 0
-    (quot 2 -5) 0
-    (quot -2 5) 0
-    (quot -2 -5) 0
+                       (quot 2 5) 0
+                       (quot 2 -5) 0
+                       (quot -2 5) 0
+                       (quot -2 -5) 0
 
     ; num = 0, div != 0
-    (quot 0 3) 0
-    (quot 0 -3) 0
-  )
-)
-
-
-;; *** Predicates ***
+                       (quot 0 3) 0
+                       (quot 0 -3) 0));; *** Predicates ***
 
 ;; pos? zero? neg?
 
@@ -483,12 +468,11 @@
               [2/3 0 -2/3]]
         pred-result [[pos?  [true false false]]
                      [zero? [false true false]]
-                     [neg?  [false false true]]] ]
+                     [neg?  [false false true]]]]
     (doseq [pr pred-result]
       (doseq [n nums]
         (is (= (map (first pr) n) (second pr))
-          (pr-str (first pr) n))))))
-
+            (pr-str (first pr) n))))))
 
 ;; even? odd?
 
@@ -519,45 +503,43 @@ Math/pow overflows to Infinity."
 
 (deftest test-bit-shift-left
   (are [x y] (= x y)
-       2r10 (bit-shift-left 2r1 1)
-       2r100 (bit-shift-left 2r1 2)
-       2r1000 (bit-shift-left 2r1 3)
-       2r00101110 (bit-shift-left 2r00010111 1)
-       2r00101110 (apply bit-shift-left [2r00010111 1])
-       0 (bit-shift-left 2r10 -1) ; truncated to least 6-bits, 63
-       (expt 2 32) (bit-shift-left 1 32)
-       (expt 2 16) (bit-shift-left 1 10000) ; truncated to least 6-bits, 16
-       )
+    2r10 (bit-shift-left 2r1 1)
+    2r100 (bit-shift-left 2r1 2)
+    2r1000 (bit-shift-left 2r1 3)
+    2r00101110 (bit-shift-left 2r00010111 1)
+    2r00101110 (apply bit-shift-left [2r00010111 1])
+    0 (bit-shift-left 2r10 -1) ; truncated to least 6-bits, 63
+    (expt 2 32) (bit-shift-left 1 32)
+    (expt 2 16) (bit-shift-left 1 10000) ; truncated to least 6-bits, 16
+)
   (is (thrown? IllegalArgumentException (bit-shift-left 1N 1))))
 
 (deftest test-bit-shift-right
   (are [x y] (= x y)
-       2r0 (bit-shift-right 2r1 1)
-       2r010 (bit-shift-right 2r100 1)
-       2r001 (bit-shift-right 2r100 2)
-       2r000 (bit-shift-right 2r100 3)
-       2r0001011 (bit-shift-right 2r00010111 1)
-       2r0001011 (apply bit-shift-right [2r00010111 1])
-       0 (bit-shift-right 2r10 -1) ; truncated to least 6-bits, 63
-       1 (bit-shift-right (expt 2 32) 32)
-       1 (bit-shift-right (expt 2 16) 10000) ; truncated to least 6-bits, 16
-       -1 (bit-shift-right -2r10 1)
-       )
+    2r0 (bit-shift-right 2r1 1)
+    2r010 (bit-shift-right 2r100 1)
+    2r001 (bit-shift-right 2r100 2)
+    2r000 (bit-shift-right 2r100 3)
+    2r0001011 (bit-shift-right 2r00010111 1)
+    2r0001011 (apply bit-shift-right [2r00010111 1])
+    0 (bit-shift-right 2r10 -1) ; truncated to least 6-bits, 63
+    1 (bit-shift-right (expt 2 32) 32)
+    1 (bit-shift-right (expt 2 16) 10000) ; truncated to least 6-bits, 16
+    -1 (bit-shift-right -2r10 1))
   (is (thrown? IllegalArgumentException (bit-shift-right 1N 1))))
 
 (deftest test-unsigned-bit-shift-right
   (are [x y] (= x y)
-       2r0 (unsigned-bit-shift-right 2r1 1)
-       2r010 (unsigned-bit-shift-right 2r100 1)
-       2r001 (unsigned-bit-shift-right 2r100 2)
-       2r000 (unsigned-bit-shift-right 2r100 3)
-       2r0001011 (unsigned-bit-shift-right 2r00010111 1)
-       2r0001011 (apply unsigned-bit-shift-right [2r00010111 1])
-       0 (unsigned-bit-shift-right 2r10 -1) ; truncated to least 6-bits, 63
-       1 (unsigned-bit-shift-right (expt 2 32) 32)
-       1 (unsigned-bit-shift-right (expt 2 16) 10000) ; truncated to least 6-bits, 16
-       9223372036854775807 (unsigned-bit-shift-right -2r10 1)
-       )
+    2r0 (unsigned-bit-shift-right 2r1 1)
+    2r010 (unsigned-bit-shift-right 2r100 1)
+    2r001 (unsigned-bit-shift-right 2r100 2)
+    2r000 (unsigned-bit-shift-right 2r100 3)
+    2r0001011 (unsigned-bit-shift-right 2r00010111 1)
+    2r0001011 (apply unsigned-bit-shift-right [2r00010111 1])
+    0 (unsigned-bit-shift-right 2r10 -1) ; truncated to least 6-bits, 63
+    1 (unsigned-bit-shift-right (expt 2 32) 32)
+    1 (unsigned-bit-shift-right (expt 2 16) 10000) ; truncated to least 6-bits, 16
+    9223372036854775807 (unsigned-bit-shift-right -2r10 1))
   (is (thrown? IllegalArgumentException (unsigned-bit-shift-right 1N 1))))
 
 (deftest test-bit-clear
@@ -579,15 +561,14 @@ Math/pow overflows to Infinity."
 ;; arrays
 (deftest test-array-types
   (are [x y z] (= (Class/forName x) (class y) (class z))
-       "[Z" (boolean-array 1) (booleans (boolean-array 1 true))
-       "[B" (byte-array 1) (bytes (byte-array 1 (byte 1)))
-       "[C" (char-array 1) (chars (char-array 1 \a))
-       "[S" (short-array 1) (shorts (short-array 1 (short 1)))
-       "[F" (float-array 1) (floats (float-array 1 1))
-       "[D" (double-array 1) (doubles (double-array 1 1))
-       "[I" (int-array 1) (ints (int-array 1 1))
-       "[J" (long-array 1) (longs (long-array 1 1))))
-
+    "[Z" (boolean-array 1) (booleans (boolean-array 1 true))
+    "[B" (byte-array 1) (bytes (byte-array 1 (byte 1)))
+    "[C" (char-array 1) (chars (char-array 1 \a))
+    "[S" (short-array 1) (shorts (short-array 1 (short 1)))
+    "[F" (float-array 1) (floats (float-array 1 1))
+    "[D" (double-array 1) (doubles (double-array 1 1))
+    "[I" (int-array 1) (ints (int-array 1 1))
+    "[J" (long-array 1) (longs (long-array 1 1))))
 
 (deftest test-ratios
   (is (== (denominator 1/2) 2))
@@ -597,9 +578,9 @@ Math/pow overflows to Infinity."
 
 (deftest test-arbitrary-precision-subtract
   (are [x y] (= x y)
-       9223372036854775808N (-' 0 -9223372036854775808)
-       clojure.lang.BigInt  (class (-' 0 -9223372036854775808))
-       java.lang.Long       (class (-' 0 -9223372036854775807))))
+    9223372036854775808N (-' 0 -9223372036854775808)
+    clojure.lang.BigInt  (class (-' 0 -9223372036854775808))
+    java.lang.Long       (class (-' 0 -9223372036854775807))))
 
 (deftest test-min-max
   (testing "min/max on different numbers of floats and doubles"
@@ -608,24 +589,24 @@ Math/pow overflows to Infinity."
               (= (Float. xmax) (max (Float. a)))
               (= xmin (min a))
               (= xmax (max a)))
-         0.0 0.0 0.0)
+      0.0 0.0 0.0)
     (are [xmin xmax a b]
          (and (= (Float. xmin) (min (Float. a) (Float. b)))
               (= (Float. xmax) (max (Float. a) (Float. b)))
               (= xmin (min a b))
               (= xmax (max a b)))
-         -1.0  0.0  0.0 -1.0
-         -1.0  0.0 -1.0  0.0
-         0.0  1.0  0.0  1.0
-         0.0  1.0  1.0  0.0)
+      -1.0  0.0  0.0 -1.0
+      -1.0  0.0 -1.0  0.0
+      0.0  1.0  0.0  1.0
+      0.0  1.0  1.0  0.0)
     (are [xmin xmax a b c]
          (and (= (Float. xmin) (min (Float. a) (Float. b) (Float. c)))
               (= (Float. xmax) (max (Float. a) (Float. b) (Float. c)))
               (= xmin (min a b c))
               (= xmax (max a b c)))
-         -1.0  1.0  0.0  1.0 -1.0
-         -1.0  1.0  0.0 -1.0  1.0
-         -1.0  1.0 -1.0  1.0  0.0))
+      -1.0  1.0  0.0  1.0 -1.0
+      -1.0  1.0  0.0 -1.0  1.0
+      -1.0  1.0 -1.0  1.0  0.0))
   (testing "min/max preserves type of winner"
     (is (= java.lang.Long (class (max 10))))
     (is (= java.lang.Long (class (max 1.0 10))))
@@ -649,13 +630,13 @@ Math/pow overflows to Infinity."
       (are [minmax]
            (are [nan? nan zero]
                 (every? nan? (map minmax
-                                  [ nan zero zero]
+                                  [nan zero zero]
                                   [zero  nan zero]
                                   [zero zero  nan]))
-                fnan?  Float/NaN  (Float. 0.0)
-                dnan? Double/NaN          0.0)
-           min
-           max))))
+             fnan?  Float/NaN  (Float. 0.0)
+             dnan? Double/NaN          0.0)
+        min
+        max))))
 
 (defn integer
   "Distribution of integers biased towards the small, but
@@ -666,9 +647,9 @@ Math/pow overflows to Infinity."
 (defn longable?
   [n]
   (try
-   (long n)
-   true
-   (catch Exception _)))
+    (long n)
+    true
+    (catch Exception _)))
 
 (defspec integer-commutative-laws
   (partial map identity)
@@ -734,23 +715,23 @@ Math/pow overflows to Infinity."
 
 (defmacro check-warn-on-box [warn? form]
   `(do (binding [*unchecked-math* :warn-on-boxed]
-                (is (= ~warn?
-                       (boolean
-                         (re-find #"^Boxed math warning"
-                                  (helper/with-err-string-writer
-                                    (helper/eval-in-temp-ns ~form)))))))
+         (is (= ~warn?
+                (boolean
+                 (re-find #"^Boxed math warning"
+                          (helper/with-err-string-writer
+                            (helper/eval-in-temp-ns ~form)))))))
        (binding [*unchecked-math* true]
-                (is (false?
-                      (boolean
-                        (re-find #"^Boxed math warning"
-                                 (helper/with-err-string-writer
-                                   (helper/eval-in-temp-ns ~form)))))))
+         (is (false?
+              (boolean
+               (re-find #"^Boxed math warning"
+                        (helper/with-err-string-writer
+                          (helper/eval-in-temp-ns ~form)))))))
        (binding [*unchecked-math* false]
-                (is (false?
-                      (boolean
-                        (re-find #"^Boxed math warning"
-                                 (helper/with-err-string-writer
-                                   (helper/eval-in-temp-ns ~form)))))))))
+         (is (false?
+              (boolean
+               (re-find #"^Boxed math warning"
+                        (helper/with-err-string-writer
+                          (helper/eval-in-temp-ns ~form)))))))))
 
 (deftest warn-on-boxed
   (check-warn-on-box true (#(inc %) 2))
@@ -758,7 +739,6 @@ Math/pow overflows to Infinity."
   (check-warn-on-box false (long-array 5))
   (check-warn-on-box true (> (first (range 3)) 0))
   (check-warn-on-box false (> ^long (first (range 3)) 0)))
-
 
 (deftest comparisons
   (let [small-numbers [1 1.0 (Integer. 1) (Float. 1.0) 9/10 1N 1M]
@@ -803,7 +783,7 @@ Math/pow overflows to Infinity."
 
 (deftest test-nan-comparison
   (are [x y] (= x y)
-       (< 1000 Double/NaN) (< 1000 (Double. Double/NaN))
-       (<= 1000 Double/NaN) (<= 1000 (Double. Double/NaN))
-       (> 1000 Double/NaN) (> 1000 (Double. Double/NaN))
-       (>= 1000 Double/NaN) (>= 1000 (Double. Double/NaN))))
+    (< 1000 Double/NaN) (< 1000 (Double. Double/NaN))
+    (<= 1000 Double/NaN) (<= 1000 (Double. Double/NaN))
+    (> 1000 Double/NaN) (> 1000 (Double. Double/NaN))
+    (>= 1000 Double/NaN) (>= 1000 (Double. Double/NaN))))

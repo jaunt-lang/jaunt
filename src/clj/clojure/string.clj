@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 (ns ^{:doc "Clojure String utilities
 
@@ -38,7 +38,7 @@ Design notes for clojure.string:
    e.g. passing a mutable implementation of CharSequence, then
    thread-safety is your responsibility."
       :author "Stuart Sierra, Stuart Halloway, David Liebke"}
-  clojure.string
+ clojure.string
   (:refer-clojure :exclude (replace reverse))
   (:import (java.util.regex Pattern Matcher)
            clojure.lang.LazilyPersistentVector))
@@ -99,14 +99,14 @@ Design notes for clojure.string:
   {:added "1.2"}
   [^CharSequence s match replacement]
   (let [s (.toString s)]
-    (cond 
-     (instance? Character match) (.replace s ^Character match ^Character replacement)
-     (instance? CharSequence match) (.replace s ^CharSequence match ^CharSequence replacement)
-     (instance? Pattern match) (if (instance? CharSequence replacement)
-                                 (.replaceAll (re-matcher ^Pattern match s)
-                                              (.toString ^CharSequence replacement))
-                                 (replace-by s match replacement))
-     :else (throw (IllegalArgumentException. (str "Invalid match arg: " match))))))
+    (cond
+      (instance? Character match) (.replace s ^Character match ^Character replacement)
+      (instance? CharSequence match) (.replace s ^CharSequence match ^CharSequence replacement)
+      (instance? Pattern match) (if (instance? CharSequence replacement)
+                                  (.replaceAll (re-matcher ^Pattern match s)
+                                               (.toString ^CharSequence replacement))
+                                  (replace-by s match replacement))
+      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match))))))
 
 (defn- replace-first-by
   [^CharSequence s ^Pattern re f]
@@ -164,34 +164,33 @@ Design notes for clojure.string:
   [^CharSequence s match replacement]
   (let [s (.toString s)]
     (cond
-     (instance? Character match)
-     (replace-first-char s match replacement)
-     (instance? CharSequence match)
-     (replace-first-str s (.toString ^CharSequence match)
-                        (.toString ^CharSequence replacement))
-     (instance? Pattern match)
-     (if (instance? CharSequence replacement)
-       (.replaceFirst (re-matcher ^Pattern match s)
-                      (.toString ^CharSequence replacement))
-       (replace-first-by s match replacement))
-     :else (throw (IllegalArgumentException. (str "Invalid match arg: " match))))))
-
+      (instance? Character match)
+      (replace-first-char s match replacement)
+      (instance? CharSequence match)
+      (replace-first-str s (.toString ^CharSequence match)
+                         (.toString ^CharSequence replacement))
+      (instance? Pattern match)
+      (if (instance? CharSequence replacement)
+        (.replaceFirst (re-matcher ^Pattern match s)
+                       (.toString ^CharSequence replacement))
+        (replace-first-by s match replacement))
+      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match))))))
 
 (defn ^String join
   "Returns a string of all elements in coll, as returned by (seq coll),
    separated by an optional separator."
   {:added "1.2"}
   ([coll]
-     (apply str coll))
+   (apply str coll))
   ([separator coll]
-     (loop [sb (StringBuilder. (str (first coll)))
-            more (next coll)
-            sep (str separator)]
-       (if more
-         (recur (-> sb (.append sep) (.append (str (first more))))
-                (next more)
-                sep)
-         (str sb)))))
+   (loop [sb (StringBuilder. (str (first coll)))
+          more (next coll)
+          sep (str separator)]
+     (if more
+       (recur (-> sb (.append sep) (.append (str (first more))))
+              (next more)
+              sep)
+       (str sb)))))
 
 (defn ^String capitalize
   "Converts first character of the string to upper-case, all other
@@ -221,9 +220,9 @@ Design notes for clojure.string:
   the maximum number of splits. Not lazy. Returns vector of the splits."
   {:added "1.2"}
   ([^CharSequence s ^Pattern re]
-     (LazilyPersistentVector/createOwning (.split re s)))
-  ([ ^CharSequence s ^Pattern re limit]
-     (LazilyPersistentVector/createOwning (.split re s limit))))
+   (LazilyPersistentVector/createOwning (.split re s)))
+  ([^CharSequence s ^Pattern re limit]
+   (LazilyPersistentVector/createOwning (.split re s limit))))
 
 (defn split-lines
   "Splits s on \\n or \\r\\n."
@@ -300,7 +299,7 @@ Design notes for clojure.string:
 (defn ^String escape
   "Return a new string, using cmap to escape each character ch
    from s as follows:
-   
+
    If (cmap ch) is nil, append ch to the new string.
    If (cmap ch) is non-nil, append (str (cmap ch)) instead."
   {:added "1.2"}
@@ -320,42 +319,42 @@ Design notes for clojure.string:
   forward from from-index or nil if not found."
   {:added "1.8"}
   ([^CharSequence s value]
-  (let [result ^long
-        (if (instance? Character value)
-          (.indexOf (.toString s) ^int (.charValue ^Character value))
-          (.indexOf (.toString s) ^String value))]
-    (if (= result -1)
-      nil
-      result)))
+   (let [result ^long
+         (if (instance? Character value)
+           (.indexOf (.toString s) ^int (.charValue ^Character value))
+           (.indexOf (.toString s) ^String value))]
+     (if (= result -1)
+       nil
+       result)))
   ([^CharSequence s value ^long from-index]
-  (let [result ^long
-        (if (instance? Character value)
-          (.indexOf (.toString s) ^int (.charValue ^Character value) (unchecked-int from-index))
-          (.indexOf (.toString s) ^String value (unchecked-int from-index)))]
-    (if (= result -1)
-      nil
-      result))))
+   (let [result ^long
+         (if (instance? Character value)
+           (.indexOf (.toString s) ^int (.charValue ^Character value) (unchecked-int from-index))
+           (.indexOf (.toString s) ^String value (unchecked-int from-index)))]
+     (if (= result -1)
+       nil
+       result))))
 
 (defn last-index-of
   "Return last index of value (string or char) in s, optionally
   searching backward from from-index or nil if not found."
   {:added "1.8"}
   ([^CharSequence s value]
-  (let [result ^long
-        (if (instance? Character value)
-          (.lastIndexOf (.toString s) ^int (.charValue ^Character value))
-          (.lastIndexOf (.toString s) ^String value))]
-    (if (= result -1)
-      nil
-      result)))
+   (let [result ^long
+         (if (instance? Character value)
+           (.lastIndexOf (.toString s) ^int (.charValue ^Character value))
+           (.lastIndexOf (.toString s) ^String value))]
+     (if (= result -1)
+       nil
+       result)))
   ([^CharSequence s value ^long from-index]
-  (let [result ^long
-        (if (instance? Character value)
-          (.lastIndexOf (.toString s) ^int (.charValue ^Character value) (unchecked-int from-index))
-          (.lastIndexOf (.toString s) ^String value (unchecked-int from-index)))]
-    (if (= result -1)
-      nil
-      result))))
+   (let [result ^long
+         (if (instance? Character value)
+           (.lastIndexOf (.toString s) ^int (.charValue ^Character value) (unchecked-int from-index))
+           (.lastIndexOf (.toString s) ^String value (unchecked-int from-index)))]
+     (if (= result -1)
+       nil
+       result))))
 
 (defn starts-with?
   "True if s starts with substr."

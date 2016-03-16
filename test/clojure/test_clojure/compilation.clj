@@ -1,12 +1,12 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-; Author: Frantisek Sodomka
+;; Author: Frantisek Sodomka
 
 
 (ns clojure.test-clojure.compilation
@@ -17,32 +17,32 @@
   (:use clojure.test
         [clojure.test-helper :only (should-not-reflect should-print-err-message)]))
 
-; http://clojure.org/compilation
+;; http://clojure.org/compilation
 
-; compile
-; gen-class, gen-interface
+;; compile
+;; gen-class, gen-interface
 
 
 (deftest test-compiler-metadata
   (let [m (meta #'when)]
     (are [x y]  (= x y)
-        (list? (:arglists m)) true
-        (> (count (:arglists m)) 0) true
+      (list? (:arglists m)) true
+      (> (count (:arglists m)) 0) true
 
-        (string? (:doc m)) true
-        (> (.length (:doc m)) 0) true
+      (string? (:doc m)) true
+      (> (.length (:doc m)) 0) true
 
-        (string? (:file m)) true
-        (> (.length (:file m)) 0) true
+      (string? (:file m)) true
+      (> (.length (:file m)) 0) true
 
-        (integer? (:line m)) true
-        (> (:line m) 0) true
+      (integer? (:line m)) true
+      (> (:line m) 0) true
 
-        (integer? (:column m)) true
-        (> (:column m) 0) true
+      (integer? (:column m)) true
+      (> (:column m) 0) true
 
-        (:macro m) true
-        (:name m) 'when )))
+      (:macro m) true
+      (:name m) 'when)))
 
 (deftest test-embedded-constants
   (testing "Embedded constants"
@@ -113,9 +113,9 @@
 
 ;; disabled until build box can call java from mvn
 #_(deftest test-numeric-dispatch
-  (is (= "(int, int)" (TestDispatch/someMethod (int 1) (int 1))))
-  (is (= "(int, long)" (TestDispatch/someMethod (int 1) (long 1))))
-  (is (= "(long, long)" (TestDispatch/someMethod (long 1) (long 1)))))
+    (is (= "(int, int)" (TestDispatch/someMethod (int 1) (int 1))))
+    (is (= "(int, long)" (TestDispatch/someMethod (int 1) (long 1))))
+    (is (= "(long, long)" (TestDispatch/someMethod (long 1) (long 1)))))
 
 (deftest test-CLJ-671-regression
   (testing "that the presence of hints does not cause the compiler to infinitely loop"
@@ -123,7 +123,7 @@
               (loop [x (long x) y (long y)]
                 (if (== y 0)
                   x
-                  (recur y ^Long(rem x y)))))]
+                  (recur y ^Long (rem x y)))))]
       (is (= 4 (gcd 8 100))))))
 
 ;; ensure proper use of hints / type decls
@@ -156,12 +156,12 @@
 (deftest calls-use-arg-vector-hint
   (should-not-reflect #(.floatValue (clojure.test-clojure.compilation/hinting-conflict)))
   (should-print-err-message #"(?s)Reflection warning.*"
-    #(.substring (clojure.test-clojure.compilation/hinting-conflict) 0)))
+                            #(.substring (clojure.test-clojure.compilation/hinting-conflict) 0)))
 
 (deftest deref-uses-var-tag
   (should-not-reflect #(.substring clojure.test-clojure.compilation/hinting-conflict 0))
   (should-print-err-message #"(?s)Reflection warning.*"
-    #(.floatValue clojure.test-clojure.compilation/hinting-conflict)))
+                            #(.floatValue clojure.test-clojure.compilation/hinting-conflict)))
 
 (defn ^String legacy-hinting [])
 
@@ -170,7 +170,7 @@
 
 (defprotocol HintedProtocol
   (hintedp ^String [a]
-           ^Integer [a b]))
+    ^Integer [a b]))
 
 (deftest hinted-protocol-arg-vector
   (should-not-reflect #(.substring (clojure.test-clojure.compilation/hintedp "") 0))
@@ -185,34 +185,34 @@
   (should-not-reflect #(loop [k 5.0] (recur (clojure.test-clojure.compilation/primfn 0))))
 
   (should-print-err-message #"(?s).*k is not matching primitive.*"
-    #(loop [k (clojure.test-clojure.compilation/primfn)] (recur :foo))))
+                            #(loop [k (clojure.test-clojure.compilation/primfn)] (recur :foo))))
 
 #_(deftest CLJ-1154-use-out-after-compile
   ;; This test creates a dummy file to compile, sets up a dummy
   ;; compiled output directory, and a dummy output stream, and
   ;; verifies the stream is still usable after compiling.
-  (spit "test/dummy.clj" "(ns dummy)")
-  (try
-    (let [compile-path (System/getProperty "clojure.compile.path")
-          tmp (java.io.File. "tmp")
-          new-out (java.io.OutputStreamWriter. (java.io.ByteArrayOutputStream.))]
-      (binding [clojure.core/*out* new-out]
-        (try
-          (.mkdir tmp)
-          (System/setProperty "clojure.compile.path" "tmp")
-          (clojure.lang.Compile/main (into-array ["dummy"]))
-          (println "this should still work without throwing an exception" )
-          (finally
-            (if compile-path
-              (System/setProperty "clojure.compile.path" compile-path)
-              (System/clearProperty "clojure.compile.path"))
-            (doseq [f (.listFiles tmp)]
-              (.delete f))
-            (.delete tmp)))))
-    (finally
-      (doseq [f (.listFiles (java.io.File. "test"))
-              :when (re-find #"dummy.clj" (str f))]
-        (.delete f)))))
+    (spit "test/dummy.clj" "(ns dummy)")
+    (try
+      (let [compile-path (System/getProperty "clojure.compile.path")
+            tmp (java.io.File. "tmp")
+            new-out (java.io.OutputStreamWriter. (java.io.ByteArrayOutputStream.))]
+        (binding [clojure.core/*out* new-out]
+          (try
+            (.mkdir tmp)
+            (System/setProperty "clojure.compile.path" "tmp")
+            (clojure.lang.Compile/main (into-array ["dummy"]))
+            (println "this should still work without throwing an exception")
+            (finally
+              (if compile-path
+                (System/setProperty "clojure.compile.path" compile-path)
+                (System/clearProperty "clojure.compile.path"))
+              (doseq [f (.listFiles tmp)]
+                (.delete f))
+              (.delete tmp)))))
+      (finally
+        (doseq [f (.listFiles (java.io.File. "test"))
+                :when (re-find #"dummy.clj" (str f))]
+          (.delete f)))))
 
 (deftest CLJ-1184-do-in-non-list-test
   (testing "do in a vector throws an exception"
@@ -227,12 +227,12 @@
   (letfn [(compile [s]
             (spit "test/clojure/bad_def_test.clj" (str "(ns clojure.bad-def-test)\n" s))
             (try
-             (binding [*compile-path* "test"]
-               (clojure.core/compile 'clojure.bad-def-test))
-             (finally
-               (doseq [f (.listFiles (java.io.File. "test/clojure"))
-                       :when (re-find #"bad_def_test" (str f))]
-                 (.delete f)))))]
+              (binding [*compile-path* "test"]
+                (clojure.core/compile 'clojure.bad-def-test))
+              (finally
+                (doseq [f (.listFiles (java.io.File. "test/clojure"))
+                        :when (re-find #"bad_def_test" (str f))]
+                  (.delete f)))))]
     (testing "do in a vector throws an exception in compilation"
       (is (thrown? Compiler$CompilerException (compile "[do 1 2 3]"))))
     (testing "do in a set throws an exception in compilation"
@@ -268,28 +268,25 @@
   (should-not-reflect #(Math/abs (clojure.test-clojure.compilation/hinted-primfn 1)))
   (should-not-reflect #(Math/abs ^long (clojure.test-clojure.compilation/unhinted-primfn 1))))
 
-
 (defrecord Y [a])
-#clojure.test_clojure.compilation.Y[1]
+#clojure.test_clojure.compilation.Y [1]
 (defrecord Y [b])
 
 (binding [*compile-path* "target/test-classes"]
   (compile 'clojure.test-clojure.compilation.examples))
 
-
 (deftest test-compiler-line-numbers
   (let [fails-on-line-number? (fn [expected function]
-                                 (try
-                                   (function)
-                                   nil
-                                   (catch Throwable t
-                                     (let [frames (filter #(= "line_number_examples.clj" (.getFileName %))
-                                                          (.getStackTrace t))
-                                           _ (if (zero? (count frames))
-                                               (.printStackTrace t)
-                                               )
-                                           actual (.getLineNumber ^StackTraceElement (first frames))]
-                                       (= expected actual)))))]
+                                (try
+                                  (function)
+                                  nil
+                                  (catch Throwable t
+                                    (let [frames (filter #(= "line_number_examples.clj" (.getFileName %))
+                                                         (.getStackTrace t))
+                                          _ (if (zero? (count frames))
+                                              (.printStackTrace t))
+                                          actual (.getLineNumber ^StackTraceElement (first frames))]
+                                      (= expected actual)))))]
     (is (fails-on-line-number?  13 line/instance-field))
     (is (fails-on-line-number?  19 line/instance-field-reflected))
     (is (fails-on-line-number?  25 line/instance-field-unboxed))
@@ -324,26 +321,26 @@
 
 (deftest clj-1568
   (let [compiler-fails-at?
-          (fn [row col source]
-            (try
-              (Compiler/load (java.io.StringReader. source) (name (gensym "clj-1568.example-")) "clj-1568.example")
-              nil
-              (catch Compiler$CompilerException e
-                (re-find (re-pattern (str "^.*:" row ":" col "\\)$"))
-                         (.getMessage e)))))]
+        (fn [row col source]
+          (try
+            (Compiler/load (java.io.StringReader. source) (name (gensym "clj-1568.example-")) "clj-1568.example")
+            nil
+            (catch Compiler$CompilerException e
+              (re-find (re-pattern (str "^.*:" row ":" col "\\)$"))
+                       (.getMessage e)))))]
     (testing "with error in the initial form"
       (are [row col source] (compiler-fails-at? row col source)
            ;; note that the spacing of the following string is important
-           1  4 "   (.foo nil)"
-           2 18 "
+        1  4 "   (.foo nil)"
+        2 18 "
                  (/ 1 0)"))
     (testing "with error in an non-initial form"
       (are [row col source] (compiler-fails-at? row col source)
            ;; note that the spacing of the following string is important
-           3 18 "(:foo {})
+        3 18 "(:foo {})
 
                  (.foo nil)"
-           4 20 "(ns clj-1568.example)
+        4 20 "(ns clj-1568.example)
 
 
                    (/ 1 0)"))))
@@ -373,7 +370,7 @@
 (deftest incorrect-primitive-type-hint-throws
   ;; invalid primitive type hint
   (is (thrown-with-msg? Compiler$CompilerException #"Cannot coerce long to int"
-        (load-string "(defn returns-long ^long [] 1) (Integer/bitCount ^int (returns-long))")))
+                        (load-string "(defn returns-long ^long [] 1) (Integer/bitCount ^int (returns-long))")))
   ;; correct casting instead
   (is (= 1 (load-string "(defn returns-long ^long [] 1) (Integer/bitCount (int (returns-long)))"))))
 
@@ -382,7 +379,6 @@
 (deftest test-anon-recursive-fn
   (is (= [0 0] (take 2 ((fn rf [x] (lazy-seq (cons x (rf x)))) 0))))
   (is (= [0 0] (take 2 (zf 0)))))
-
 
 ;; See CLJ-1845
 (deftest direct-linking-for-load

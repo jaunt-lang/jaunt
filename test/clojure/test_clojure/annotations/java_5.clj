@@ -6,13 +6,13 @@
 
 (deftype #^{Deprecated true
             Retention RetentionPolicy/RUNTIME}
-  Bar [#^int a
-       #^{:tag int
-          Deprecated true
-          Retention RetentionPolicy/RUNTIME} b]
+           Bar [#^int a
+                #^{:tag int
+                   Deprecated true
+                   Retention RetentionPolicy/RUNTIME} b]
   Foo (#^{Deprecated true
           Retention RetentionPolicy/RUNTIME}
-       foo [this] 42))
+         foo [this] 42))
 
 (defn annotation->map
   "Converts a Java annotation (which conceals data)
@@ -20,18 +20,18 @@
    Works recursively. Returns non-annotations unscathed."
   [#^java.lang.annotation.Annotation o]
   (cond
-   (instance? Annotation o)
-   (let [type (.annotationType o)
-         itfs (-> (into #{type} (supers type)) (disj java.lang.annotation.Annotation))
-         data-methods (into #{} (mapcat #(.getDeclaredMethods %) itfs))]
-     (into
-      {:annotationType (.annotationType o)}
-      (map
-       (fn [m] [(keyword (.getName m)) (annotation->map (.invoke m o nil))])
-       data-methods)))
-   (or (sequential? o) (.isArray (class o)))
-   (map annotation->map o)
-     :else o))
+    (instance? Annotation o)
+    (let [type (.annotationType o)
+          itfs (-> (into #{type} (supers type)) (disj java.lang.annotation.Annotation))
+          data-methods (into #{} (mapcat #(.getDeclaredMethods %) itfs))]
+      (into
+       {:annotationType (.annotationType o)}
+       (map
+        (fn [m] [(keyword (.getName m)) (annotation->map (.invoke m o nil))])
+        data-methods)))
+    (or (sequential? o) (.isArray (class o)))
+    (map annotation->map o)
+    :else o))
 
 (def expected-annotations
   #{{:annotationType java.lang.annotation.Retention, :value RetentionPolicy/RUNTIME}
