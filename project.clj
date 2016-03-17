@@ -3,6 +3,7 @@
   :java-source-paths ["src/jvm" "test/java"]
   :test-paths        ["test/clojure"]
   :resource-paths    ["src/resources"]
+  :exclusions        [org.clojure/clojure]
   :profiles {:dev {:plugins [[lein-cljfmt "0.4.1"]]
                    :cljfmt  {:indents {fn*                 [[:inner 0]]
                                        as->                [[:inner 0]]
