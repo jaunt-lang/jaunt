@@ -425,7 +425,18 @@ public class Compiler implements Opcodes {
   }
 
   static public PersistentHashSet getUsedVars(Var v) {
-    return (PersistentHashSet) RT.get(v.meta(), RT.USES_KEY, PersistentHashSet.EMPTY);
+
+    PersistentHashSet ret = null;
+    if ((ret = (PersistentHashSet) RT.get(v.meta(), RT.USES_KEY)) == null) {
+      Object val = v.get();
+      if (val instanceof IMeta) {
+        ret = (PersistentHashSet) RT.get(((IMeta) val).meta(), RT.USES_KEY, PersistentHashSet.EMPTY);
+        v.alterMeta(Var.assoc, RT.list(RT.USES_KEY, ret));
+      } else {
+        ret = PersistentHashSet.EMPTY;
+      }
+    }
+    return ret;
   }
 
   static public PersistentHashSet getReachedVars(Var v) {
@@ -434,29 +445,25 @@ public class Compiler implements Opcodes {
 
   static public PersistentHashSet getReachedVars(Var v, PersistentHashSet acc) {
     PersistentHashSet reaches = null;
-    reaches = (PersistentHashSet) RT.get(v.meta(), RT.REACHES_KEY);
-    if (reaches != null) {
-      return reaches;
-    } else {
-      reaches = PersistentHashSet.EMPTY;
+
+    if ((reaches = (PersistentHashSet) RT.get(v.meta(), RT.REACHES_KEY)) == null) {
 
       // merge the reach sets of used vars
-      for (Object o : getUsedVars(v)) { // Set<Var>
-        Var uv = (Var) o; // statically safe
-        if (!acc.contains(uv)) {
-          acc = (PersistentHashSet) acc.cons(uv);
-          reaches = (PersistentHashSet) acc.cons(uv);
-          for (Object o1 : getReachedVars(uv, acc)) {
+      for (Object o : getUsedVars(v)) { // Set<Symbol>
+        if (!acc.contains(o)) {
+          acc = (PersistentHashSet) acc.cons(o);
+          reaches = (PersistentHashSet) acc.cons(o);
+          for (Object o1 : getReachedVars(Var.find((Symbol) o), acc)) {
             reaches = (PersistentHashSet) reaches.cons(o1);
           }
         }
       }
 
-      // save the reach set
+      // FIXME: correctness concerns?
       v.alterMeta(Var.assoc, RT.list(RT.REACHES_KEY, reaches));
-
-      return reaches;
     }
+
+    return reaches;
   }
 
   static PersistentHashSet reachesStaleVars(Var v) {
@@ -657,15 +664,10 @@ public class Compiler implements Opcodes {
         mm = (IPersistentMap) elideMeta(mm);
         try {
           Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey)),
-                                        DEFINING_VAR, v,
-                                        USE_SET, PersistentHashSet.EMPTY));
+                                        DEFINING_VAR, v));
           C ctx = context == C.EVAL ? context : C.EXPRESSION;
           Expr initExpr = analyze(ctx, RT.third(form), v.sym.name);
-
-          PersistentHashSet uses = (PersistentHashSet) USE_SET.get();
-          mm = (IPersistentMap) RT.assoc(mm, RT.USES_KEY, uses);
           Expr meta = mm.count() == 0 ? null : analyze(ctx, mm);
-
           return new DefExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(),
                              v, initExpr, meta, initProvided, isDynamic, shadowsCoreMapping);
         } finally {
@@ -3819,7 +3821,7 @@ public class Compiler implements Opcodes {
     private boolean hasPrimSigs;
     private boolean hasMeta;
     private boolean hasEnclosingMethod;
-    //  String superName = null;
+    private PersistentHashSet uses;
 
     public FnExpr(Object tag) {
       super(tag);
@@ -3900,6 +3902,7 @@ public class Compiler implements Opcodes {
                            CONSTANT_IDS, new IdentityHashMap(),
                            KEYWORDS, PersistentHashMap.EMPTY,
                            VARS, PersistentHashMap.EMPTY,
+                           USE_SET, PersistentHashSet.EMPTY,
                            KEYWORD_CALLSITES, PersistentVector.EMPTY,
                            PROTOCOL_CALLSITES, PersistentVector.EMPTY,
                            VAR_CALLSITES, emptyVarCallSites(),
@@ -3981,6 +3984,7 @@ public class Compiler implements Opcodes {
         fn.keywordCallsites = (IPersistentVector) KEYWORD_CALLSITES.deref();
         fn.protocolCallsites = (IPersistentVector) PROTOCOL_CALLSITES.deref();
         fn.varCallsites = (IPersistentSet) VAR_CALLSITES.deref();
+        fn.uses = (PersistentHashSet) USE_SET.deref();
 
         fn.constantsID = RT.nextID();
 //      DynamicClassLoader loader = (DynamicClassLoader) LOADER.get();
@@ -3988,19 +3992,32 @@ public class Compiler implements Opcodes {
       } finally {
         Var.popThreadBindings();
       }
+
+      // propagate var use info up
+      if (USE_SET.isBound()) {
+        PersistentHashSet outerUses = (PersistentHashSet) USE_SET.get();
+        for (Object o : fn.uses)
+          outerUses = (PersistentHashSet) outerUses.cons(o);
+
+        USE_SET.set(outerUses);
+      }
+
       fn.hasPrimSigs = prims.size() > 0;
       IPersistentMap fmeta = RT.meta(origForm);
       if (fmeta != null) {
         fmeta = fmeta.without(RT.LINE_KEY).without(RT.COLUMN_KEY).without(RT.FILE_KEY).without(retkey);
+      } else {
+        fmeta = PersistentHashMap.EMPTY;
       }
+
+      //RT.errPrintWriter().println(name + " uses " + fn.uses.toString());
+      fmeta = fmeta.assoc(RT.USES_KEY, fn.uses);
 
       fn.hasMeta = RT.count(fmeta) > 0;
 
       try {
         fn.compile(fn.isVariadic() ? "clojure/lang/RestFn" : "clojure/lang/AFunction",
-                   (prims.size() == 0)?
-                   null
-                   :prims.toArray(new String[prims.size()]),
+                   (prims.size() == 0) ? null : prims.toArray(new String[prims.size()]),
                    fn.onceOnly);
       } catch (IOException e) {
         throw Util.sneakyThrow(e);
@@ -4009,8 +4026,7 @@ public class Compiler implements Opcodes {
 
       if (fn.supportsMeta()) {
         //System.err.println(name + " supports meta");
-        return new MetaExpr(fn, MapExpr
-                            .parse(context == C.EVAL ? context : C.EXPRESSION, fmeta));
+        return new MetaExpr(fn, MapExpr.parse(context == C.EVAL ? context : C.EXPRESSION, fmeta));
       } else {
         return fn;
       }
@@ -5990,7 +6006,9 @@ public class Compiler implements Opcodes {
 
       for (int i = 0; i < bindingInits.count(); i++) {
         BindingInit bi = (BindingInit) bindingInits.nth(i);
-        ObjExpr fe = (ObjExpr) bi.init;
+        Expr e = bi.init;
+        e = e instanceof MetaExpr ? ((MetaExpr)e).expr : e;
+        ObjExpr fe = (ObjExpr) e;
         gen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ILOAD), bi.binding.idx);
         fe.emitLetFnInits(gen, objx, lbset);
       }
@@ -6704,8 +6722,10 @@ public class Compiler implements Opcodes {
                    (form instanceof IPersistentCollection
                     && !(RT.first(form) instanceof Symbol
                          && ((Symbol) RT.first(form)).name.startsWith("def")))) {
-          ObjExpr fexpr = (ObjExpr) analyze(C.EXPRESSION, RT.list(FN, PersistentVector.EMPTY, form),
-                                            "eval" + RT.nextID());
+          Expr e = analyze(C.EXPRESSION, RT.list(FN, PersistentVector.EMPTY, form), "eval" + RT.nextID());
+          // Discard metadata on top level lambda
+          e = (e instanceof MetaExpr) ? ((MetaExpr) e).expr : e;
+          ObjExpr fexpr = (ObjExpr) e;
           IFn fn = (IFn) fexpr.eval();
           return fn.invoke();
         } else {
@@ -7058,7 +7078,7 @@ public class Compiler implements Opcodes {
       return;
     }
     if (USE_SET.isBound()) {
-      USE_SET.set(((APersistentSet)USE_SET.get()).cons(var));
+      USE_SET.set(((APersistentSet)USE_SET.get()).cons(var.asSymbol()));
     }
     IPersistentMap varsMap = (IPersistentMap) VARS.deref();
     Object id = RT.get(varsMap, var);
@@ -7898,13 +7918,12 @@ public class Compiler implements Opcodes {
       return RT.vector(name,RT.seq(paramTypes));
     }
 
-    static NewInstanceMethod parse(ObjExpr objx, ISeq form, Symbol thistag,
-                                   Map overrideables) {
+    static NewInstanceMethod parse(ObjExpr objx, ISeq form, Symbol thistag, Map overrideables) {
       //(methodname [this-name args*] body...)
       //this-name might be nil
       NewInstanceMethod method = new NewInstanceMethod(objx, (ObjMethod) METHOD.deref());
       Symbol dotname = (Symbol)RT.first(form);
-      Symbol name = (Symbol) Symbol.intern(null,munge(dotname.name)).withMeta(RT.meta(dotname));
+      Symbol name = (Symbol) Symbol.intern(null, munge(dotname.name)).withMeta(RT.meta(dotname));
       IPersistentVector parms = (IPersistentVector) RT.second(form);
       if (parms.count() == 0) {
         throw new IllegalArgumentException("Must supply at least one argument for 'this' in: " + dotname);
@@ -7930,7 +7949,7 @@ public class Compiler implements Opcodes {
 
         //register 'this' as local 0
         if (thisName != null) {
-          registerLocal((thisName == null) ? dummyThis:thisName,thistag, null,false);
+          registerLocal((thisName == null) ? dummyThis : thisName,thistag, null, false);
         } else {
           getAndIncLocalNum();
         }
