@@ -70,8 +70,8 @@ All you need is a `jaunt.clj` like this
 
 ### With Boot
 
-Unfortunately boot is not yet supported. Pull requests detailing usage with boot would be most
-welcome.
+Due to a minor breaking change in Jaunt's implementation details and the fact that Boot is fully AOT
+compiled against Clojure for startup performance, Jaunt is not usable with boot at this time.
 
 ## Goals
 
