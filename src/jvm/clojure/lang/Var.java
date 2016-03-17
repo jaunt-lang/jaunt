@@ -177,6 +177,10 @@ public final class Var
     return null;
   }
 
+  public Symbol asSymbol() {
+    return Symbol.create(getNamespace(), getName());
+  }
+
   public static Var find(Symbol nsQualifiedSym) {
     if (nsQualifiedSym.ns == null) {
       throw new IllegalArgumentException("Symbol must be namespace-qualified");
