@@ -26,7 +26,7 @@
   :default - A function of two args, that will, if present and no reader is found for a tag,
              be called with the tag and the value."
 
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([]
    (read *in*))
   ([stream]
@@ -41,6 +41,6 @@
   http://edn-format.org
 
   opts is a map as per clojure.edn/read"
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([s] (read-string {:eof nil} s))
   ([opts s] (when s (clojure.lang.EdnReader/readString s opts))))

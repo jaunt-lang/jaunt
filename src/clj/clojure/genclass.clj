@@ -628,7 +628,7 @@
   to reference the load code for the implementing namespace. Should be
   true when implementing-ns is the default, false if you intend to
   load the code via some other method."
-  {:added "1.0"}
+  {:added "0.1.0"}
 
   [& options]
   (when *compile-files*
@@ -711,7 +711,7 @@
   This parameter is used to specify the signatures of the methods of
   the generated interface.  Do not repeat superinterface signatures
   here."
-  {:added "1.0"}
+  {:added "0.1.0"}
 
   [& options]
   (let [options-map (apply hash-map options)
@@ -730,7 +730,7 @@
   classloader. Subsequent to generation you can import it into any
   desired namespaces just like any other class. See gen-class for a
   description of the options."
-    {:added "1.0"}
+    {:added "0.1.0"}
 
     [& options]
     (let [options-map (apply hash-map options)

@@ -104,7 +104,7 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
 (defn find-doc
   "Prints documentation for any var whose documentation or name
  contains a match for re-string-or-pattern"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [re-string-or-pattern]
   (let [re (re-pattern re-string-or-pattern)
         ms (concat (mapcat #(sort-by :name (map meta (vals (ns-interns %))))
@@ -119,7 +119,7 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
 
 (defmacro doc
   "Prints documentation for a var or special form given its name"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [name]
   (if-let [special-name ('{& fn catch try finally try} name)]
     (#'print-doc (#'special-doc special-name))
@@ -198,14 +198,14 @@ str-or-pattern."
 (defn demunge
   "Given a string representation of a fn class,
   as in a stack trace element, returns a readable version."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [fn-name]
   (clojure.lang.Compiler/demunge fn-name))
 
 (defn root-cause
   "Returns the initial cause of an exception or error by peeling off all of
   its wrappers"
-  {:added "1.3"}
+  {:added "0.1.0"}
   [^Throwable t]
   (loop [cause t]
     (if (and (instance? clojure.lang.Compiler$CompilerException cause)
@@ -217,7 +217,7 @@ str-or-pattern."
 
 (defn stack-element-str
   "Returns a (possibly unmunged) string representation of a StackTraceElement"
-  {:added "1.3"}
+  {:added "0.1.0"}
   [^StackTraceElement el]
   (let [file (.getFileName el)
         clojure-fn? (and file (or (.endsWith file ".clj")
@@ -231,7 +231,7 @@ str-or-pattern."
 (defn pst
   "Prints a stack trace of the exception, to the depth requested. If none supplied, uses the root cause of the
   most recent repl exception (*e), and a depth of 12."
-  {:added "1.3"}
+  {:added "0.1.0"}
   ([] (pst 12))
   ([e-or-depth]
    (if (instance? Throwable e-or-depth)

@@ -65,7 +65,7 @@
 
 (defn browse-url
   "Open url in a browser"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [url]
   (let [script @*open-url-script*
         script (if (= :uninitialized script)

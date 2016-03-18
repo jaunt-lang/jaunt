@@ -28,27 +28,27 @@
 
 
 (def ^:dynamic
-  ^{:doc "Bind to true if you want write to use pretty printing", :added "1.2"}
+  ^{:doc "Bind to true if you want write to use pretty printing", :added "0.1.0"}
   *print-pretty* true)
 
 (defonce ^:dynamic ; If folks have added stuff here, don't overwrite
   ^{:doc "The pretty print dispatch function. Use with-pprint-dispatch or set-pprint-dispatch
 to modify.",
-    :added "1.2"}
+    :added "0.1.0"}
   *print-pprint-dispatch* nil)
 
 (def ^:dynamic
   ^{:doc "Pretty printing will try to avoid anything going beyond this column.
 Set it to nil to have pprint let the line be arbitrarily long. This will ignore all
 non-mandatory newlines.",
-    :added "1.2"}
+    :added "0.1.0"}
   *print-right-margin* 72)
 
 (def ^:dynamic
   ^{:doc "The column at which to enter miser style. Depending on the dispatch table,
 miser style add newlines in more places to try to keep lines short allowing for further
 levels of nesting.",
-    :added "1.2"}
+    :added "0.1.0"}
   *print-miser-width* 40)
 
 ;;; TODO implement output limiting
@@ -72,7 +72,7 @@ levels of nesting.",
 (def ^:dynamic
   ^{:doc "Don't print namespaces with symbols. This is particularly useful when
 pretty printing the results of macro expansions"
-    :added "1.2"}
+    :added "0.1.0"}
   *print-suppress-namespaces* nil)
 
 ;;; TODO: support print-base and print-radix in cl-format
@@ -81,12 +81,12 @@ pretty printing the results of macro expansions"
   ^{:doc "Print a radix specifier in front of integers and rationals. If *print-base* is 2, 8,
 or 16, then the radix specifier used is #b, #o, or #x, respectively. Otherwise the
 radix specifier is in the form #XXr where XX is the decimal value of *print-base* "
-    :added "1.2"}
+    :added "0.1.0"}
   *print-radix* nil)
 
 (def ^:dynamic
   ^{:doc "The base to use for printing integers and rationals."
-    :added "1.2"}
+    :added "0.1.0"}
   *print-base* 10)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -175,7 +175,7 @@ of the caller.
 This method is primarily intended for use by pretty print dispatch functions that
 already know that the pretty printer will have set up their environment appropriately.
 Normal library clients should use the standard \"write\" interface. "
-  {:added "1.2"}
+  {:added "0.1.0"}
   [object]
   (let [length-reached (and
                         *current-length*
@@ -213,7 +213,7 @@ The following keyword arguments can be passed with values:
 
   * = not yet supported
 "
-  {:added "1.2"}
+  {:added "0.1.0"}
   [object & kw-args]
   (let [options (merge {:stream true} (apply hash-map kw-args))]
     (binding-map (table-ize write-option-table options)
@@ -236,7 +236,7 @@ The following keyword arguments can be passed with values:
 (defn pprint
   "Pretty print object to the optional output writer. If the writer is not provided,
 print the object to the currently bound value of *out*."
-  {:added "1.2"}
+  {:added "0.1.0"}
   ([object] (pprint object *out*))
   ([object writer]
    (with-pretty-writer writer
@@ -249,7 +249,7 @@ print the object to the currently bound value of *out*."
 (defmacro pp
   "A convenience macro that pretty prints the last thing output. This is
 exactly equivalent to (pprint *1)."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [] `(pprint *1))
 
 (defn set-pprint-dispatch
@@ -259,7 +259,7 @@ to a pretty printing writer to which it should do its printing.
 
 For example functions, see simple-dispatch and code-dispatch in
 clojure.pprint.dispatch.clj."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [function]
   (let [old-meta (meta #'*print-pprint-dispatch*)]
     (alter-var-root #'*print-pprint-dispatch* (constantly function))
@@ -268,7 +268,7 @@ clojure.pprint.dispatch.clj."
 
 (defmacro with-pprint-dispatch
   "Execute body with the pretty print dispatch function bound to function."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [function & body]
   `(binding [*print-pprint-dispatch* ~function]
      ~@body))
@@ -303,7 +303,7 @@ This function is intended for use when writing custom dispatch functions.
 
 Before the body, the caller can optionally specify options: :prefix, :per-line-prefix,
 and :suffix."
-  {:added "1.2", :arglists '[[options* body]]}
+  {:added "0.1.0", :arglists '[[options* body]]}
   [& args]
   (let [[options body] (parse-lb-options #{:prefix :per-line-prefix :suffix} args)]
     `(do (if (#'clojure.pprint/level-exceeded)
@@ -328,7 +328,7 @@ newline is :linear, :miser, :fill, or :mandatory.
 This function is intended for use when writing custom dispatch functions.
 
 Output is sent to *out* which must be a pretty printing writer."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [kind]
   (check-enumerated-arg kind #{:linear :miser :fill :mandatory})
   (nl *out* kind))
@@ -342,7 +342,7 @@ the current column position. n is an offset.
 This function is intended for use when writing custom dispatch functions.
 
 Output is sent to *out* which must be a pretty printing writer."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [relative-to n]
   (check-enumerated-arg relative-to #{:block :current})
   (indent *out* relative-to n))
@@ -360,7 +360,7 @@ This function is intended for use when writing custom dispatch functions.
 Output is sent to *out* which must be a pretty printing writer.
 
 THIS FUNCTION IS NOT YET IMPLEMENTED."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [kind colnum colinc]
   (check-enumerated-arg kind #{:line :section :line-relative :section-relative})
   (throw (UnsupportedOperationException. "pprint-tab is not yet implemented")))
@@ -385,7 +385,7 @@ THIS FUNCTION IS NOT YET IMPLEMENTED."
 (defmacro print-length-loop
   "A version of loop that iterates at most *print-length* times. This is designed
 for use in pretty-printer dispatch functions."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [bindings & body]
   (let [count-var (gensym "length-count")
         mod-body (pll-mod-body count-var body)]

@@ -7,7 +7,7 @@
 ;;    You must not remove this notice, or any other, from this software.
 
 (ns ^{:author "Stuart Halloway"
-      :added "1.3"
+      :added "0.1.0"
       :doc "Reflection on Host Types
 Alpha - subject to change.
 
@@ -91,7 +91,7 @@ Platform implementers must:
                     :members.
      :reflector     implementation to use. Defaults to JavaReflector,
                     AsmReflector is also an option."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [typeref & options]
   (let [{:keys [ancestors reflector]}
         (merge {:reflector default-reflector}
@@ -116,7 +116,7 @@ Platform implementers must:
   "Alpha - subject to change.
    Reflect on the type of obj (or obj itself if obj is a class).
    Return value and options are the same as for type-reflect. "
-  {:added "1.3"}
+  {:added "0.1.0"}
   [obj & options]
   (apply type-reflect (if (class? obj) obj (class obj)) options))
 

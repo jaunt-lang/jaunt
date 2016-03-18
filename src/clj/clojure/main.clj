@@ -23,21 +23,21 @@
 #_(defn root-cause [x] x)
 #_(defn stack-element-str
     "Returns a (possibly unmunged) string representation of a StackTraceElement"
-    {:added "1.3"}
+    {:added "0.1.0"}
     [^StackTraceElement el]
     (.getClassName el))
 
 (defn demunge
   "Given a string representation of a fn class,
   as in a stack trace element, returns a readable version."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [fn-name]
   (clojure.lang.Compiler/demunge fn-name))
 
 (defn root-cause
   "Returns the initial cause of an exception or error by peeling off all of
   its wrappers"
-  {:added "1.3"}
+  {:added "0.1.0"}
   [^Throwable t]
   (loop [cause t]
     (if (and (instance? clojure.lang.Compiler$CompilerException cause)
@@ -49,7 +49,7 @@
 
 (defn stack-element-str
   "Returns a (possibly unmunged) string representation of a StackTraceElement"
-  {:added "1.3"}
+  {:added "0.1.0"}
   [^StackTraceElement el]
   (let [file (.getFileName el)
         clojure-fn? (and file (or (.endsWith file ".clj")

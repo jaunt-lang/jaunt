@@ -33,7 +33,7 @@ a more powerful alternative to Clojure's standard format function.
 
 See documentation for pprint and cl-format for more information or
 complete documentation on the the clojure web site on github.",
-   :added "1.2"}
+   :added "0.1.0"}
  clojure.pprint
   (:refer-clojure :exclude (deftype))
   (:use [clojure.walk :only [walk]]))

@@ -250,7 +250,7 @@ It is implemented with a number of custom enlive templates.\"
 (defmulti
   test-dispatch
   "A test dispatch method"
-  {:added "1.2" :arglists '[[object]]}
+  {:added "0.1.0" :arglists '[[object]]}
   #(and (seq %) (not (string? %))))
 
 (defmethod test-dispatch true [avec]

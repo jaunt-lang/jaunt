@@ -31,10 +31,10 @@
     :private true}
   char-array-type (class (make-array Character/TYPE 0)))
 
-(defprotocol ^{:added "1.2"} Coercions
+(defprotocol ^{:added "0.1.0"} Coercions
   "Coerce between various 'resource-namish' things."
-  (^{:tag java.io.File, :added "1.2"} as-file [x] "Coerce argument to a file.")
-  (^{:tag java.net.URL, :added "1.2"} as-url [x] "Coerce argument to a URL."))
+  (^{:tag java.io.File, :added "0.1.0"} as-file [x] "Coerce argument to a file.")
+  (^{:tag java.net.URL, :added "0.1.0"} as-url [x] "Coerce argument to a URL."))
 
 (defn- escaped-utf8-urlstring->str [s]
   (-> (clojure.string/replace s "+" (URLEncoder/encode "+" "UTF-8"))
@@ -65,7 +65,7 @@
   (as-url [u] (.toURL u))
   (as-file [u] (as-file (as-url u))))
 
-(defprotocol ^{:added "1.2"} IOFactory
+(defprotocol ^{:added "0.1.0"} IOFactory
   "Factory functions that create ready-to-use, buffered versions of
    the various Java I/O stream types, on top of anything that can
    be unequivocally converted to the requested kind of stream.
@@ -77,10 +77,10 @@
 
    Callers should generally prefer the higher level API provided by
    reader, writer, input-stream, and output-stream."
-  (^{:added "1.2"} make-reader [x opts] "Creates a BufferedReader. See also IOFactory docs.")
-  (^{:added "1.2"} make-writer [x opts] "Creates a BufferedWriter. See also IOFactory docs.")
-  (^{:added "1.2"} make-input-stream [x opts] "Creates a BufferedInputStream. See also IOFactory docs.")
-  (^{:added "1.2"} make-output-stream [x opts] "Creates a BufferedOutputStream. See also IOFactory docs."))
+  (^{:added "0.1.0"} make-reader [x opts] "Creates a BufferedReader. See also IOFactory docs.")
+  (^{:added "0.1.0"} make-writer [x opts] "Creates a BufferedWriter. See also IOFactory docs.")
+  (^{:added "0.1.0"} make-input-stream [x opts] "Creates a BufferedInputStream. See also IOFactory docs.")
+  (^{:added "0.1.0"} make-output-stream [x opts] "Creates a BufferedOutputStream. See also IOFactory docs."))
 
 (defn ^Reader reader
   "Attempts to coerce its argument into an open java.io.Reader.
@@ -96,7 +96,7 @@
 
    Should be used inside with-open to ensure the Reader is properly
    closed."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [x & opts]
   (make-reader x (when opts (apply hash-map opts))))
 
@@ -113,7 +113,7 @@
 
    Should be used inside with-open to ensure the Writer is properly
    closed."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [x & opts]
   (make-writer x (when opts (apply hash-map opts))))
 
@@ -130,7 +130,7 @@
 
    Should be used inside with-open to ensure the InputStream is properly
    closed."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [x & opts]
   (make-input-stream x (when opts (apply hash-map opts))))
 
@@ -147,7 +147,7 @@
 
    Should be used inside with-open to ensure the OutputStream is
    properly closed."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [x & opts]
   (make-output-stream x (when opts (apply hash-map opts))))
 
@@ -400,14 +400,14 @@
 
   Does not close any streams except those it opens itself
   (on a File)."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [input output & opts]
   (do-copy input output (when opts (apply hash-map opts))))
 
 (defn ^String as-relative-path
   "Take an as-file-able thing and return a string if it is
    a relative path, else IllegalArgumentException."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [x]
   (let [^File f (as-file x)]
     (if (.isAbsolute f)
@@ -418,7 +418,7 @@
   "Returns a java.io.File, passing each arg to as-file.  Multiple-arg
    versions treat the first argument as parent and subsequent args as
    children relative to the parent."
-  {:added "1.2"}
+  {:added "0.1.0"}
   ([arg]
    (as-file arg))
   ([parent child]
@@ -428,7 +428,7 @@
 
 (defn delete-file
   "Delete file f. Raise an exception if it fails unless silently is true."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [f & [silently]]
   (or (.delete (file f))
       silently
@@ -437,7 +437,7 @@
 (defn make-parents
   "Given the same arg(s) as for file, creates all parent directories of
    the file they represent."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [f & more]
   (when-let [parent (.getParentFile ^File (apply file f more))]
     (.mkdirs parent)))
@@ -445,6 +445,6 @@
 (defn ^URL resource
   "Returns the URL for a named resource. Use the context class loader
    if no loader is specified."
-  {:added "1.2"}
+  {:added "0.1.0"}
   ([n] (resource n (.getContextClassLoader (Thread/currentThread))))
   ([n ^ClassLoader loader] (.getResource loader n)))

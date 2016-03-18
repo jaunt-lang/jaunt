@@ -63,13 +63,13 @@
                        (if (vector? b) b (vec b))
                        (range (max (count a) (count b)))))))
 
-(defprotocol ^{:added "1.3"} EqualityPartition
+(defprotocol ^{:added "0.1.0"} EqualityPartition
   "Implementation detail. Subject to change."
-  (^{:added "1.3"} equality-partition [x] "Implementation detail. Subject to change."))
+  (^{:added "0.1.0"} equality-partition [x] "Implementation detail. Subject to change."))
 
-(defprotocol ^{:added "1.3"} Diff
+(defprotocol ^{:added "0.1.0"} Diff
   "Implementation detail. Subject to change."
-  (^{:added "1.3"} diff-similar [a b] "Implementation detail. Subject to change."))
+  (^{:added "0.1.0"} diff-similar [a b] "Implementation detail. Subject to change."))
 
 (extend nil
   Diff
@@ -128,7 +128,7 @@
     by their indexes, with results returned as vectors.
   * Everything else (including strings!) is treated as
     an atom and compared for equality."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [a b]
   (if (= a b)
     [nil nil a]

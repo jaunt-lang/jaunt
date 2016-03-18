@@ -91,7 +91,7 @@
   arguments, (combinef) must produce its identity element. These
   operations may be performed in parallel, but the results will
   preserve order."
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([reducef coll] (fold reducef reducef coll))
   ([combinef reducef coll] (fold 512 combinef reducef coll))
   ([n combinef reducef coll]
@@ -102,7 +102,7 @@
   returns a reducible collection, where any supplied reducing
   fn will be transformed by xf. xf is a function of reducing fn to
   reducing fn."
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([coll xf]
    (reify
      clojure.core.protocols/CollReduce
@@ -116,7 +116,7 @@
   returns a foldable collection, where any supplied reducing
   fn will be transformed by xf. xf is a function of reducing fn to
   reducing fn."
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([coll xf]
    (reify
      clojure.core.protocols/CollReduce
@@ -160,7 +160,7 @@
 
 (defcurried map
   "Applies f to every value in the reduction of coll. Foldable."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [f coll]
   (folder coll
           (fn [f1]
@@ -171,7 +171,7 @@
 (defcurried mapcat
   "Applies f to every value in the reduction of coll, concatenating the result
   colls of (f val). Foldable."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [f coll]
   (folder coll
           (fn [f1]
@@ -187,7 +187,7 @@
 (defcurried filter
   "Retains values in the reduction of coll for which (pred val)
   returns logical true. Foldable."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [pred coll]
   (folder coll
           (fn [f1]
@@ -200,7 +200,7 @@
 (defcurried remove
   "Removes values in the reduction of coll for which (pred val)
   returns logical true. Foldable."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [pred coll]
   (filter (complement pred) coll))
 
@@ -208,7 +208,7 @@
   "Takes any nested combination of sequential things (lists, vectors,
   etc.) and returns their contents as a single, flat foldable
   collection."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [coll]
   (folder coll
           (fn [f1]
@@ -221,7 +221,7 @@
 
 (defcurried take-while
   "Ends the reduction of coll when (pred val) returns logical false."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [pred coll]
   (reducer coll
            (fn [f1]
@@ -233,7 +233,7 @@
 
 (defcurried take
   "Ends the reduction of coll after consuming n values."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [n coll]
   (reducer coll
            (fn [f1]
@@ -247,7 +247,7 @@
 
 (defcurried drop
   "Elides the first n values from the reduction of coll."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [n coll]
   (reducer coll
            (fn [f1]
@@ -292,7 +292,7 @@
   and counted. The single argument version will build a combining fn
   with the supplied identity constructor. Tests for identity
   with (zero? (count x)). See also foldcat."
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([] (java.util.ArrayList.))
   ([ctor]
    (fn
@@ -307,13 +307,13 @@
 
 (defn append!
   ".adds x to acc and returns acc"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [^java.util.Collection acc x]
   (doto acc (.add x)))
 
 (defn foldcat
   "Equivalent to (fold cat append! coll)"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [coll]
   (fold cat append! coll))
 
@@ -321,7 +321,7 @@
   "Builds a combining fn out of the supplied operator and identity
   constructor. op must be associative and ctor called with no args
   must return an identity value for it."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [op ctor]
   (fn m
     ([] (ctor))

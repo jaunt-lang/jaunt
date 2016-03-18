@@ -37,14 +37,14 @@
 
 (defn add-local-javadoc
   "Adds to the list of local Javadoc paths."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [path]
   (dosync (commute *local-javadocs* conj path)))
 
 (defn add-remote-javadoc
   "Adds to the list of remote Javadoc URLs.  package-prefix is the
   beginning of the package name that has docs at this URL."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [package-prefix url]
   (dosync (commute *remote-javadocs* assoc package-prefix url)))
 
@@ -52,7 +52,7 @@
   "Searches for a URL for the given class name.  Tries
   *local-javadocs* first, then *remote-javadocs*.  Returns a string."
   {:tag String,
-   :added "1.2"}
+   :added "0.1.0"}
   [^String classname]
   (let [file-path (.replace classname \. File/separatorChar)
         url-path (.replace classname \. \/)]
@@ -72,7 +72,7 @@
 (defn javadoc
   "Opens a browser window displaying the javadoc for the argument.
   Tries *local-javadocs* first, then *remote-javadocs*."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [class-or-object]
   (let [^Class c (if (instance? Class class-or-object)
                    class-or-object

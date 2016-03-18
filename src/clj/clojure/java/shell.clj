@@ -20,14 +20,14 @@ collecting its stdout"}
 
 (defmacro with-sh-dir
   "Sets the directory for use with sh, see sh for details."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [dir & forms]
   `(binding [*sh-dir* ~dir]
      ~@forms))
 
 (defmacro with-sh-env
   "Sets the environment for use with sh, see sh for details."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [env & forms]
   `(binding [*sh-env* ~env]
      ~@forms))
@@ -107,7 +107,7 @@ collecting its stdout"}
     :exit => sub-process's exit code
     :out  => sub-process's stdout (as byte[] or String)
     :err  => sub-process's stderr (String via platform default encoding)"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [& args]
   (let [[cmd opts] (parse-args args)
         proc (.exec (Runtime/getRuntime)

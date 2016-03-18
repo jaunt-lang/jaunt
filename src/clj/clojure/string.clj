@@ -47,7 +47,7 @@ Design notes for clojure.string:
 
 (defn ^String reverse
   "Returns s with its characters reversed."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (.toString (.reverse (StringBuilder. s))))
 
@@ -55,7 +55,7 @@ Design notes for clojure.string:
   "Given a replacement string that you wish to be a literal
    replacement for a pattern match in replace or replace-first, do the
    necessary escaping of special characters in the replacement."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [^CharSequence replacement]
   (Matcher/quoteReplacement (.toString ^CharSequence replacement)))
 
@@ -96,7 +96,7 @@ Design notes for clojure.string:
    Example:
    (clojure.string/replace \"Almost Pig Latin\" #\"\\b(\\w)(\\w+)\\b\" \"$2$1ay\")
    -> \"lmostAay igPay atinLay\""
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s match replacement]
   (let [s (.toString s)]
     (cond
@@ -160,7 +160,7 @@ Design notes for clojure.string:
    (clojure.string/replace-first \"swap first two words\"
                                  #\"(\\w+)(\\s+)(\\w+)\" \"$3$2$1\")
    -> \"first swap two words\""
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s match replacement]
   (let [s (.toString s)]
     (cond
@@ -179,7 +179,7 @@ Design notes for clojure.string:
 (defn ^String join
   "Returns a string of all elements in coll, as returned by (seq coll),
    separated by an optional separator."
-  {:added "1.2"}
+  {:added "0.1.0"}
   ([coll]
    (apply str coll))
   ([separator coll]
@@ -195,7 +195,7 @@ Design notes for clojure.string:
 (defn ^String capitalize
   "Converts first character of the string to upper-case, all other
   characters to lower-case."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (let [s (.toString s)]
     (if (< (count s) 2)
@@ -205,20 +205,20 @@ Design notes for clojure.string:
 
 (defn ^String upper-case
   "Converts string to all upper-case."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (.. s toString toUpperCase))
 
 (defn ^String lower-case
   "Converts string to all lower-case."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (.. s toString toLowerCase))
 
 (defn split
   "Splits string on a regular expression.  Optional argument limit is
   the maximum number of splits. Not lazy. Returns vector of the splits."
-  {:added "1.2"}
+  {:added "0.1.0"}
   ([^CharSequence s ^Pattern re]
    (LazilyPersistentVector/createOwning (.split re s)))
   ([^CharSequence s ^Pattern re limit]
@@ -226,13 +226,13 @@ Design notes for clojure.string:
 
 (defn split-lines
   "Splits s on \\n or \\r\\n."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (split s #"\r?\n"))
 
 (defn ^String trim
   "Removes whitespace from both ends of string."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (let [len (.length s)]
     (loop [rindex len]
@@ -249,7 +249,7 @@ Design notes for clojure.string:
 
 (defn ^String triml
   "Removes whitespace from the left side of string."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (let [len (.length s)]
     (loop [index 0]
@@ -261,7 +261,7 @@ Design notes for clojure.string:
 
 (defn ^String trimr
   "Removes whitespace from the right side of string."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (loop [index (.length s)]
     (if (zero? index)
@@ -273,7 +273,7 @@ Design notes for clojure.string:
 (defn ^String trim-newline
   "Removes all trailing newline \\n or return \\r characters from
   string.  Similar to Perl's chomp."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (loop [index (.length s)]
     (if (zero? index)
@@ -285,7 +285,7 @@ Design notes for clojure.string:
 
 (defn blank?
   "True if s is nil, empty, or contains only whitespace."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s]
   (if s
     (loop [index (int 0)]
@@ -302,7 +302,7 @@ Design notes for clojure.string:
 
    If (cmap ch) is nil, append ch to the new string.
    If (cmap ch) is non-nil, append (str (cmap ch)) instead."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [^CharSequence s cmap]
   (loop [index (int 0)
          buffer (StringBuilder. (.length s))]
@@ -317,7 +317,7 @@ Design notes for clojure.string:
 (defn index-of
   "Return index of value (string or char) in s, optionally searching
   forward from from-index or nil if not found."
-  {:added "1.8"}
+  {:added "0.1.0"}
   ([^CharSequence s value]
    (let [result ^long
          (if (instance? Character value)
@@ -338,7 +338,7 @@ Design notes for clojure.string:
 (defn last-index-of
   "Return last index of value (string or char) in s, optionally
   searching backward from from-index or nil if not found."
-  {:added "1.8"}
+  {:added "0.1.0"}
   ([^CharSequence s value]
    (let [result ^long
          (if (instance? Character value)
@@ -358,18 +358,18 @@ Design notes for clojure.string:
 
 (defn starts-with?
   "True if s starts with substr."
-  {:added "1.8"}
+  {:added "0.1.0"}
   [^CharSequence s ^String substr]
   (.startsWith (.toString s) substr))
 
 (defn ends-with?
   "True if s ends with substr."
-  {:added "1.8"}
+  {:added "0.1.0"}
   [^CharSequence s ^String substr]
   (.endsWith (.toString s) substr))
 
 (defn includes?
   "True if s includes substr."
-  {:added "1.8"}
+  {:added "0.1.0"}
   [^CharSequence s ^CharSequence substr]
   (.contains (.toString s) substr))

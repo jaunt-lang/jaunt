@@ -181,7 +181,7 @@
 (defmacro with-junit-output
   "Execute body with modified test-is reporting functions that write
   JUnit-compatible XML output."
-  {:added "1.1"}
+  {:added "0.1.0"}
   [& body]
   `(binding [t/report junit-report
              *var-context* (list)
