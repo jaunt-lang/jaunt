@@ -6925,8 +6925,8 @@
 
 (defn- parse-version [v]
   {:pre [(string? v)]}
-  (let [[_ major minor incremental qualifier]
-        (re-matches #"^(\d+)\.(\d+)\.(\d+)(-.*)?$" v)]
+  (let [[_ major minor incremental qualifier] (re-matches #"^(\d+)\.(\d+)\.(\d+)(-.*)?$" v)
+        qualifier                             (or qualifier "")] 
     {:major        (Integer/valueOf ^String major)
      :minor        (Integer/valueOf ^String minor)
      :incremental  (Integer/valueOf ^String incremental)
