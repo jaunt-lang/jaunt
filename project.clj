@@ -1,4 +1,4 @@
-(defproject org.jaunt-lang/jaunt (slurp "VERSION")
+(defproject org.jaunt-lang/jaunt (. ^String (slurp "VERSION") (trim))
   :source-paths      ["src/clj"]
   :java-source-paths ["src/jvm" "test/java"]
   :test-paths        ["test/clojure"]
