@@ -6,13 +6,14 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-;functional hierarchical zipper, with navigation, editing and enumeration
-;see Huet
+;; functional hierarchical zipper, with navigation, editing and enumeration
+;; see Huet
 
-(ns ^{:doc "Functional hierarchical zipper, with navigation, editing,
-  and enumeration.  See Huet"
-      :author "Rich Hickey"}
- clojure.zip
+(ns clojure.zip
+  "Functional hierarchical zipper, with navigation, editing,
+  and enumeration. See Huet"
+  {:authors ["Rich Hickey <richhickey@gmail.com>"]
+   :added   "0.1.0"}
   (:refer-clojure :exclude (replace remove next)))
 
 (defn zipper

@@ -6,9 +6,10 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "Socket server support"
-      :author "Alex Miller"}
- clojure.core.server
+(ns clojure.core.server
+  "Socket server support"
+  {:authors ["Alex Miller <alex.miller@cognitect.com>"]
+   :added   "0.1.0"}
   (:require [clojure.string :as str]
             [clojure.edn :as edn]
             [clojure.main :as m])

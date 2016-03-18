@@ -11,8 +11,13 @@
 
 (require '[clojure.set :as set]
          '[clojure.string :as str])
-(import '[clojure.asm ClassReader ClassVisitor Type Opcodes]
-        '[java.lang.reflect Modifier]
+
+(import '[clojure.asm
+          ,,ClassReader
+          ,,ClassVisitor
+          ,,Type
+          ,,Opcodes]
+        java.lang.reflect.Modifier
         java.io.InputStream)
 
 (extend-protocol TypeReference

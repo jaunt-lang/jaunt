@@ -7,8 +7,9 @@
 ;;    You must not remove this notice, or any other, from this software.
 
 (ns ^{:doc    "The core Clojure language."
-      :author "Rich Hickey"}
- clojure.core)
+      :author "Rich Hickey"
+      :added  "0.1.0"}
+    clojure.core)
 
 (def unquote)
 (def unquote-splicing)
@@ -5673,34 +5674,37 @@
   individual calls to in-ns/require/use/import:
 
   (ns foo.bar
+    \"Some docs\"
+    {:added   \"0.0.1\"
+     :authors [\"Ada Lovelace <adal@foo.com>\"]}
     (:refer-clojure :exclude [ancestors printf])
     (:require (clojure.contrib sql combinatorics))
     (:use (my.lib this that))
     (:import (java.util Date Timer Random)
              (java.sql Connection Statement)))"
   {:arglists '([name docstring? attr-map? references*])
-   :added "0.1.0"}
+   :added    "0.1.0"}
   [name & references]
   (let [process-reference
         (fn [[kname & args]]
           `(~(symbol "clojure.core" (clojure.core/name kname))
             ~@(map #(list 'quote %) args)))
-        docstring  (when (string? (first references)) (first references))
-        references (if docstring (next references) references)
-        name (if docstring
-               (vary-meta name assoc :doc docstring)
-               name)
-        metadata   (when (map? (first references)) (first references))
-        references (if metadata (next references) references)
-        name (if metadata
-               (vary-meta name merge metadata)
-               name)
+        docstring        (when (string? (first references)) (first references))
+        references       (if docstring (next references) references)
+        name             (if docstring
+                           (vary-meta name assoc :doc docstring)
+                           name)
+        metadata         (when (map? (first references)) (first references))
+        references       (if metadata (next references) references)
+        name             (if metadata
+                           (vary-meta name merge metadata)
+                           name)
         gen-class-clause (first (filter #(= :gen-class (first %)) references))
         gen-class-call
         (when gen-class-clause
           (list* `gen-class :name (.replace (str name) \- \_) :impl-ns name :main true (next gen-class-clause)))
-        references (remove #(= :gen-class (first %)) references)
-        name-metadata (meta name)]
+        references       (remove #(= :gen-class (first %)) references)
+        name-metadata    (meta name)]
     `(do
        (clojure.core/in-ns '~name)
        ~@(when name-metadata

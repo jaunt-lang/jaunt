@@ -6,9 +6,10 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "Set operations such as union/intersection."
-      :author "Rich Hickey"}
- clojure.set)
+(ns clojure.set
+  "Set operations such as union/intersection." 
+  {:authors ["Rich Hickey <richhickey@gmail.com>"]
+   :added   "0.1.0"})
 
 (defn- bubble-max-key [k coll]
   "Move a maximal element of coll according to fn k (which returns a number)

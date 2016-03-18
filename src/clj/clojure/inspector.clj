@@ -6,15 +6,15 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "Graphical object inspector for Clojure data structures."
-      :author "Rich Hickey"}
- clojure.inspector
-  (:import
-   (java.awt BorderLayout)
-   (java.awt.event ActionEvent ActionListener)
-   (javax.swing.tree TreeModel)
-   (javax.swing.table TableModel AbstractTableModel)
-   (javax.swing JPanel JTree JTable JScrollPane JFrame JToolBar JButton SwingUtilities)))
+(ns clojure.inspector
+  "Graphical object inspector for Clojure data structures."
+  {:author "Rich Hickey"
+   :added  "0.1.0"}
+  (:import (java.awt BorderLayout)
+           (java.awt.event ActionEvent ActionListener)
+           (javax.swing.tree TreeModel)
+           (javax.swing.table TableModel AbstractTableModel)
+           (javax.swing JPanel JTree JTable JScrollPane JFrame JToolBar JButton SwingUtilities)))
 
 (defn atom? [x]
   (not (coll? x)))

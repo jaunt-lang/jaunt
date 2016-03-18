@@ -11,9 +11,10 @@
 ;; by Stuart Sierra
 ;; January 6, 2009
 
-(ns ^{:doc "Print stack traces oriented towards Clojure, not Java."
-      :author "Stuart Sierra"}
- clojure.stacktrace)
+(ns clojure.stacktrace
+  "Print stack traces oriented towards Clojure, not Java."
+  {:authors ["Stuart Sierra <mail@stuartsierra.com>"]
+   :added   "0.1.0"})
 
 (defn root-cause
   "Returns the last 'cause' Throwable in a chain of Throwables."

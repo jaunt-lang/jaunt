@@ -5,18 +5,22 @@
 ;;    By using this software in any fashion, you are agreeing to be bound by
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
-(ns
- ^{:author "Christophe Grand, Stuart Sierra",
-   :doc "A repl helper to quickly open javadocs."}
- clojure.java.javadoc
-  (:use [clojure.java.browse :only (browse-url)])
-  (:import
-   (java.io File)))
 
-(def ^:dynamic *feeling-lucky-url* "http://www.google.com/search?btnI=I%27m%20Feeling%20Lucky&q=allinurl:")
+(ns clojure.java.javadoc
+  "A repl helper to quickly open javadocs."
+  {:authors ["Christophe Grand <christophe@cgrand.net>"
+             "Stuart Sierra <mail@stuartsierra.com>"]
+   :added   "0.1.0"}
+  (:require [clojure.java.browse :refer [browse-url]])
+  (:import (java.io File)))
+
+(def ^:dynamic *feeling-lucky-url*
+  "http://www.google.com/search?btnI=I%27m%20Feeling%20Lucky&q=allinurl:")
+
 (def ^:dynamic *feeling-lucky* true)
 
-(def ^:dynamic *local-javadocs* (ref (list)))
+(def ^:dynamic *local-javadocs*
+  (ref (list)))
 
 (def ^:dynamic *core-java-api*
   (case (System/getProperty "java.specification.version")

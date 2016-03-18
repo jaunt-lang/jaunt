@@ -6,10 +6,10 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns
- ^{:author "Christophe Grand",
-   :doc "Start a web browser from Clojure"}
- clojure.java.browse
+(ns clojure.java.browse
+  "Start a web browser from Clojure"
+  {:authors ["Christophe Grand <christophe@cgrand.net>"]
+   :added   "0.1.0"}
   (:require [clojure.java.shell :as sh]
             [clojure.string :as str])
   (:import (java.net URI)))
@@ -57,9 +57,9 @@
 (defn- open-url-in-swing
   "Opens url (a string) in a Swing window."
   [url]
-;; the implementation of this function resides in another namespace to be loaded "on demand"
-;; this fixes a bug on mac os x where the process turns into a GUI app
-;; see http://code.google.com/p/clojure-contrib/issues/detail?id=32
+  ;; the implementation of this function resides in another namespace to be loaded "on demand"
+  ;; this fixes a bug on mac os x where the process turns into a GUI app
+  ;; see http://code.google.com/p/clojure-contrib/issues/detail?id=32
   (require 'clojure.java.browse-ui)
   ((find-var 'clojure.java.browse-ui/open-url-in-swing) url))
 

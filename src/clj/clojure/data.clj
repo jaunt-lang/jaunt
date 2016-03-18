@@ -6,10 +6,10 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns
- ^{:author "Stuart Halloway",
-   :doc "Non-core data functions."}
- clojure.data
+(ns clojure.data
+  "Non-core data functions."
+  {:author "Stuart Halloway"
+   :added  "0.1.0"}
   (:require [clojure.set :as set]))
 
 (declare diff)

@@ -6,13 +6,12 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc
-      "A library for reduction and parallel folding. Alpha and subject
-      to change.  Note that fold and its derivatives require Java 7+ or
-      Java 6 + jsr166y.jar for fork/join support. See Clojure's pom.xml for the
-      dependency info."
-      :author "Rich Hickey"}
- clojure.core.reducers
+(ns clojure.core.reducers
+  "A library for reduction and parallel folding. Alpha and subject to change.
+  Note that fold and its derivatives require Java 7+ or Java 6 + jsr166y.jar
+  for fork/join support. See Clojure's pom.xml for the dependency info."
+  {:authors ["Rich Hickey <richhickey@gmail.com>"]
+   :added   "0.1.0"}
   (:refer-clojure :exclude [reduce map mapcat filter remove take take-while drop flatten cat])
   (:require [clojure.walk :as walk]))
 

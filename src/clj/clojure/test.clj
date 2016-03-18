@@ -14,10 +14,8 @@
 ;; Thanks to Chas Emerick, Allen Rohner, and Stuart Halloway for
 ;; contributions and suggestions.
 
-(ns
- ^{:author "Stuart Sierra, with contributions and suggestions by
-  Chas Emerick, Allen Rohner, and Stuart Halloway",
-   :doc "A unit testing framework.
+(ns clojure.test
+  "A unit testing framework.
 
    ASSERTIONS
 
@@ -229,9 +227,13 @@
    \"with-test-out\" macro, which rebinds *out* to the current value
    of *test-out*.
 
-   For additional event types, see the examples in the code.
-"}
- clojure.test
+   For additional event types, see the examples in the code." 
+  {:authors ["Stuart Sierra <mail@stuartsierra.com>"
+             "Chas Emerick <chas@cemerick.com>"
+             "Allen Rohner <arohner@gmail.com>"
+             "Stuart Halloway <stu@cognitect.com>"]
+   :added   "0.1.0"}
+
   (:require [clojure.template :as temp]
             [clojure.stacktrace :as stack]
             [clojure.string :as str]))

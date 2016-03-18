@@ -6,9 +6,10 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "edn reading."
-      :author "Rich Hickey"}
- clojure.edn
+(ns clojure.edn
+  {:doc    "edn reading."
+   :author "Rich Hickey"
+   :added  "0.1.0"}
   (:refer-clojure :exclude [read read-string]))
 
 (defn read

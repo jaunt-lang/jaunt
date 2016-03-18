@@ -14,13 +14,8 @@
 ;; Inspired by ClojureCheck by Meikel Brandmeyer:
 ;; http://kotka.de/projects/clojure/clojurecheck.html
 
-
-;; DOCUMENTATION
-;;
-
-
-
-(ns ^{:doc "clojure.test extensions for the Test Anything Protocol (TAP)
+(ns clojure.test.tap
+  "clojure.test extensions for the Test Anything Protocol (TAP)
 
   TAP is a simple text-based syntax for reporting test results.  TAP
   was originally developed for Perl, and now has implementations in
@@ -37,8 +32,8 @@
 
     (with-tap-output
      (run-tests 'my.cool.library))"
-      :author "Stuart Sierra"}
- clojure.test.tap
+  {:authors ["Stuart Sierra <mail@stuartsierra.com>"]
+   :added   "0.1.0"}
   (:require [clojure.test :as t]
             [clojure.stacktrace :as stack]))
 

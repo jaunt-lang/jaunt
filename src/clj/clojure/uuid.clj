@@ -6,7 +6,10 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns clojure.uuid)
+(ns clojure.uuid
+  "Reading and printing support for #uuid"
+  {:authors ["Michael Fogus <mefogus@gmail.com>"]
+   :added   "0.1.0"})
 
 (defn- default-uuid-reader [form]
   {:pre [(string? form)]}

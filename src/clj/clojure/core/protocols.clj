@@ -6,7 +6,10 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns clojure.core.protocols)
+(ns clojure.core.protocols
+  "Implementation detail. More efficient reduce for some collections."
+  {:authors ["Stuart Halloway <stu@cognitect.com>"]
+   :added   "0.1.0"})
 
 (set! *warn-on-reflection* true)
 

@@ -6,30 +6,49 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns
- ^{:author "Stuart Sierra, Chas Emerick, Stuart Halloway",
-   :doc "This file defines polymorphic I/O utility functions for Clojure."}
- clojure.java.io
-  (:require clojure.string)
+(ns clojure.java.io
+  "Polymorphic I/O utility functions for Clojure."
+  {:authors ["Stuart Sierra <mail@stuartsierra.com>"
+             "Chas Emerick <chas@cemerick.com>"
+             "Stuart Halloway <stu@cognitect.com>"]
+   :added   "0.1.0"}
+  (:require [clojure.string :as str])
   (:import
-   (java.io Reader InputStream InputStreamReader PushbackReader
-            BufferedReader File OutputStream
-            OutputStreamWriter BufferedWriter Writer
-            FileInputStream FileOutputStream ByteArrayOutputStream
-            StringReader ByteArrayInputStream
-            BufferedInputStream BufferedOutputStream
-            CharArrayReader Closeable)
-   (java.net URI URL MalformedURLException Socket URLDecoder URLEncoder)))
+   (java.io
+    Reader
+    InputStream
+    InputStreamReader
+    PushbackReader
+    BufferedReader
+    File
+    OutputStream
+    OutputStreamWriter
+    BufferedWriter
+    Writer
+    FileInputStream
+    FileOutputStream
+    ByteArrayOutputStream
+    StringReader
+    ByteArrayInputStream
+    BufferedInputStream
+    BufferedOutputStream
+    CharArrayReader
+    Closeable)
+   (java.net
+    URI
+    URL
+    MalformedURLException
+    Socket
+    URLDecoder
+    URLEncoder)))
 
-(def
-  ^{:doc "Type object for a Java primitive byte array."
-    :private true}
-  byte-array-type (class (make-array Byte/TYPE 0)))
+(def ^:private byte-array-type
+  "Type object for a Java primitive byte array."
+  (class (make-array Byte/TYPE 0)))
 
-(def
-  ^{:doc "Type object for a Java primitive char array."
-    :private true}
-  char-array-type (class (make-array Character/TYPE 0)))
+(def ^:private char-array-type
+  "Type object for a Java primitive char array."
+  (class (make-array Character/TYPE 0)))
 
 (defprotocol ^{:added "0.1.0"} Coercions
   "Coerce between various 'resource-namish' things."
@@ -37,7 +56,7 @@
   (^{:tag java.net.URL, :added "0.1.0"} as-url [x] "Coerce argument to a URL."))
 
 (defn- escaped-utf8-urlstring->str [s]
-  (-> (clojure.string/replace s "+" (URLEncoder/encode "+" "UTF-8"))
+  (-> (str/replace s "+" (URLEncoder/encode "+" "UTF-8"))
       (URLDecoder/decode "UTF-8")))
 
 (extend-protocol Coercions
@@ -161,11 +180,11 @@
   (or (:buffer-size opts) 1024))
 
 (def default-streams-impl
-  {:make-reader (fn [x opts] (make-reader (make-input-stream x opts) opts))
-   :make-writer (fn [x opts] (make-writer (make-output-stream x opts) opts))
-   :make-input-stream (fn [x opts]
-                        (throw (IllegalArgumentException.
-                                (str "Cannot open <" (pr-str x) "> as an InputStream."))))
+  {:make-reader        (fn [x opts] (make-reader (make-input-stream x opts) opts))
+   :make-writer        (fn [x opts] (make-writer (make-output-stream x opts) opts))
+   :make-input-stream  (fn [x opts]
+                         (throw (IllegalArgumentException.
+                                 (str "Cannot open <" (pr-str x) "> as an InputStream."))))
    :make-output-stream (fn [x opts]
                          (throw (IllegalArgumentException.
                                  (str "Cannot open <" (pr-str x) "> as an OutputStream."))))})
@@ -292,8 +311,8 @@
                                 (str "Cannot open <" (pr-str x) "> as a Writer."))))))
 
 (defmulti
-  ^{:doc "Internal helper for copy"
-    :private true
+  ^{:doc      "Internal helper for copy"
+    :private  true
     :arglists '([input output opts])}
   do-copy
   (fn [input output opts] [(type input) (type output)]))

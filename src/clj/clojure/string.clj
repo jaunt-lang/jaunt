@@ -6,41 +6,41 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "Clojure String utilities
+(ns clojure.string
+  "Clojure String utilities
 
-It is poor form to (:use clojure.string). Instead, use require
-with :as to specify a prefix, e.g.
+  Design notes for clojure.string:
 
-(ns your.namespace.here
-  (:require [clojure.string :as str]))
-
-Design notes for clojure.string:
-
-1. Strings are objects (as opposed to sequences). As such, the
+  1. Strings are objects (as opposed to sequences). As such, the
    string being manipulated is the first argument to a function;
    passing nil will result in a NullPointerException unless
    documented otherwise. If you want sequence-y behavior instead,
    use a sequence.
 
-2. Functions are generally not lazy, and call straight to host
+  2. Functions are generally not lazy, and call straight to host
    methods where those are available and efficient.
 
-3. Functions take advantage of String implementation details to
+  3. Functions take advantage of String implementation details to
    write high-performing loop/recurs instead of using higher-order
    functions. (This is not idiomatic in general-purpose application
    code.)
 
-4. When a function is documented to accept a string argument, it
+  4. When a function is documented to accept a string argument, it
    will take any implementation of the correct *interface* on the
    host platform. In Java, this is CharSequence, which is more
    general than String. In ordinary usage you will almost always
    pass concrete strings. If you are doing something unusual,
    e.g. passing a mutable implementation of CharSequence, then
    thread-safety is your responsibility."
-      :author "Stuart Sierra, Stuart Halloway, David Liebke"}
- clojure.string
+  {:authors ["Stuart Sierra <mail@stuartsierra.com>"
+             "Stuart Halloway <stu@cognitect.com>"
+             "David Liebke"
+             "Nola Stowe <nola@rubygeek.com>"]
+   :added   "0.1.0"}
   (:refer-clojure :exclude (replace reverse))
-  (:import (java.util.regex Pattern Matcher)
+  (:import (java.util.regex
+            Pattern
+            Matcher)
            clojure.lang.LazilyPersistentVector))
 
 (set! *warn-on-reflection* true)

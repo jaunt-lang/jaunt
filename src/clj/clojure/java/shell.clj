@@ -6,17 +6,20 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns
- ^{:author "Chris Houser, Stuart Halloway",
-   :doc "Conveniently launch a sub-process providing its stdin and
-collecting its stdout"}
- clojure.java.shell
-  (:use [clojure.java.io :only (as-file copy)])
+(ns clojure.java.shell
+  "Conveniently launch a sub-process providing its stdin and collecting its stdout"
+  {:authors ["Chris Houser <chouser@lonocloud.com>"
+             "Stuart Halloway <stu@cognitect.com>"]
+   :added   "0.1.0"}
+  (:require [clojure.java.io :refer [as-file copy]])
   (:import (java.io ByteArrayOutputStream StringWriter)
            (java.nio.charset Charset)))
 
-(def ^:dynamic *sh-dir* nil)
-(def ^:dynamic *sh-env* nil)
+(def ^:dynamic *sh-dir*
+  nil)
+
+(def ^:dynamic *sh-env*
+  nil)
 
 (defmacro with-sh-dir
   "Sets the directory for use with sh, see sh for details."
@@ -45,8 +48,11 @@ collecting its stdout"}
 (defn- parse-args
   [args]
   (let [default-encoding "UTF-8" ;; see sh doc string
-        default-opts {:out-enc default-encoding :in-enc default-encoding :dir *sh-dir* :env *sh-env*}
-        [cmd opts] (split-with string? args)]
+        default-opts     {:out-enc default-encoding
+                          :in-enc  default-encoding
+                          :dir     *sh-dir*
+                          :env     *sh-env*}
+        [cmd opts]       (split-with string? args)]
     [cmd (merge default-opts (apply hash-map opts))]))
 
 (defn- ^"[Ljava.lang.String;" as-env-strings

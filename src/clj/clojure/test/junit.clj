@@ -11,10 +11,8 @@
 ;; by Jason Sankey
 ;; June 2009
 
-;; DOCUMENTATION
-;;
-
-(ns ^{:doc "clojure.test extension for JUnit-compatible XML output.
+(ns clojure.test.junit
+  "clojure.test extension for JUnit-compatible XML output.
 
   JUnit (http://junit.org/) is the most popular unit-testing library
   for Java.  As such, tool support for JUnit output formats is
@@ -31,10 +29,9 @@
       (run-tests 'my.cool.library))
 
   To write the output to a file, rebind clojure.test/*test-out* to
-  your own PrintWriter (perhaps opened using
-  clojure.java.io/writer)."
-      :author "Jason Sankey"}
- clojure.test.junit
+  your own PrintWriter (perhaps opened using clojure.java.io/writer)."
+  {:authors ["Jason Sankey"]
+   :added   "0.1.0"}
   (:require [clojure.stacktrace :as stack]
             [clojure.test :as t]))
 

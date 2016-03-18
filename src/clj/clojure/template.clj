@@ -21,10 +21,10 @@
 ;;
 ;; December 15, 2008: first version
 
-
-(ns ^{:doc "Macros that expand to repeated copies of a template expression."
-      :author "Stuart Sierra"}
- clojure.template
+(ns clojure.template
+  "Macros that expand to repeated copies of a template expression."
+  {:authors ["Stuart Sierra <mail@stuartsierra.com>"]
+   :added   "0.1.0"}
   (:require [clojure.walk :as walk]))
 
 (defn apply-template
