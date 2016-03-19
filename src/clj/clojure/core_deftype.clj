@@ -25,7 +25,7 @@
   (definterface MyInterface
     (^int method1 [x])
     (^Bar method2 [^Baz b ^Quux q]))"
-  {:added "0.1.0"} ;; Present since 1.2, but made public in 1.5.
+  {:added "0.1.0"}
   [name & sigs]
   (let [tag (fn [x] (or (:tag (meta x)) Object))
         psig (fn [[name [& args]]]
