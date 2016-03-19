@@ -287,7 +287,7 @@
   Deprecated in 1.2: The information needed for test reporting is
   now on :file and :line keys in the result map."
   {:added "0.1.0"
-   :deprecated "1.2"}
+   :deprecated "0.1.0"}
   [n]
   (let [^StackTraceElement s (nth (.getStackTrace (new java.lang.Throwable)) n)]
     [(.getFileName s) (.getLineNumber s)]))
@@ -334,7 +334,7 @@
   report :type)
 
 (defn- file-and-line
-  {:deprecated "1.8"}
+  {:deprecated "0.1.0"}
   [^Throwable exception depth]
   (let [stacktrace (.getStackTrace exception)]
     (if (< depth (count stacktrace))

@@ -2231,7 +2231,7 @@
   Returns a sequence of the exceptions thrown during asynchronous
   actions of the agent."
   {:added "0.1.0"
-   :deprecated "1.2"}
+   :deprecated "0.1.0"}
   [a]
   (when-let [e (agent-error a)]
     (list e)))
@@ -2241,7 +2241,7 @@
   Clears any exceptions thrown during asynchronous actions of the
   agent, allowing subsequent actions to occur."
   {:added "0.1.0"
-   :deprecated "1.2"}
+   :deprecated "0.1.0"}
   [^clojure.lang.Agent a] (restart-agent a (.deref a)))
 
 (defn shutdown-agents
@@ -2979,7 +2979,7 @@
   "DEPRECATED: Use 'repeat' instead.
    Returns a lazy seq of n xs."
   {:added "0.1.0"
-   :deprecated "1.3"}
+   :deprecated "0.1.0"}
   [n x] (take n (repeat x)))
 
 (defn iterate
@@ -5064,7 +5064,7 @@
   Adds the url (String or URL object) to the classpath per
   URLClassLoader.addURL"
   {:added "0.1.0"
-   :deprecated "1.1"}
+   :deprecated "0.1.0"}
   [url]
   (clojure.lang.RT/addURL url))
 
@@ -6900,7 +6900,7 @@
 
 (def
   ^{:dynamic    true
-    :deprecated "FIXME"
+    :deprecated "0.1.0"
     :added      "0.1.0"}
   *clojure-version*
   "DEPRECATED: replaced by *jaunt-version*
@@ -6917,7 +6917,7 @@
 
   Returns clojure version as a printable string."
   {:added      "0.1.0"
-   :deprecated "FIXME"}
+   :deprecated "0.1.0"}
   []
   "1.8.0")
 
