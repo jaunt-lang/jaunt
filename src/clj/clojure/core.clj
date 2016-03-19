@@ -9,7 +9,7 @@
 (ns ^{:doc    "The core Clojure language."
       :author "Rich Hickey"
       :added  "0.1.0"}
-    clojure.core)
+ clojure.core)
 
 (def unquote)
 (def unquote-splicing)

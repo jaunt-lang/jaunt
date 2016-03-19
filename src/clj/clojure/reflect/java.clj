@@ -13,10 +13,10 @@
          '[clojure.string :as str])
 
 (import '[clojure.asm
-          ,,ClassReader
-          ,,ClassVisitor
-          ,,Type
-          ,,Opcodes]
+          ClassReader
+          ClassVisitor
+          Type
+          Opcodes]
         java.lang.reflect.Modifier
         java.io.InputStream)
 

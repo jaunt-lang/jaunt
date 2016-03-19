@@ -9,16 +9,16 @@
 (in-ns 'clojure.core)
 
 (import '[java.lang.reflect
-          ,,Modifier
-          ,,Constructor]
+          Modifier
+          Constructor]
         '[clojure.asm
-          ,,ClassWriter
-          ,,ClassVisitor
-          ,,Opcodes
-          ,,Type]
+          ClassWriter
+          ClassVisitor
+          Opcodes
+          Type]
         '[clojure.asm.commons
-          ,,Method
-          ,,GeneratorAdapter]
+          Method
+          GeneratorAdapter]
         clojure.lang.IPersistentMap)
 
 ;;(defn method-sig [^java.lang.reflect.Method meth]
@@ -150,12 +150,12 @@
         iname (fn [^Class c] (.. Type (getType c) (getInternalName)))
         totype (fn [^Class c] (. Type (getType c)))
         to-types (fn [cs] (if (pos? (count cs))
-                           (into-array (map totype cs))
-                           (make-array Type 0)))
+                            (into-array (map totype cs))
+                            (make-array Type 0)))
         obj-type ^Type (totype Object)
         arg-types (fn [n] (if (pos? n)
-                           (into-array (repeat n obj-type))
-                           (make-array Type 0)))
+                            (into-array (repeat n obj-type))
+                            (make-array Type 0)))
         super-type ^Type (totype super)
         init-name (str init)
         post-init-name (str post-init)

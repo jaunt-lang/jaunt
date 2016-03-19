@@ -15,10 +15,10 @@
    :added   "0.1.0"}
   (:refer-clojure :exclude [with-bindings])
   (:import (clojure.lang
-            ,,RT
-            ,,Compiler
-            ,,Compiler$CompilerException
-            ,,LineNumberingPushbackReader)))
+            RT
+            Compiler
+            Compiler$CompilerException
+            LineNumberingPushbackReader)))
 
 (declare main)
 
