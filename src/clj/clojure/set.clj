@@ -7,7 +7,7 @@
 ;;    You must not remove this notice, or any other, from this software.
 
 (ns clojure.set
-  "Set operations such as union/intersection." 
+  "Set operations such as union/intersection."
   {:authors ["Rich Hickey <richhickey@gmail.com>"]
    :added   "0.1.0"})
 

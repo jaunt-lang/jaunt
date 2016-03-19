@@ -541,7 +541,7 @@
                        fd)))
           fdecl  (if (vector? (first fdecl))
                    (list fdecl)
-                   fdecl) 
+                   fdecl)
           fdecl  (seq (add-args [] fdecl))
           decl   (loop [p prefix d fdecl]
                    (if p
@@ -6930,7 +6930,7 @@
 (defn- parse-version [v]
   {:pre [(string? v)]}
   (let [[_ major minor incremental qualifier] (re-matches #"^(\d+)\.(\d+)\.(\d+)(-.*)?$" v)
-        qualifier                             (or qualifier "")] 
+        qualifier                             (or qualifier "")]
     {:major        (Integer/valueOf ^String major)
      :minor        (Integer/valueOf ^String minor)
      :incremental  (Integer/valueOf ^String incremental)

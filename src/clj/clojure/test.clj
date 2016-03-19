@@ -227,7 +227,7 @@
    \"with-test-out\" macro, which rebinds *out* to the current value
    of *test-out*.
 
-   For additional event types, see the examples in the code." 
+   For additional event types, see the examples in the code."
   {:authors ["Stuart Sierra <mail@stuartsierra.com>"
              "Chas Emerick <chas@cemerick.com>"
              "Allen Rohner <arohner@gmail.com>"
