@@ -1,6 +1,7 @@
 ## Change Log
 
 ### upcoming
+- [#108](https://github.com/jaunt-lang/jaunt/pull/107) Add tests against CIDER (@arrdem).
 - [#107](https://github.com/jaunt-lang/jaunt/pull/107) Set version to 0.1.0 (@arrdem).
   - Fix a minor bug in `*jaunt-version*` loading due to the Maven qualifier being empty/`nil`
   - Refactor `ns` forms to prefer explicit full ns macro docstrings, attrs over `^{}`
