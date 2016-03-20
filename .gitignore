@@ -11,3 +11,4 @@ user.clj
 *.html
 .lein-env
 *.iml
+cider-nrepl
