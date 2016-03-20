@@ -6,11 +6,11 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns
- ^{:author "Christophe Grand",
-   :doc "Helper namespace for clojure.java.browse.
-            Prevents console apps from becoming GUI unnecessarily."}
- clojure.java.browse-ui)
+(ns clojure.java.browse-ui
+  "Helper namespace for clojure.java.browse.
+  Prevents console apps from becoming GUI unnecessarily."
+  {:authors ["Christophe Grand <christophe@cgrand.net>"]
+   :added   "0.1.0"})
 
 (defn- open-url-in-swing
   [url]

@@ -8,29 +8,37 @@
 
 (in-ns 'clojure.core)
 
-(import '(java.lang.reflect Modifier Constructor)
-        '(clojure.asm ClassWriter ClassVisitor Opcodes Type)
-        '(clojure.asm.commons Method GeneratorAdapter)
-        '(clojure.lang IPersistentMap))
+(import '[java.lang.reflect
+          Modifier
+          Constructor]
+        '[clojure.asm
+          ClassWriter
+          ClassVisitor
+          Opcodes
+          Type]
+        '[clojure.asm.commons
+          Method
+          GeneratorAdapter]
+        clojure.lang.IPersistentMap)
 
-;(defn method-sig [^java.lang.reflect.Method meth]
-;  [(. meth (getName)) (seq (. meth (getParameterTypes)))])
+;;(defn method-sig [^java.lang.reflect.Method meth]
+;;  [(. meth (getName)) (seq (. meth (getParameterTypes)))])
 
 (defn- filter-methods [^Class c invalid-method?]
-  (loop [mm {}
+  (loop [mm         {}
          considered #{}
-         c c]
+         c          c]
     (if c
       (let [[mm considered]
-            (loop [mm mm
+            (loop [mm         mm
                    considered considered
-                   meths (seq (concat
-                               (seq (. c (getDeclaredMethods)))
-                               (seq (. c (getMethods)))))]
+                   meths      (seq (concat
+                                    (seq (. c (getDeclaredMethods)))
+                                    (seq (. c (getMethods)))))]
               (if meths
                 (let [^java.lang.reflect.Method meth (first meths)
-                      mods (. meth (getModifiers))
-                      mk (method-sig meth)]
+                      mods                           (. meth (getModifiers))
+                      mk                             (method-sig meth)]
                   (if (or (considered mk)
                           (invalid-method? meth))
                     (recur mm (conj considered mk) (next meths))
@@ -80,7 +88,7 @@
               rfld (first (filter #(= f (.getName ^java.lang.reflect.Field %)) dflds))]
           (or rfld (recur (.getSuperclass c))))))))
 
-;(distinct (map first(keys (mapcat non-private-methods [Object IPersistentMap]))))
+                                        ;(distinct (map first(keys (mapcat non-private-methods [Object IPersistentMap]))))
 
 (def ^{:private true} prim->class
   {'int Integer/TYPE
@@ -169,7 +177,7 @@
         var-fields (concat (when init [init-name])
                            (when post-init [post-init-name])
                            (when main [main-name])
-                           ;(when exposes-methods (map str (vals exposes-methods)))
+                                        ;(when exposes-methods (map str (vals exposes-methods)))
                            (distinct (concat (keys sigs-by-name)
                                              (mapcat (fn [[m s]] (map #(overload-name m (map the-class %)) s)) overloads)
                                              (mapcat (comp (partial map str) vals val) exposes))))
@@ -236,7 +244,7 @@
                                                                            (if as-static 0 1))
                                                                         Object)))))
                                         ;(into-array (cons obj-type
-;; (repeat (count ptypes) obj-type))))))
+                ;; (repeat (count ptypes) obj-type))))))
                                         ;unbox return
                 (. gen (unbox rtype))
                 (when (= (. rtype (getSort)) (. Type VOID))
@@ -258,7 +266,7 @@
                  (when-let [ifc (seq interfaces)]
                    (into-array (map iname ifc)))))
 
-;; class annotations
+    ;; class annotations
     (add-annotations cv name-meta)
 
                                         ;static fields for vars
@@ -290,8 +298,8 @@
         (. gen push (str "/" impl-cname))
         (. gen push ctype)
         (. gen (invokeStatic util-type (. Method (getMethod "Object loadWithClass(String,Class)"))))
-;;         (. gen push (str (.replace impl-pkg-name \- \_) "__init"))
-;;         (. gen (invokeStatic class-type (. Method (getMethod "Class forName(String)"))))
+        ;;         (. gen push (str (.replace impl-pkg-name \- \_) "__init"))
+        ;;         (. gen (invokeStatic class-type (. Method (getMethod "Class forName(String)"))))
         (. gen pop))
 
       (. gen (returnValue))
@@ -369,16 +377,16 @@
           (. gen ifNull no-post-init-label)
           (.checkCast gen ifn-type)
           (. gen (loadThis))
-                                       ;box init args
+                                        ;box init args
           (dotimes [i (count pclasses)]
             (. gen (loadArg i))
             (. clojure.lang.Compiler$HostExpr (emitBoxReturn nil gen (nth pclasses i))))
-                                       ;call init fn
+                                        ;call init fn
           (. gen (invokeInterface ifn-type (new Method "invoke" obj-type
                                                 (arg-types (inc (count ptypes))))))
           (. gen pop)
           (. gen goTo end-post-init-label)
-                                       ;no init found
+                                        ;no init found
           (. gen mark no-post-init-label)
           (. gen (throwException ex-type (str impl-pkg-name "/" prefix post-init-name " not defined")))
           (. gen mark end-post-init-label))
@@ -628,7 +636,7 @@
   to reference the load code for the implementing namespace. Should be
   true when implementing-ns is the default, false if you intend to
   load the code via some other method."
-  {:added "1.0"}
+  {:added "0.1.0"}
 
   [& options]
   (when *compile-files*
@@ -711,7 +719,7 @@
   This parameter is used to specify the signatures of the methods of
   the generated interface.  Do not repeat superinterface signatures
   here."
-  {:added "1.0"}
+  {:added "0.1.0"}
 
   [& options]
   (let [options-map (apply hash-map options)
@@ -730,7 +738,7 @@
   classloader. Subsequent to generation you can import it into any
   desired namespaces just like any other class. See gen-class for a
   description of the options."
-    {:added "1.0"}
+    {:added "0.1.0"}
 
     [& options]
     (let [options-map (apply hash-map options)

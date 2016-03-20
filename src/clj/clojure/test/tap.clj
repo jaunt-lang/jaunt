@@ -14,13 +14,8 @@
 ;; Inspired by ClojureCheck by Meikel Brandmeyer:
 ;; http://kotka.de/projects/clojure/clojurecheck.html
 
-
-;; DOCUMENTATION
-;;
-
-
-
-(ns ^{:doc "clojure.test extensions for the Test Anything Protocol (TAP)
+(ns clojure.test.tap
+  "clojure.test extensions for the Test Anything Protocol (TAP)
 
   TAP is a simple text-based syntax for reporting test results.  TAP
   was originally developed for Perl, and now has implementations in
@@ -37,34 +32,34 @@
 
     (with-tap-output
      (run-tests 'my.cool.library))"
-      :author "Stuart Sierra"}
- clojure.test.tap
+  {:authors ["Stuart Sierra <mail@stuartsierra.com>"]
+   :added   "0.1.0"}
   (:require [clojure.test :as t]
             [clojure.stacktrace :as stack]))
 
 (defn print-tap-plan
   "Prints a TAP plan line like '1..n'.  n is the number of tests"
-  {:added "1.1"}
+  {:added "0.1.0"}
   [n]
   (println (str "1.." n)))
 
 (defn print-tap-diagnostic
   "Prints a TAP diagnostic line.  data is a (possibly multi-line)
   string."
-  {:added "1.1"}
+  {:added "0.1.0"}
   [data]
   (doseq [line (.split ^String data "\n")]
     (println "#" line)))
 
 (defn print-tap-pass
   "Prints a TAP 'ok' line.  msg is a string, with no line breaks"
-  {:added "1.1"}
+  {:added "0.1.0"}
   [msg]
   (println "ok" msg))
 
 (defn print-tap-fail
   "Prints a TAP 'not ok' line.  msg is a string, with no line breaks"
-  {:added "1.1"}
+  {:added "0.1.0"}
   [msg]
   (println "not ok" msg))
 
@@ -116,7 +111,7 @@
 (defmacro with-tap-output
   "Execute body with modified test reporting functions that produce
   TAP output"
-  {:added "1.1"}
+  {:added "0.1.0"}
   [& body]
   `(binding [t/report tap-report]
      ~@body))

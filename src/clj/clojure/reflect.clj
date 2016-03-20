@@ -6,39 +6,39 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:author "Stuart Halloway"
-      :added "1.3"
-      :doc "Reflection on Host Types
-Alpha - subject to change.
+(ns clojure.reflect
+  "Reflection on Host Types
+  Alpha - subject to change.
 
-Two main entry points:
+  Two main entry points:
 
-* type-reflect reflects on something that implements TypeReference.
-* reflect (for REPL use) reflects on the class of an instance, or
+  * type-reflect reflects on something that implements TypeReference.
+  * reflect (for REPL use) reflects on the class of an instance, or
   on a class if passed a class
 
-Key features:
+  Key features:
 
-* Exposes the read side of reflection as pure data. Reflecting
+  * Exposes the read side of reflection as pure data. Reflecting
   on a type returns a map with keys :bases, :flags, and :members.
 
-* Canonicalizes class names as Clojure symbols. Types can extend
+  * Canonicalizes class names as Clojure symbols. Types can extend
   to the TypeReference protocol to indicate that they can be
   unambiguously resolved as a type name. The canonical format
   requires one non-Java-ish convention: array brackets are <>
   instead of [] so they can be part of a Clojure symbol.
 
-* Pluggable Reflectors for different implementations. The default
+  * Pluggable Reflectors for different implementations. The default
   JavaReflector is good when you have a class in hand, or use
   the AsmReflector for \"hands off\" reflection without forcing
   classes to load.
 
-Platform implementers must:
+  Platform implementers must:
 
-* Create an implementation of Reflector.
-* Create one or more implementations of TypeReference.
-* def default-reflector to be an instance that satisfies Reflector."}
- clojure.reflect
+  * Create an implementation of Reflector.
+  * Create one or more implementations of TypeReference.
+  * def default-reflector to be an instance that satisfies Reflector."
+  {:authors ["Stuart Halloway <stu@cognitect.com>"]
+   :added   "0.1.0"}
   (:require [clojure.set :as set]))
 
 (defprotocol Reflector
@@ -91,19 +91,19 @@ Platform implementers must:
                     :members.
      :reflector     implementation to use. Defaults to JavaReflector,
                     AsmReflector is also an option."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [typeref & options]
   (let [{:keys [ancestors reflector]}
         (merge {:reflector default-reflector}
                (apply hash-map options))
-        refl (partial do-reflect reflector)
+        refl   (partial do-reflect reflector)
         result (refl typeref)]
     ;; could make simpler loop of two args: names an
     (if ancestors
       (let [make-ancestor-map (fn [names]
                                 (zipmap names (map refl names)))]
         (loop [reflections (make-ancestor-map (:bases result))]
-          (let [ancestors-visited (set (keys reflections))
+          (let [ancestors-visited  (set (keys reflections))
                 ancestors-to-visit (set/difference (set (mapcat :bases (vals reflections)))
                                                    ancestors-visited)]
             (if (seq ancestors-to-visit)
@@ -116,7 +116,7 @@ Platform implementers must:
   "Alpha - subject to change.
    Reflect on the type of obj (or obj itself if obj is a class).
    Return value and options are the same as for type-reflect. "
-  {:added "1.3"}
+  {:added "0.1.0"}
   [obj & options]
   (apply type-reflect (if (class? obj) obj (class obj)) options))
 

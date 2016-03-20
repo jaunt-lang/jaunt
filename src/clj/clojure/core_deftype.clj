@@ -12,7 +12,7 @@
 
 (defn namespace-munge
   "Convert a Clojure namespace name to a legal Java package name."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [ns]
   (.replace (str ns) \- \_))
 
@@ -25,7 +25,7 @@
   (definterface MyInterface
     (^int method1 [x])
     (^Bar method2 [^Baz b ^Quux q]))"
-  {:added "1.2"} ;; Present since 1.2, but made public in 1.5.
+  {:added "0.1.0"}
   [name & sigs]
   (let [tag (fn [x] (or (:tag (meta x)) Object))
         psig (fn [[name [& args]]]
@@ -118,7 +118,7 @@
 
   (meta ^{:k :v} (reify Object (toString [this] \"foo\")))
   == {:k :v}"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [& opts+specs]
   (let [[interfaces methods] (parse-opts+specs opts+specs)]
     (with-meta `(reify* ~interfaces ~@methods) (meta &form))))
@@ -147,7 +147,7 @@
 
 (defn- emit-defrecord
   "Do not use this directly - use defrecord"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [tagname cname fields interfaces methods opts]
   (let [classname (with-meta (symbol (str (namespace-munge *ns*) "." cname)) (meta cname))
         interfaces (vec interfaces)
@@ -363,7 +363,7 @@
   Given (defrecord TypeName ...), two factory functions will be
   defined: ->TypeName, taking positional parameters for the fields,
   and map->TypeName, taking a map of keywords to field values."
-  {:added "1.2"
+  {:added "0.1.0"
    :arglists '([name [& fields] & opts+specs])}
 
   [name fields & opts+specs]
@@ -388,7 +388,7 @@
 
 (defn record?
   "Returns true if x is a record"
-  {:added "1.6"
+  {:added "0.1.0"
    :static true}
   [x]
   (instance? clojure.lang.IRecord x))
@@ -469,7 +469,7 @@
 
   Given (deftype TypeName ...), a factory function called ->TypeName
   will be defined, taking positional parameters for the fields"
-  {:added "1.2"
+  {:added "0.1.0"
    :arglists '([name [& fields] & opts+specs])}
 
   [name fields & opts+specs]
@@ -539,20 +539,20 @@
 
 (defn extends?
   "Returns true if atype extends protocol"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [protocol atype]
   (boolean (or (implements? protocol atype)
                (get (:impls protocol) atype))))
 
 (defn extenders
   "Returns a collection of the types explicitly extending protocol"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [protocol]
   (keys (:impls protocol)))
 
 (defn satisfies?
   "Returns true if x satisfies the protocol"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [protocol x]
   (boolean (find-protocol-impl protocol x)))
 
@@ -723,7 +723,7 @@
         (bar-me [this] x)
         (bar-me [this y] x))))
   => 17"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [name & opts+sigs]
   (emit-protocol name opts+sigs))
 
@@ -762,7 +762,7 @@
 
   See also:
   extends?, satisfies?, extenders"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [atype & proto+mmaps]
   (doseq [[proto mmap] (partition 2 proto+mmaps)]
     (when-not (protocol? proto)
@@ -816,7 +816,7 @@
    Foo
      {:baz (fn ([x] ...) ([x y & zs] ...))
       :bar (fn [x y] ...)})"
-  {:added "1.2"}
+  {:added "0.1.0"}
   [t & specs]
   (emit-extend-type t specs))
 
@@ -862,7 +862,7 @@
    (clojure.core/extend-type nil Protocol
      (foo [x] ...)
      (bar [x y] ...)))"
-  {:added "1.2"}
+  {:added "0.1.0"}
 
   [p & specs]
   (emit-extend-protocol p specs))

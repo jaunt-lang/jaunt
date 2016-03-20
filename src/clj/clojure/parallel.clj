@@ -6,9 +6,12 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "DEPRECATED Wrapper of the ForkJoin library (JSR-166)."
-      :author "Rich Hickey"}
- clojure.parallel)
+(ns clojure.parallel
+  "DEPRECATED Wrapper of the ForkJoin library (JSR-166)."
+  {:authors    ["Rich Hickey <richhickey@gmail.com>"]
+   :added      "0.1.0"
+   :deprecated true})
+
 (alias 'parallel 'clojure.parallel)
 
 (comment "
@@ -216,7 +219,7 @@ pvec.
   (load-file "src/parallel.clj")
   (refer 'parallel)
   (pdistinct [1 2 3 2 1])
-;(pcumulate [1 2 3 2 1] + 0) ;broken, not exposed
+                                        ;(pcumulate [1 2 3 2 1] + 0) ;broken, not exposed
   (def a (make-array Object 1000000))
   (dotimes i (count a)
            (aset a i (rand-int i)))

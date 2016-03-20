@@ -18,6 +18,7 @@ test:
     - bash etc/bin/check-whitespace.sh
     - bash etc/bin/check-changelog.sh
     - lein cljfmt check
+    - grep -Hnr '[[:blank:]]\+$' src test && exit 1 || exit 0
   override:
     - bash etc/bin/run-tests.sh:
         parallel: true

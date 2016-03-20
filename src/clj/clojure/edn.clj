@@ -6,9 +6,10 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "edn reading."
-      :author "Rich Hickey"}
- clojure.edn
+(ns clojure.edn
+  {:doc    "edn reading."
+   :author "Rich Hickey"
+   :added  "0.1.0"}
   (:refer-clojure :exclude [read read-string]))
 
 (defn read
@@ -26,7 +27,7 @@
   :default - A function of two args, that will, if present and no reader is found for a tag,
              be called with the tag and the value."
 
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([]
    (read *in*))
   ([stream]
@@ -41,6 +42,6 @@
   http://edn-format.org
 
   opts is a map as per clojure.edn/read"
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([s] (read-string {:eof nil} s))
   ([opts s] (when s (clojure.lang.EdnReader/readString s opts))))

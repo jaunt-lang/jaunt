@@ -6,15 +6,15 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "Graphical object inspector for Clojure data structures."
-      :author "Rich Hickey"}
- clojure.inspector
-  (:import
-   (java.awt BorderLayout)
-   (java.awt.event ActionEvent ActionListener)
-   (javax.swing.tree TreeModel)
-   (javax.swing.table TableModel AbstractTableModel)
-   (javax.swing JPanel JTree JTable JScrollPane JFrame JToolBar JButton SwingUtilities)))
+(ns clojure.inspector
+  "Graphical object inspector for Clojure data structures."
+  {:author "Rich Hickey"
+   :added  "0.1.0"}
+  (:import (java.awt BorderLayout)
+           (java.awt.event ActionEvent ActionListener)
+           (javax.swing.tree TreeModel)
+           (javax.swing.table TableModel AbstractTableModel)
+           (javax.swing JPanel JTree JTable JScrollPane JFrame JToolBar JButton SwingUtilities)))
 
 (defn atom? [x]
   (not (coll? x)))
@@ -89,7 +89,7 @@
 
 (defn inspect-tree
   "creates a graphical (Swing) inspector on the supplied hierarchical data"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [data]
   (doto (JFrame. "Clojure Inspector")
     (.add (JScrollPane. (JTree. (tree-model data))))
@@ -100,7 +100,7 @@
   "creates a graphical (Swing) inspector on the supplied regular
   data, which must be a sequential data structure of data structures
   of equal length"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [data]
   (doto (JFrame. "Clojure Inspector")
     (.add (JScrollPane. (JTable. (old-table-model data))))
@@ -151,7 +151,7 @@
 
 (defn inspect
   "creates a graphical (Swing) inspector on the supplied object"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [x]
   (doto (JFrame. "Clojure Inspector")
     (.add

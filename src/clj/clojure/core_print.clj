@@ -21,7 +21,7 @@
   more items, the printer will print items up to the limit followed by
   '...' to represent the remaining items. The root binding is nil
   indicating no limit."
-    :added "1.0"}
+    :added "0.1.0"}
   *print-length* nil)
 
 (def ^:dynamic
@@ -33,7 +33,7 @@
   collection and is at a level greater than or equal to the value bound to
   *print-level*, the printer prints '#' to represent it. The root binding
   is nil indicating no limit."
-    :added "1.0"}
+    :added "0.1.0"}
   *print-level* nil)
 
 (def ^:dynamic *verbose-defrecords* false)
@@ -176,7 +176,7 @@
 
 (def ^{:tag String
        :doc "Returns escape string for char or nil if none"
-       :added "1.0"}
+       :added "0.1.0"}
   char-escape-string
   {\newline "\\n"
    \tab  "\\t"
@@ -290,7 +290,7 @@
 
 (def ^{:tag String
        :doc "Returns name string for char or nil if none"
-       :added "1.0"}
+       :added "0.1.0"}
   char-name-string
   {\newline "newline"
    \tab "tab"
@@ -413,7 +413,7 @@
 
 (defn Throwable->map
   "Constructs a data representation for a Throwable."
-  {:added "1.7"}
+  {:added "0.1.0"}
   [^Throwable o]
   (let [base (fn [^Throwable t]
                (let [m {:type (class t)

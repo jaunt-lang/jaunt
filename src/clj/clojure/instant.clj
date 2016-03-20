@@ -7,6 +7,9 @@
 ;;    You must not remove this notice, or any other, from this software.
 
 (ns clojure.instant
+  "Provides #inst parsing and printing."
+  {:added  "0.1.0"
+   :author "Ben Smith-Mannschott"}
   (:import [java.util Calendar Date GregorianCalendar TimeZone]
            [java.sql Timestamp]))
 
@@ -282,4 +285,3 @@ map with this var as the value for the 'inst key. Timestamp preserves
 fractional seconds with nanosecond precision. The timezone offset will
 be used to convert into UTC."
   (partial parse-timestamp (validated construct-timestamp)))
-

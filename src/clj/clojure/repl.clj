@@ -8,12 +8,20 @@
 
 ;; Utilities meant to be used interactively at the REPL
 
-(ns
- ^{:author "Chris Houser, Christophe Grand, Stephen Gilardi, Michel Salim"
-   :doc "Utilities meant to be used interactively at the REPL"}
- clojure.repl
-  (:import (java.io LineNumberReader InputStreamReader PushbackReader)
-           (clojure.lang RT Reflector)))
+(ns clojure.repl
+  "Utilities meant to be used interactively at the REPL"
+  {:authors ["Chris Houser <chouser@lonocloud.com>"
+             "Christophe Grand <christophe@cgrand.net>"
+             "Stephen Gilardi <scgilardi@gmail.com>"
+             "Michel Salim <michel@sylvestre.me>"]
+   :added   "0.1.0"}
+  (:import (java.io
+            LineNumberReader
+            InputStreamReader
+            PushbackReader)
+           (clojure.lang
+            RT
+            Reflector)))
 
 (def ^:private special-doc-map
   '{. {:url "java_interop#dot"
@@ -104,7 +112,7 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
 (defn find-doc
   "Prints documentation for any var whose documentation or name
  contains a match for re-string-or-pattern"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [re-string-or-pattern]
   (let [re (re-pattern re-string-or-pattern)
         ms (concat (mapcat #(sort-by :name (map meta (vals (ns-interns %))))
@@ -119,7 +127,7 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
 
 (defmacro doc
   "Prints documentation for a var or special form given its name"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [name]
   (if-let [special-name ('{& fn catch try finally try} name)]
     (#'print-doc (#'special-doc special-name))
@@ -171,8 +179,8 @@ itself (not its value) is returned. The reader macro #'x expands to (var x)."}})
 
 (defn apropos
   "Given a regular expression or stringable thing, return a seq of all
-public definitions in all currently-loaded namespaces that match the
-str-or-pattern."
+  public definitions in all currently-loaded namespaces that match the
+  str-or-pattern."
   [str-or-pattern]
   (let [matches? (if (instance? java.util.regex.Pattern str-or-pattern)
                    #(re-find str-or-pattern (str %))
@@ -198,14 +206,14 @@ str-or-pattern."
 (defn demunge
   "Given a string representation of a fn class,
   as in a stack trace element, returns a readable version."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [fn-name]
   (clojure.lang.Compiler/demunge fn-name))
 
 (defn root-cause
   "Returns the initial cause of an exception or error by peeling off all of
   its wrappers"
-  {:added "1.3"}
+  {:added "0.1.0"}
   [^Throwable t]
   (loop [cause t]
     (if (and (instance? clojure.lang.Compiler$CompilerException cause)
@@ -217,7 +225,7 @@ str-or-pattern."
 
 (defn stack-element-str
   "Returns a (possibly unmunged) string representation of a StackTraceElement"
-  {:added "1.3"}
+  {:added "0.1.0"}
   [^StackTraceElement el]
   (let [file (.getFileName el)
         clojure-fn? (and file (or (.endsWith file ".clj")
@@ -229,9 +237,10 @@ str-or-pattern."
          " (" (.getFileName el) ":" (.getLineNumber el) ")")))
 
 (defn pst
-  "Prints a stack trace of the exception, to the depth requested. If none supplied, uses the root cause of the
-  most recent repl exception (*e), and a depth of 12."
-  {:added "1.3"}
+  "Prints a stack trace of the exception, to the depth requested. If none
+  supplied, uses the root cause of the most recent repl exception (*e), and a
+  depth of 12."
+  {:added "0.1.0"}
   ([] (pst 12))
   ([e-or-depth]
    (if (instance? Throwable e-or-depth)
@@ -243,7 +252,7 @@ str-or-pattern."
      (println (str (-> e class .getSimpleName) " "
                    (.getMessage e)
                    (when-let [info (ex-data e)] (str " " (pr-str info)))))
-     (let [st (.getStackTrace e)
+     (let [st    (.getStackTrace e)
            cause (.getCause e)]
        (doseq [el (take depth
                         (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName %))

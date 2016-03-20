@@ -6,11 +6,17 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "XML reading/writing."
-      :author "Rich Hickey"}
- clojure.xml
-  (:import (org.xml.sax ContentHandler Attributes SAXException)
-           (javax.xml.parsers SAXParser SAXParserFactory)))
+(ns clojure.xml
+  "XML reading/writing."
+  {:authors ["Rich Hickey <richhickey@gmail.com>"]
+   :added   "0.1.0"}
+  (:import (org.xml.sax
+            ContentHandler
+            Attributes
+            SAXException)
+           (javax.xml.parsers
+            SAXParser
+            SAXParserFactory)))
 
 (def ^:dynamic *stack*)
 (def ^:dynamic *current*)
@@ -81,7 +87,7 @@
   attrs, and content. Other parsers can be supplied by passing
   startparse, a fn taking a source and a ContentHandler and returning
   a parser"
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([s] (parse s startparse-sax))
   ([s startparse]
    (binding [*stack* nil

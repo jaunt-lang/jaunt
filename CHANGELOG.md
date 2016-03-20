@@ -1,6 +1,12 @@
 ## Change Log
 
 ### upcoming
+- [#107](https://github.com/jaunt-lang/jaunt/pull/107) Set version to 0.1.0 (@arrdem).
+  - Fix a minor bug in `*jaunt-version*` loading due to the Maven qualifier being empty/`nil`
+  - Refactor `ns` forms to prefer explicit full ns macro docstrings, attrs over `^{}`
+  - Standardize `^:added` version metadata on namespaces and vars
+  - Standardize `^:deprecated` version metadata on namespaces and vars
+  - Add `^:authors` metadata on namespaces, replacing `^:author`
 - [#72](https://github.com/jaunt-lang/jaunt/pull/72) Impose cljfmt linting of clj sources (@arrdem).
 - [#105](https://github.com/jaunt-lang/jaunt/pull/105) Run CircleCI tests in parallel (@arrdem).
   - Adds `etc/bin/run-tests.sh`

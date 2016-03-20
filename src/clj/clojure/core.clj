@@ -7,7 +7,8 @@
 ;;    You must not remove this notice, or any other, from this software.
 
 (ns ^{:doc    "The core Clojure language."
-      :author "Rich Hickey"}
+      :author "Rich Hickey"
+      :added  "0.1.0"}
  clojure.core)
 
 (def unquote)
@@ -16,14 +17,14 @@
 (def
   ^{:arglists '([& items])
     :doc      "Creates a new list containing the items."
-    :added    "1.0"}
+    :added    "0.1.0"}
   list
   clojure.lang.PersistentList/creator)
 
 (def
   ^{:arglists '([x seq])
     :doc      "Returns a new seq where x is the first element and seq is the rest."
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   cons
   (fn* ^:static cons [x seq]
@@ -32,21 +33,21 @@
 ;; during bootstrap we don't have destructuring let, loop or fn, will redefine later
 (def
   ^{:macro true
-    :added "1.0"}
+    :added "0.1.0"}
   let
   (fn* let [&form &env & decl]
     (cons 'let* decl)))
 
 (def
   ^{:macro true
-    :added "1.0"}
+    :added "0.1.0"}
   loop
   (fn* loop [&form &env & decl]
     (cons 'loop* decl)))
 
 (def
   ^{:macro true
-    :added "1.0"}
+    :added "0.1.0"}
   fn
   (fn* fn [&form &env & decl]
     (.withMeta ^clojure.lang.IObj (cons 'fn* decl)
@@ -55,7 +56,7 @@
 (def
   ^{:arglists '([coll])
     :doc      "Returns the first item in the collection. Calls seq on its argument. If coll is nil, returns nil."
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   first
   (fn ^:static first [coll]
@@ -65,7 +66,7 @@
   ^{:arglists '([coll])
     :tag      clojure.lang.ISeq
     :doc      "Returns a seq of the items after the first. Calls seq on its argument.  If there are no more items, returns nil."
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   next
   (fn ^:static next [x]
@@ -75,7 +76,7 @@
   ^{:arglists '([coll])
     :tag      clojure.lang.ISeq
     :doc      "Returns a possibly empty seq of the items after the first. Calls seq on its argument."
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   rest
   (fn ^:static rest [x]
@@ -84,7 +85,7 @@
 (def
   ^{:arglists '([coll x] [coll x & xs])
     :doc      "conj[oin]. Returns a new collection with the xs 'added'. (conj nil item) returns (item).  The 'addition' may happen at different 'places' depending on the concrete type."
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   conj
   (fn ^:static conj
@@ -100,7 +101,7 @@
 (def
   ^{:doc      "Same as (first (next x))"
     :arglists '([x])
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   second
   (fn ^:static second [x]
@@ -109,7 +110,7 @@
 (def
   ^{:doc      "Same as (first (first x))"
     :arglists '([x])
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   ffirst
   (fn ^:static ffirst [x]
@@ -118,7 +119,7 @@
 (def
   ^{:doc "Same as (next (first x))"
     :arglists '([x])
-    :added "1.0"
+    :added "0.1.0"
     :static true}
   nfirst
   (fn ^:static nfirst [x]
@@ -127,7 +128,7 @@
 (def
   ^{:doc      "Same as (first (next x))"
     :arglists '([x])
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   fnext
   (fn ^:static fnext [x]
@@ -136,7 +137,7 @@
 (def
   ^{:doc "Same as (next (next x))"
     :arglists '([x])
-    :added "1.0"
+    :added "0.1.0"
     :static true}
   nnext
   (fn ^:static nnext [x]
@@ -146,7 +147,7 @@
   ^{:arglists '(^clojure.lang.ISeq [coll])
     :doc      "Returns a seq on the collection. If the collection is empty, returns nil.  (seq nil) returns nil. seq also works on Strings, native Java arrays (of reference types) and any objects that implement Iterable. Note that seqs cache values, thus seq should not be used on any Iterable whose iterator repeatedly returns the same mutable object."
     :tag      clojure.lang.ISeq
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   seq
   (fn ^:static seq
@@ -156,7 +157,7 @@
 (def
   ^{:arglists '([^Class c x])
     :doc      "Evaluates x and tests if it is an instance of the class c. Returns true or false"
-    :added    "1.0"}
+    :added    "0.1.0"}
   instance?
   (fn instance? [^Class c x]
     (. c (isInstance x))))
@@ -164,7 +165,7 @@
 (def
   ^{:arglists '([x])
     :doc      "Return true if x implements ISeq"
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   seq?
   (fn ^:static seq? [x]
@@ -173,7 +174,7 @@
 (def
   ^{:arglists '([x])
     :doc      "Return true if x is a Character"
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   char?
   (fn ^:static char? [x]
@@ -182,7 +183,7 @@
 (def
   ^{:arglists '([x])
     :doc      "Return true if x is a String"
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   string?
   (fn ^:static string? [x]
@@ -191,7 +192,7 @@
 (def
   ^{:arglists '([x])
     :doc      "Return true if x implements IPersistentMap"
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   map?
   (fn ^:static map? [x]
@@ -200,7 +201,7 @@
 (def
   ^{:arglists '([x])
     :doc      "Return true if x implements IPersistentVector"
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   vector?
   (fn ^:static vector? [x]
@@ -209,7 +210,7 @@
 (def
   ^{:arglists '([x])
     :doc      "Return true if x is a Var"
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   var?
   (fn ^:static var? [x]
@@ -218,7 +219,7 @@
 (def
   ^{:arglists '([map key val] [map key val & kvs])
     :doc      "assoc[iate]. When applied to a map, returns a new map of the same (hashed/sorted) type, that contains the mapping of key(s) to val(s). When applied to a vector, returns a new vector that contains val at index. Note - index must be <= (count vector)."
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   assoc
   (fn ^:static assoc
@@ -237,7 +238,7 @@
 (def
   ^{:arglists '([obj])
     :doc      "Returns the metadata of obj, returns nil if there is no metadata."
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   meta
   (fn meta [x]
@@ -247,7 +248,7 @@
 (def
   ^{:arglists '([^clojure.lang.IObj obj m])
     :doc      "Returns an object of the same type and value as obj, with map m as its metadata."
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   with-meta
   (fn with-meta [^clojure.lang.IObj x m]
@@ -256,7 +257,7 @@
 (def
   ^{:arglists '([obj])
     :doc      "Checks to see if the supplied object is marked deprecated."
-    :added    "1.9"
+    :added    "0.1.0"
     :static   true}
   deprecated?
   (fn ^:static deprecated? [o]
@@ -268,7 +269,7 @@
 (def
   ^{:arglists '([obj])
     :doc      "Checks to see if the supplied object is marked private."
-    :added    "1.9"
+    :added    "0.1.0"
     :static   true}
   private?
   (fn ^:static private? [o]
@@ -321,7 +322,7 @@
 (def
   ^{:arglists '([coll])
     :doc      "Return the last item in coll, in linear time"
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   last
   (fn ^:static last [s]
@@ -332,7 +333,7 @@
 (def
   ^{:arglists '([coll])
     :doc      "Return a seq of all but the last item in coll, in linear time"
-    :added    "1.0"
+    :added    "0.1.0"
     :static   true}
   butlast
   (fn ^:static butlast [s]
@@ -345,7 +346,7 @@
   ^{:doc      "Same as (def name (fn [params* ] exprs*)) or (def name (fn ([params* ] exprs*)+)) with any doc-string or attrs added to the var metadata. prepost-map defines a map with optional keys :pre and :post that contain collections of pre or post conditions."
     :arglists '([name doc-string? attr-map? [params*] prepost-map? body]
                 [name doc-string? attr-map? ([params*] prepost-map? body) + attr-map?])
-    :added    "1.0"}
+    :added    "0.1.0"}
   defn
   (fn defn [&form &env name & fdecl]
     ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
@@ -397,21 +398,21 @@
   "Returns an array of Objects containing the contents of coll, which
   can be any Collection.  Maps to java.util.Collection.toArray()."
   {:tag    "[Ljava.lang.Object;"
-   :added  "1.0"
+   :added  "0.1.0"
    :static true}
   [coll]
   (clojure.lang.RT/toArray coll))
 
 (defn cast
   "Throws a ClassCastException if x is not a c, else returns x."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   [^Class c x]
   (. c (cast x)))
 
 (defn vector
   "Creates a new vector containing the args."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   ([] [])
   ([a] [a])
@@ -426,7 +427,7 @@
 (defn vec
   "Creates a new vector containing the contents of coll. Java arrays
   will be aliased and should not be modified."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   ([coll]
    (if (vector? coll)
@@ -439,7 +440,7 @@
   "keyval => key val
   Returns a new hash map with supplied mappings.  If any keys are
   equal, they are handled as if by repeated uses of assoc."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   ([] {})
   ([& keyvals]
@@ -448,7 +449,7 @@
 (defn hash-set
   "Returns a new hash set with supplied keys.  Any equal keys are
   handled as if by repeated uses of conj."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   ([] #{})
   ([& keys]
@@ -458,7 +459,7 @@
   "keyval => key val
   Returns a new sorted map with supplied mappings.  If any keys are
   equal, they are handled as if by repeated uses of assoc."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   ([]
    clojure.lang.PersistentTreeMap/EMPTY)
@@ -470,7 +471,7 @@
   Returns a new sorted map with supplied mappings, using the supplied
   comparator.  If any keys are equal, they are handled as if by
   repeated uses of assoc."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   [comparator & keyvals]
   (clojure.lang.PersistentTreeMap/create comparator keyvals))
@@ -478,7 +479,7 @@
 (defn sorted-set
   "Returns a new sorted set with supplied keys.  Any equal keys are
   handled as if by repeated uses of conj."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   ([]
    clojure.lang.PersistentTreeSet/EMPTY)
@@ -489,7 +490,7 @@
   "Returns a new sorted set with supplied keys, using the supplied
   comparator.  Any equal keys are handled as if by repeated uses of
   conj."
-  {:added  "1.1"
+  {:added  "0.1.0"
    :static true}
   [comparator & keys]
   (clojure.lang.PersistentTreeSet/create comparator keys))
@@ -497,7 +498,7 @@
 (defn nil?
   "Returns true if x is nil, false otherwise."
   {:tag    Boolean
-   :added  "1.0"
+   :added  "0.1.0"
    :static true
    :inline (fn [x] (list 'clojure.lang.Util/identical x nil))}
   [x]
@@ -521,7 +522,7 @@
   ^{:doc      "Like defn, but the resulting function name is declared as a macro and will be used as a macro by the compiler when it is called."
     :arglists '([name doc-string? attr-map? [params*] body]
                 [name doc-string? attr-map? ([params*] body) + attr-map?])
-    :added    "1.0"}
+    :added    "0.1.0"}
   defmacro
   (fn [&form &env
        name & args]
@@ -540,7 +541,7 @@
                        fd)))
           fdecl  (if (vector? (first fdecl))
                    (list fdecl)
-                   fdecl) 
+                   fdecl)
           fdecl  (seq (add-args [] fdecl))
           decl   (loop [p prefix d fdecl]
                    (if p
@@ -555,20 +556,20 @@
 
 (defmacro when
   "Evaluates test. If logical true, evaluates body in an implicit do."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [test & body]
   (list 'if test (cons 'do body)))
 
 (defmacro when-not
   "Evaluates test. If logical false, evaluates body in an implicit do."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [test & body]
   (list 'if test nil (cons 'do body)))
 
 (defn false?
   "Returns true if x is the value false, false otherwise."
   {:tag            Boolean
-   :added          "1.0"
+   :added          "0.1.0"
    :inline-arities #{1}
    :inline         (fn [xe] (list 'clojure.lang.Util/identical xe false))
    :static         true}
@@ -578,7 +579,7 @@
 (defn true?
   "Returns true if x is the value true, false otherwise."
   {:tag            Boolean
-   :added          "1.0"
+   :added          "0.1.0"
    :inline-arities #{1}
    :inline         (fn [xe] (list 'clojure.lang.Util/identical xe true))
    :static         true}
@@ -588,7 +589,7 @@
 (defn not
   "Returns true if x is logical false, false otherwise."
   {:tag            Boolean
-   :added          "1.0"
+   :added          "0.1.0"
    :inline-arities #{1}
    :inline         (fn [xe] (list 'if xe false true))
    :static         true}
@@ -598,7 +599,7 @@
 (defn some?
   "Returns true if x is not nil, false otherwise."
   {:tag            Boolean
-   :added          "1.6"
+   :added          "0.1.0"
    :inline-arities #{1}
    :inline         (fn [xe]
                      (list 'clojure.core/not
@@ -612,7 +613,7 @@
   x.toString().  (str nil) returns the empty string. With more than
   one arg, returns the concatenation of the str values of the args."
   {:tag    String
-   :added  "1.0"
+   :added  "0.1.0"
    :static true}
   (^String [] "")
   (^String [^Object x]
@@ -626,14 +627,14 @@
 
 (defn symbol?
   "Return true if x is a Symbol"
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   [x]
   (instance? clojure.lang.Symbol x))
 
 (defn keyword?
   "Return true if x is a Keyword"
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   [x]
   (instance? clojure.lang.Keyword x))
@@ -641,7 +642,7 @@
 (defn symbol
   "Returns a Symbol with the given namespace and name."
   {:tag    clojure.lang.Symbol
-   :added  "1.0"
+   :added  "0.1.0"
    :static true}
   ([name]
    (if (symbol? name)
@@ -654,7 +655,7 @@
   "Returns a new symbol with a unique name. If a prefix string is
   supplied, the name is prefix# where # is some unique number. If
   prefix is not supplied, the prefix is 'G__'."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([] (gensym "G__"))
   ([prefix-string]
@@ -666,7 +667,7 @@
   time.  If a test returns logical true, cond evaluates and returns
   the value of the corresponding expr and doesn't evaluate any of the
   other tests or exprs. (cond) returns nil."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& clauses]
   (when clauses
     (list 'if (first clauses)
@@ -680,7 +681,7 @@
   "Returns a Keyword with the given namespace and name.  Do not use :
   in the keyword strings, it will be added automatically."
   {:tag    clojure.lang.Keyword
-   :added  "1.0"
+   :added  "0.1.0"
    :static true}
   ([name]
    (cond
@@ -696,7 +697,7 @@
   has not already been interned, it will return nil.  Do not use :
   in the keyword strings, it will be added automatically."
   {:tag    clojure.lang.Keyword
-   :added  "1.3"
+   :added  "0.1.0"
    :static true}
   ([name]
    (cond
@@ -718,7 +719,7 @@
 (defn list*
   "Creates a new seq containing the items prepended to the rest, the
   last of which will be treated as a sequence."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([args] (seq args))
   ([a args] (cons a args))
@@ -729,7 +730,7 @@
 
 (defn apply
   "Applies fn f to the argument list formed by prepending intervening arguments to args."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([^clojure.lang.IFn f args]
    (. f (applyTo (seq args))))
@@ -745,7 +746,7 @@
 (defn vary-meta
   "Returns an object of the same type and value as obj, with
   (apply f (meta obj) args) as its metadata."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [obj f & args]
   (with-meta obj (apply f (meta obj) args)))
@@ -755,7 +756,7 @@
   a Seqable object that will invoke the body only the first time seq
   is called, and will cache the result and return it on all subsequent
   seq calls. See also - realized?"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& body]
   (list 'new 'clojure.lang.LazySeq (list* '^{:once true} fn* [] body)))
 
@@ -787,7 +788,7 @@
 
 (defn concat
   "Returns a lazy seq representing the concatenation of the elements in the supplied colls."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([] (lazy-seq nil))
   ([x] (lazy-seq x))
@@ -818,20 +819,20 @@
   invoke the body only the first time it is forced (with force or deref/@), and
   will cache the result and return it on all subsequent force
   calls. See also - realized?"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& body]
   (list 'new 'clojure.lang.Delay (list* `^{:once true} fn* [] body)))
 
 (defn delay?
   "returns true if x is a Delay created with delay"
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   [x]
   (instance? clojure.lang.Delay x))
 
 (defn force
   "If x is a Delay, returns the (possibly cached) value of its expression, else returns x"
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   [x]
   (. clojure.lang.Delay (force x)))
@@ -839,7 +840,7 @@
 (defmacro if-not
   "Evaluates test. If logical false, evaluates and returns then expr,
   otherwise else expr, if supplied, else nil."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([test then]
    `(if-not ~test ~then nil))
   ([test then else]
@@ -849,7 +850,7 @@
   "Tests if 2 arguments are the same object"
   {:inline         (fn [x y] `(. clojure.lang.Util identical ~x ~y))
    :inline-arities #{2}
-   :added          "1.0"}
+   :added          "0.1.0"}
   [x y]
   (clojure.lang.Util/identical x y))
 
@@ -862,7 +863,7 @@
   comparison."
   {:inline         (fn [x y] `(. clojure.lang.Util equiv ~x ~y))
    :inline-arities #{2}
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([x] true)
   ([x y]
    (clojure.lang.Util/equiv x y))
@@ -876,7 +877,7 @@
 (defn not=
   "Same as (not (= obj1 obj2))"
   {:tag    Boolean
-   :added  "1.0"
+   :added  "0.1.0"
    :static true}
   ([x] false)
   ([x y]
@@ -891,7 +892,7 @@
   compares numbers and collections in a type-independent manner. x
   must implement Comparable"
   {:inline (fn [x y] `(clojure.lang.Util/compare ~x ~y))
-   :added  "1.0"}
+   :added  "0.1.0"}
   [x y]
   (clojure.lang.Util/compare x y))
 
@@ -900,7 +901,7 @@
   returns logical false (nil or false), and returns that value and
   doesn't evaluate any of the other expressions, otherwise it returns
   the value of the last expr. (and) returns true."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([] true)
   ([x] x)
   ([x & next]
@@ -912,7 +913,7 @@
   returns a logical true value, or returns that value and doesn't
   evaluate any of the other expressions, otherwise it returns the
   value of the last expression. (or) returns nil."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([] nil)
   ([x] x)
   ([x & next]
@@ -923,7 +924,7 @@
 (defn zero?
   "Returns true if num is zero, else false"
   {:inline (fn [x] `(clojure.lang.Numbers/isZero ~x))
-   :added  "1.0"}
+   :added  "0.1.0"}
   [x]
   (clojure.lang.Numbers/isZero x))
 
@@ -931,7 +932,7 @@
   "Returns the number of items in the collection. (count nil) returns
   0.  Also works on strings, arrays, and Java Collections and Maps"
   {:inline (fn [x] `(clojure.lang.RT/count ~x))
-   :added  "1.0"}
+   :added  "0.1.0"}
   [coll]
   (clojure.lang.RT/count coll))
 
@@ -940,7 +941,7 @@
   {:inline (fn [x]
              `(. clojure.lang.RT (~(if *unchecked-math*
                                      'uncheckedIntCast 'intCast) ~x)))
-   :added  "1.0"}
+   :added  "0.1.0"}
   [x]
   (clojure.lang.RT/intCast x))
 
@@ -951,7 +952,7 @@
   in O(n) time, for sequences."
   {:inline         (fn  [c i & nf] `(. clojure.lang.RT (nth ~c ~i ~@nf)))
    :inline-arities #{2 3}
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([coll index]
    (clojure.lang.RT/nth coll index))
   ([coll index not-found]
@@ -962,7 +963,7 @@
   otherwise false."
   {:inline         (fn [x y] `(clojure.lang.Numbers/lt ~x ~y))
    :inline-arities #{2}
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([x] true)
   ([x y]
    (clojure.lang.Numbers/lt x y))
@@ -977,7 +978,7 @@
   "Returns a number one greater than num. Supports arbitrary precision.
   See also: inc"
   {:inline (fn [x] `(clojure.lang.Numbers/incP ~x))
-   :added  "1.0"}
+   :added  "0.1.0"}
   [x]
   (clojure.lang.Numbers/incP x))
 
@@ -985,7 +986,7 @@
   "Returns a number one greater than num. Does not auto-promote
   longs, will throw on overflow. See also: inc'"
   {:inline (fn [x] `(. clojure.lang.Numbers (~(if *unchecked-math* 'unchecked_inc 'inc) ~x)))
-   :added  "1.2"}
+   :added  "0.1.0"}
   [x]
   (clojure.lang.Numbers/inc x))
 
@@ -1008,7 +1009,7 @@
 
 (defn reverse
   "Returns a seq of the items in coll in reverse order. Not lazy."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll]
   (reduce1 conj () coll))
@@ -1041,7 +1042,7 @@
   "Returns the sum of nums. (+') returns 0. Supports arbitrary precision. See also: +"
   {:inline         (nary-inline 'addP)
    :inline-arities >1?
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([] 0)
   ([x] (cast Number x))
   ([x y]
@@ -1053,7 +1054,7 @@
   "Returns the sum of nums. (+) returns 0. Does not auto-promote longs, will throw on overflow. See also: +'"
   {:inline         (nary-inline 'add 'unchecked_add)
    :inline-arities >1?
-   :added          "1.2"}
+   :added          "0.1.0"}
   ([] 0)
   ([x] (cast Number x))
   ([x y]
@@ -1065,7 +1066,7 @@
   "Returns the product of nums. (*') returns 1. Supports arbitrary precision. See also: *"
   {:inline         (nary-inline 'multiplyP)
    :inline-arities >1?
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([] 1)
   ([x] (cast Number x))
   ([x y]
@@ -1077,7 +1078,7 @@
   "Returns the product of nums. (*) returns 1. Does not auto-promote longs, will throw on overflow. See also: *'"
   {:inline         (nary-inline 'multiply 'unchecked_multiply)
    :inline-arities >1?
-   :added          "1.2"}
+   :added          "0.1.0"}
   ([] 1)
   ([x] (cast Number x))
   ([x y]
@@ -1089,7 +1090,7 @@
   "If no denominators are supplied, returns 1/numerator, else returns numerator divided by all of the denominators."
   {:inline         (nary-inline 'divide)
    :inline-arities >1?
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([x] (/ 1 x))
   ([x y]
    (clojure.lang.Numbers/divide x y))
@@ -1100,7 +1101,7 @@
   "If no ys are supplied, returns the negation of x, else subtracts the ys from x and returns the result. Supports arbitrary precision. See also: -"
   {:inline         (nary-inline 'minusP)
    :inline-arities >0?
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([x]
    (clojure.lang.Numbers/minusP x))
   ([x y]
@@ -1112,7 +1113,7 @@
   "If no ys are supplied, returns the negation of x, else subtracts the ys from x and returns the result. Does not auto-promote longs, will throw on overflow. See also: -'"
   {:inline         (nary-inline 'minus 'unchecked_minus)
    :inline-arities >0?
-   :added          "1.2"}
+   :added          "0.1.0"}
   ([x]
    (clojure.lang.Numbers/minus x))
   ([x y]
@@ -1124,7 +1125,7 @@
   "Returns non-nil if nums are in monotonically non-decreasing order, otherwise false."
   {:inline         (fn [x y] `(clojure.lang.Numbers/lte ~x ~y))
    :inline-arities #{2}
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([x] true)
   ([x y]
    (clojure.lang.Numbers/lte x y))
@@ -1139,7 +1140,7 @@
   "Returns non-nil if nums are in monotonically decreasing order, otherwise false."
   {:inline         (fn [x y] `(clojure.lang.Numbers/gt ~x ~y))
    :inline-arities #{2}
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([x] true)
   ([x y]
    (clojure.lang.Numbers/gt x y))
@@ -1154,7 +1155,7 @@
   "Returns non-nil if nums are in monotonically non-increasing order, otherwise false."
   {:inline         (fn [x y] `(clojure.lang.Numbers/gte ~x ~y))
    :inline-arities #{2}
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([x] true)
   ([x y]
    (clojure.lang.Numbers/gte x y))
@@ -1169,7 +1170,7 @@
   "Returns non-nil if nums all have the equivalent value (type-independent), otherwise false"
   {:inline         (fn [x y] `(clojure.lang.Numbers/equiv ~x ~y))
    :inline-arities #{2}
-   :added          "1.0"}
+   :added          "0.1.0"}
   ([x] true)
   ([x y]
    (clojure.lang.Numbers/equiv x y))
@@ -1182,7 +1183,7 @@
 
 (defn max
   "Returns the greatest of the nums."
-  {:added          "1.0"
+  {:added          "0.1.0"
    :inline-arities >1?
    :inline         (nary-inline 'max)}
   ([x] x)
@@ -1193,7 +1194,7 @@
 
 (defn min
   "Returns the least of the nums."
-  {:added          "1.0"
+  {:added          "0.1.0"
    :inline-arities >1?
    :inline         (nary-inline 'min)}
   ([x] x)
@@ -1206,7 +1207,7 @@
   "Returns a number one less than num. Supports arbitrary precision.
   See also: dec"
   {:inline (fn [x] `(clojure.lang.Numbers/decP ~x))
-   :added  "1.0"}
+   :added  "0.1.0"}
   [x]
   (clojure.lang.Numbers/decP x))
 
@@ -1214,7 +1215,7 @@
   "Returns a number one less than num. Does not auto-promote
   longs, will throw on overflow. See also: dec'"
   {:inline (fn [x] `(. clojure.lang.Numbers (~(if *unchecked-math* 'unchecked_dec 'dec) ~x)))
-   :added  "1.2"}
+   :added  "0.1.0"}
   [x]
   (clojure.lang.Numbers/dec x))
 
@@ -1222,7 +1223,7 @@
   "Returns a number one greater than x, an int.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x] `(clojure.lang.Numbers/unchecked_int_inc ~x))
-   :added  "1.0"}
+   :added  "0.1.0"}
   [x]
   (clojure.lang.Numbers/unchecked_int_inc x))
 
@@ -1230,108 +1231,108 @@
   "Returns a number one greater than x, a long.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x] `(. clojure.lang.Numbers (unchecked_inc ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (. clojure.lang.Numbers (unchecked_inc x)))
 
 (defn unchecked-dec-int
   "Returns a number one less than x, an int.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x] `(. clojure.lang.Numbers (unchecked_int_dec ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (. clojure.lang.Numbers (unchecked_int_dec x)))
 
 (defn unchecked-dec
   "Returns a number one less than x, a long.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x] `(. clojure.lang.Numbers (unchecked_dec ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (. clojure.lang.Numbers (unchecked_dec x)))
 
 (defn unchecked-negate-int
   "Returns the negation of x, an int.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x] `(. clojure.lang.Numbers (unchecked_int_negate ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (. clojure.lang.Numbers (unchecked_int_negate x)))
 
 (defn unchecked-negate
   "Returns the negation of x, a long.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x] `(. clojure.lang.Numbers (unchecked_minus ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (. clojure.lang.Numbers (unchecked_minus x)))
 
 (defn unchecked-add-int
   "Returns the sum of x and y, both int.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x y] `(. clojure.lang.Numbers (unchecked_int_add ~x ~y)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x y] (. clojure.lang.Numbers (unchecked_int_add x y)))
 
 (defn unchecked-add
   "Returns the sum of x and y, both long.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x y] `(. clojure.lang.Numbers (unchecked_add ~x ~y)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x y] (. clojure.lang.Numbers (unchecked_add x y)))
 
 (defn unchecked-subtract-int
   "Returns the difference of x and y, both int.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x y] `(. clojure.lang.Numbers (unchecked_int_subtract ~x ~y)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x y] (. clojure.lang.Numbers (unchecked_int_subtract x y)))
 
 (defn unchecked-subtract
   "Returns the difference of x and y, both long.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x y] `(. clojure.lang.Numbers (unchecked_minus ~x ~y)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x y] (. clojure.lang.Numbers (unchecked_minus x y)))
 
 (defn unchecked-multiply-int
   "Returns the product of x and y, both int.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x y] `(. clojure.lang.Numbers (unchecked_int_multiply ~x ~y)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x y] (. clojure.lang.Numbers (unchecked_int_multiply x y)))
 
 (defn unchecked-multiply
   "Returns the product of x and y, both long.
   Note - uses a primitive operator subject to overflow."
   {:inline (fn [x y] `(. clojure.lang.Numbers (unchecked_multiply ~x ~y)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x y] (. clojure.lang.Numbers (unchecked_multiply x y)))
 
 (defn unchecked-divide-int
   "Returns the division of x by y, both int.
   Note - uses a primitive operator subject to truncation."
   {:inline (fn [x y] `(. clojure.lang.Numbers (unchecked_int_divide ~x ~y)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x y] (. clojure.lang.Numbers (unchecked_int_divide x y)))
 
 (defn unchecked-remainder-int
   "Returns the remainder of division of x by y, both int.
   Note - uses a primitive operator subject to truncation."
   {:inline (fn [x y] `(. clojure.lang.Numbers (unchecked_int_remainder ~x ~y)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x y] (. clojure.lang.Numbers (unchecked_int_remainder x y)))
 
 (defn pos?
   "Returns true if num is greater than zero, else false"
   {:inline (fn [x] `(. clojure.lang.Numbers (isPos ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (. clojure.lang.Numbers (isPos x)))
 
 (defn neg?
   "Returns true if num is less than zero, else false"
   {:inline (fn [x] `(. clojure.lang.Numbers (isNeg ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (. clojure.lang.Numbers (isNeg x)))
 
 (defn quot
   "quot[ient] of dividing numerator by denominator."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true
    :inline (fn [x y] `(. clojure.lang.Numbers (quotient ~x ~y)))}
   [num div]
@@ -1339,7 +1340,7 @@
 
 (defn rem
   "remainder of dividing numerator by denominator."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true
    :inline (fn [x y] `(. clojure.lang.Numbers (remainder ~x ~y)))}
   [num div]
@@ -1347,7 +1348,7 @@
 
 (defn rationalize
   "returns the rational value of num"
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   [num]
   (. clojure.lang.Numbers (rationalize num)))
@@ -1357,14 +1358,14 @@
 (defn bit-not
   "Bitwise complement"
   {:inline (fn [x] `(. clojure.lang.Numbers (not ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (. clojure.lang.Numbers not x))
 
 (defn bit-and
   "Bitwise and"
   {:inline (nary-inline 'and)
    :inline-arities >1?
-   :added "1.0"}
+   :added "0.1.0"}
   ([x y] (. clojure.lang.Numbers and x y))
   ([x y & more]
    (reduce1 bit-and (bit-and x y) more)))
@@ -1373,7 +1374,7 @@
   "Bitwise or"
   {:inline (nary-inline 'or)
    :inline-arities >1?
-   :added "1.0"}
+   :added "0.1.0"}
   ([x y] (. clojure.lang.Numbers or x y))
   ([x y & more]
    (reduce1 bit-or (bit-or x y) more)))
@@ -1382,7 +1383,7 @@
   "Bitwise exclusive or"
   {:inline (nary-inline 'xor)
    :inline-arities >1?
-   :added "1.0"}
+   :added "0.1.0"}
   ([x y] (. clojure.lang.Numbers xor x y))
   ([x y & more]
    (reduce1 bit-xor (bit-xor x y) more)))
@@ -1391,7 +1392,7 @@
   "Bitwise and with complement"
   {:inline (nary-inline 'andNot)
    :inline-arities >1?
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   ([x y] (. clojure.lang.Numbers andNot x y))
   ([x y & more]
@@ -1399,49 +1400,49 @@
 
 (defn bit-clear
   "Clear bit at index n"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x n] (. clojure.lang.Numbers clearBit x n))
 
 (defn bit-set
   "Set bit at index n"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x n] (. clojure.lang.Numbers setBit x n))
 
 (defn bit-flip
   "Flip bit at index n"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x n] (. clojure.lang.Numbers flipBit x n))
 
 (defn bit-test
   "Test bit at index n"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x n] (. clojure.lang.Numbers testBit x n))
 
 (defn bit-shift-left
   "Bitwise shift left"
   {:inline (fn [x n] `(. clojure.lang.Numbers (shiftLeft ~x ~n)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x n] (. clojure.lang.Numbers shiftLeft x n))
 
 (defn bit-shift-right
   "Bitwise shift right"
   {:inline (fn [x n] `(. clojure.lang.Numbers (shiftRight ~x ~n)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x n] (. clojure.lang.Numbers shiftRight x n))
 
 (defn unsigned-bit-shift-right
   "Bitwise shift right, without sign-extension."
   {:inline (fn [x n] `(. clojure.lang.Numbers (unsignedShiftRight ~x ~n)))
-   :added "1.6"}
+   :added "0.1.0"}
   [x n] (. clojure.lang.Numbers unsignedShiftRight x n))
 
 (defn integer?
   "Returns true if n is an integer"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [n]
   (or (instance? Integer n)
@@ -1453,7 +1454,7 @@
 
 (defn even?
   "Returns true if n is even, throws an exception if n is not an integer"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [n] (if (integer? n)
         (zero? (bit-and (clojure.lang.RT/uncheckedLongCast n) 1))
@@ -1461,7 +1462,7 @@
 
 (defn odd?
   "Returns true if n is odd, throws an exception if n is not an integer"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [n] (not (even? n)))
 
@@ -1470,7 +1471,7 @@
 (defn complement
   "Takes a fn f and returns a fn that takes the same arguments as f,
   has the same effects, if any, and returns the opposite truth value."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [f]
   (fn
@@ -1481,13 +1482,13 @@
 
 (defn constantly
   "Returns a function that takes any number of arguments and returns x."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x] (fn [& args] x))
 
 (defn identity
   "Returns its argument."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x] x)
 
@@ -1497,7 +1498,7 @@
 (defn peek
   "For a list or queue, same as first, for a vector, same as, but much
   more efficient than, last. If the collection is empty, returns nil."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (. clojure.lang.RT (peek coll)))
 
@@ -1506,7 +1507,7 @@
   item, for a vector, returns a new vector without the last item. If
   the collection is empty, throws an exception.  Note - not the same
   as next/butlast."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (. clojure.lang.RT (pop coll)))
 
@@ -1514,7 +1515,7 @@
 
 (defn map-entry?
   "Return true if x is a map entry"
-  {:added "1.8"}
+  {:added "0.1.0"}
   [x]
   (instance? java.util.Map$Entry x))
 
@@ -1524,7 +1525,7 @@
   vectors and Java arrays, this tests if the numeric key is within the
   range of indexes. 'contains?' operates constant or logarithmic time;
   it will not perform a linear search for a value.  See also 'some'."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll key] (. clojure.lang.RT (contains coll key)))
 
@@ -1532,7 +1533,7 @@
   "Returns the value mapped to key, not-found or nil if key not present."
   {:inline (fn  [m k & nf] `(. clojure.lang.RT (get ~m ~k ~@nf)))
    :inline-arities #{2 3}
-   :added "1.0"}
+   :added "0.1.0"}
   ([map key]
    (. clojure.lang.RT (get map key)))
   ([map key not-found]
@@ -1541,7 +1542,7 @@
 (defn dissoc
   "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
   that does not contain a mapping for key(s)."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([map] map)
   ([map key]
@@ -1555,7 +1556,7 @@
 (defn disj
   "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
   does not contain key(s)."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([set] set)
   ([^clojure.lang.IPersistentSet set key]
@@ -1570,13 +1571,13 @@
 
 (defn find
   "Returns the map entry for key, or nil if key not present."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [map key] (. clojure.lang.RT (find map key)))
 
 (defn select-keys
   "Returns a map containing only those entries in map whose key is in keys"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [map keyseq]
   (loop [ret {} keys (seq keyseq)]
@@ -1591,26 +1592,26 @@
 
 (defn keys
   "Returns a sequence of the map's keys, in the same order as (seq map)."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [map] (. clojure.lang.RT (keys map)))
 
 (defn vals
   "Returns a sequence of the map's values, in the same order as (seq map)."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [map] (. clojure.lang.RT (vals map)))
 
 (defn key
   "Returns the key of the map entry."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^java.util.Map$Entry e]
   (. e (getKey)))
 
 (defn val
   "Returns the value in the map entry."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^java.util.Map$Entry e]
   (. e (getValue)))
@@ -1618,7 +1619,7 @@
 (defn rseq
   "Returns, in constant time, a seq of the items in rev (which
   can be a vector or sorted-map), in reverse order. If rev is empty returns nil"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Reversible rev]
   (. rev (rseq)))
@@ -1626,7 +1627,7 @@
 (defn name
   "Returns the name String of a string, symbol or keyword."
   {:tag String
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [x]
   (if (string? x) x (. ^clojure.lang.Named x (getName))))
@@ -1634,7 +1635,7 @@
 (defn namespace
   "Returns the namespace String of a symbol or keyword, or nil if not present."
   {:tag String
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [^clojure.lang.Named x]
   (. x (getNamespace)))
@@ -1642,7 +1643,7 @@
 (defmacro locking
   "Executes exprs in an implicit do, while holding the monitor of x.
   Will release the monitor of x in all circumstances."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [x & body]
   `(let [lockee# ~x]
      (try
@@ -1665,7 +1666,7 @@
   (. (. System (getProperties)) (get \"os.name\"))
 
   but is easier to write, read, and understand."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([x form] `(. ~x ~form))
   ([x form & more] `(.. (. ~x ~form) ~@more)))
 
@@ -1674,7 +1675,7 @@
   second item in the first form, making a list of it if it is not a
   list already. If there are more forms, inserts the first form as the
   second item in second form, etc."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [x & forms]
   (loop [x x, forms forms]
     (if forms
@@ -1690,7 +1691,7 @@
   last item in the first form, making a list of it if it is not a
   list already. If there are more forms, inserts the first form as the
   last item in second form, etc."
-  {:added "1.1"}
+  {:added "0.1.0"}
   [x & forms]
   (loop [x x, forms forms]
     (if forms
@@ -1741,7 +1742,7 @@
   a reference type e.g. a var (i.e. via the Var-quote dispatch macro #'
   or the var special form)."
   {:arglists '([name docstring? attr-map? dispatch-fn & options])
-   :added "1.0"}
+   :added "0.1.0"}
   [mm-name & options]
   (let [docstring   (if (string? (first options))
                       (first options)
@@ -1776,20 +1777,20 @@
 
 (defmacro defmethod
   "Creates and installs a new method of multimethod associated with dispatch-value. "
-  {:added "1.0"}
+  {:added "0.1.0"}
   [multifn dispatch-val & fn-tail]
   `(. ~(with-meta multifn {:tag 'clojure.lang.MultiFn}) addMethod ~dispatch-val (fn ~@fn-tail)))
 
 (defn remove-all-methods
   "Removes all of the methods of multimethod."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.MultiFn multifn]
   (.reset multifn))
 
 (defn remove-method
   "Removes the method of multimethod associated with dispatch-value."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.MultiFn multifn dispatch-val]
   (. multifn removeMethod dispatch-val))
@@ -1797,27 +1798,27 @@
 (defn prefer-method
   "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
    when there is a conflict"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.MultiFn multifn dispatch-val-x dispatch-val-y]
   (. multifn preferMethod dispatch-val-x dispatch-val-y))
 
 (defn methods
   "Given a multimethod, returns a map of dispatch values -> dispatch fns"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.MultiFn multifn] (.getMethodTable multifn))
 
 (defn get-method
   "Given a multimethod and a dispatch value, returns the dispatch fn
   that would apply to that value, or nil if none apply and no default"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.MultiFn multifn dispatch-val] (.getMethod multifn dispatch-val))
 
 (defn prefers
   "Given a multimethod, returns a map of preferred value -> set of other values"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.MultiFn multifn] (.getPreferTable multifn))
 
@@ -1837,7 +1838,7 @@
 
   If test is true, evaluates then with binding-form bound to the value of
   test, if not, yields else"
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([bindings then]
    `(if-let ~bindings ~then nil))
   ([bindings then else & oldform]
@@ -1856,7 +1857,7 @@
   "bindings => binding-form test
 
   When test is true, evaluates body with binding-form bound to the value of test"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [bindings & body]
   (assert-args
    (vector? bindings) "a vector for its binding"
@@ -1872,7 +1873,7 @@
 
    If test is not nil, evaluates then with binding-form bound to the
    value of test, if not, yields else"
-  {:added "1.6"}
+  {:added "0.1.0"}
   ([bindings then]
    `(if-some ~bindings ~then nil))
   ([bindings then else & oldform]
@@ -1892,7 +1893,7 @@
 
    When test is not nil, evaluates body with binding-form bound to the
    value of test"
-  {:added "1.6"}
+  {:added "0.1.0"}
   [bindings & body]
   (assert-args
    (vector? bindings) "a vector for its binding"
@@ -1917,7 +1918,7 @@
         ...
         (finally
           (pop-thread-bindings)))"
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [bindings]
   (clojure.lang.Var/pushThreadBindings bindings))
@@ -1925,7 +1926,7 @@
 (defn pop-thread-bindings
   "Pop one set of bindings pushed with push-binding before. It is an error to
   pop bindings without pushing before."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   []
   (clojure.lang.Var/popThreadBindings))
@@ -1933,7 +1934,7 @@
 (defn get-thread-bindings
   "Get a map with the Var/value pairs which is currently in effect for the
   current thread."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   []
   (clojure.lang.Var/getThreadBindings))
@@ -1946,7 +1947,7 @@
   re-establishes the bindings that existed before.  The new bindings
   are made in parallel (unlike let); all init-exprs are evaluated
   before the vars are bound to their new values."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [bindings & body]
   (assert-args
    (vector? bindings) "a vector for its binding"
@@ -1968,7 +1969,7 @@
   "Takes a map of Var/value pairs. Installs for the given Vars the associated
   values as thread-local bindings. Then calls f with the supplied arguments.
   Pops the installed bindings after f returned. Returns whatever f returns."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [binding-map f & args]
   (push-thread-bindings binding-map)
@@ -1981,7 +1982,7 @@
   "Takes a map of Var/value pairs. Installs for the given Vars the associated
   values as thread-local bindings. Then executes body. Pops the installed
   bindings after body was evaluated. Returns the value of body."
-  {:added "1.1"}
+  {:added "0.1.0"}
   [binding-map & body]
   `(with-bindings* ~binding-map (fn [] ~@body)))
 
@@ -1990,7 +1991,7 @@
   the thread at the time bound-fn* was called and then call f with any given
   arguments. This may be used to define a helper function which runs on a
   different thread, but needs the same bindings in place."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [f]
   (let [bindings (get-thread-bindings)]
@@ -2002,20 +2003,20 @@
   same bindings in effect as in the thread at the time bound-fn was called.
   This may be used to define a helper function which runs on a different
   thread, but needs the same bindings in place."
-  {:added "1.1"}
+  {:added "0.1.0"}
   [& fntail]
   `(bound-fn* (fn ~@fntail)))
 
 (defn find-var
   "Returns the global var named by the namespace-qualified symbol, or
   nil if no var with that name."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [sym] (. clojure.lang.Var (find sym)))
 
 (defn binding-conveyor-fn
   {:private true
-   :added "1.3"}
+   :added "0.1.0"}
   [f]
   (let [frame (clojure.lang.Var/cloneThreadBindingFrame)]
     (fn
@@ -2067,7 +2068,7 @@
   :continue (the default if an error-handler is given) or :fail (the
   default if no error-handler is given) -- see set-error-mode! for
   details."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([state & options]
    (let [a (new clojure.lang.Agent state)
@@ -2081,13 +2082,13 @@
 
 (defn set-agent-send-executor!
   "Sets the ExecutorService to be used by send"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [executor]
   (set! clojure.lang.Agent/pooledExecutor executor))
 
 (defn set-agent-send-off-executor!
   "Sets the ExecutorService to be used by send-off"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [executor]
   (set! clojure.lang.Agent/soloExecutor executor))
 
@@ -2097,7 +2098,7 @@
   will be set to the value of:
 
   (apply action-fn state-of-agent args)"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [executor ^clojure.lang.Agent a f & args]
   (.dispatch a (binding [*agent* a] (binding-conveyor-fn f)) args executor))
 
@@ -2107,7 +2108,7 @@
   will be set to the value of:
 
   (apply action-fn state-of-agent args)"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Agent a f & args]
   (apply send-via clojure.lang.Agent/pooledExecutor a f args))
@@ -2118,7 +2119,7 @@
   the agent will be set to the value of:
 
   (apply action-fn state-of-agent args)"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Agent a f & args]
   (apply send-via clojure.lang.Agent/soloExecutor a f args))
@@ -2130,7 +2131,7 @@
   actions immediately. This has no impact on actions sent during a
   transaction, which are still held until commit. If no action is
   occurring, does nothing. Returns the number of actions dispatched."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [] (clojure.lang.Agent/releasePendingSends))
 
@@ -2148,13 +2149,13 @@
   set!s. Keys must be unique per reference, and can be used to remove
   the watch with remove-watch, but are otherwise considered opaque by
   the watch mechanism."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.IRef reference key fn] (.addWatch reference key fn))
 
 (defn remove-watch
   "Removes a watch (set by add-watch) from a reference"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.IRef reference key]
   (.removeWatch reference key))
@@ -2163,7 +2164,7 @@
   "Returns the exception thrown during an asynchronous action of the
   agent if the agent is failed.  Returns nil if the agent is not
   failed."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Agent a] (.getError a))
 
@@ -2177,7 +2178,7 @@
   agent will remain failed with its old state and error.  Watchers, if
   any, will NOT be notified of the new state.  Throws an exception if
   the agent is not failed."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Agent a, new-state & options]
   (let [opts (apply hash-map options)]
@@ -2188,7 +2189,7 @@
   being run by the agent throws an exception or doesn't pass the
   validator fn, handler-fn will be called with two arguments: the
   agent and the exception."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Agent a, handler-fn]
   (.setErrorHandler a handler-fn))
@@ -2196,7 +2197,7 @@
 (defn error-handler
   "Returns the error-handler of agent a, or nil if there is none.
   See set-error-handler!"
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Agent a]
   (.getErrorHandler a))
@@ -2213,14 +2214,14 @@
   accepting new 'send' and 'send-off' actions, and any previously
   queued actions will be held until a 'restart-agent'.  Deref will
   still work, returning the state of the agent before the error."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Agent a, mode-keyword]
   (.setErrorMode a mode-keyword))
 
 (defn error-mode
   "Returns the error-mode of agent a.  See set-error-mode!"
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Agent a]
   (.getErrorMode a))
@@ -2229,8 +2230,8 @@
   "DEPRECATED: Use 'agent-error' instead.
   Returns a sequence of the exceptions thrown during asynchronous
   actions of the agent."
-  {:added "1.0"
-   :deprecated "1.2"}
+  {:added "0.1.0"
+   :deprecated "0.1.0"}
   [a]
   (when-let [e (agent-error a)]
     (list e)))
@@ -2239,15 +2240,15 @@
   "DEPRECATED: Use 'restart-agent' instead.
   Clears any exceptions thrown during asynchronous actions of the
   agent, allowing subsequent actions to occur."
-  {:added "1.0"
-   :deprecated "1.2"}
+  {:added "0.1.0"
+   :deprecated "0.1.0"}
   [^clojure.lang.Agent a] (restart-agent a (.deref a)))
 
 (defn shutdown-agents
   "Initiates a shutdown of the thread pools that back the agent
   system. Running actions will complete, but no new actions will be
   accepted"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [] (. clojure.lang.Agent shutdown))
 
@@ -2274,7 +2275,7 @@
   set :min-history to ensure it will be available when first needed (instead
   of after a read fault). History is limited, and the limit can be set
   with :max-history."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([x] (new clojure.lang.Ref x))
   ([x & options]
@@ -2305,7 +2306,7 @@
   used for blocking references (futures and promises), and will return
   timeout-val if the timeout (in milliseconds) is reached before a
   value is available. See also - realized?."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([ref] (if (instance? clojure.lang.IDeref ref)
            (.deref ^clojure.lang.IDeref ref)
@@ -2328,7 +2329,7 @@
   argument, which will be passed the intended new state on any state
   change. If the new state is unacceptable, the validate-fn should
   return false or throw an exception."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([x] (new clojure.lang.Atom x))
   ([x & options] (setup-reference (atom x) options)))
@@ -2338,7 +2339,7 @@
   (apply f current-value-of-atom args). Note that f may be called
   multiple times, and thus should be free of side effects.  Returns
   the value that was swapped in."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([^clojure.lang.IAtom atom f] (.swap atom f))
   ([^clojure.lang.IAtom atom f x] (.swap atom f x))
@@ -2349,14 +2350,14 @@
   "Atomically sets the value of atom to newval if and only if the
   current value of the atom is identical to oldval. Returns true if
   set happened, else false"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.IAtom atom oldval newval] (.compareAndSet atom oldval newval))
 
 (defn reset!
   "Sets the value of atom to newval without regard for the
   current value. Returns newval."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.IAtom atom newval] (.reset atom newval))
 
@@ -2367,13 +2368,13 @@
   validator-fn should return false or throw an exception. If the current state (root
   value if var) is not acceptable to the new validator, an exception
   will be thrown and the validator will not be changed."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.IRef iref validator-fn] (. iref (setValidator validator-fn)))
 
 (defn get-validator
   "Gets the validator-fn for a var/ref/agent/atom."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.IRef iref] (. iref (getValidator)))
 
@@ -2383,13 +2384,13 @@
   (apply f its-current-meta args)
 
   f must be free of side-effects"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.IReference iref f & args] (.alterMeta iref f args))
 
 (defn reset-meta!
   "Atomically resets the metadata for a namespace/var/ref/agent/atom"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.IReference iref metadata-map] (.resetMeta iref metadata-map))
 
@@ -2408,7 +2409,7 @@
   Thus fun should be commutative, or, failing that, you must accept
   last-one-in-wins behavior.  commute allows for more concurrency than
   ref-set."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
 
   [^clojure.lang.Ref ref fun & args]
@@ -2421,7 +2422,7 @@
   (apply fun in-transaction-value-of-ref args)
 
   and returns the in-transaction-value of ref."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Ref ref fun & args]
   (. ref (alter fun args)))
@@ -2429,21 +2430,21 @@
 (defn ref-set
   "Must be called in a transaction. Sets the value of ref.
   Returns val."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Ref ref val]
   (. ref (set val)))
 
 (defn ref-history-count
   "Returns the history count of a ref"
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Ref ref]
   (.getHistoryCount ref))
 
 (defn ref-min-history
   "Gets the min-history of a ref, or sets it and returns the ref"
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   ([^clojure.lang.Ref ref]
    (.getMinHistory ref))
@@ -2452,7 +2453,7 @@
 
 (defn ref-max-history
   "Gets the max-history of a ref, or sets it and returns the ref"
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   ([^clojure.lang.Ref ref]
    (.getMaxHistory ref))
@@ -2463,7 +2464,7 @@
   "Must be called in a transaction. Protects the ref from modification
   by other transactions.  Returns the in-transaction-value of
   ref. Allows for more concurrency than (ref-set ref @ref)"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Ref ref]
   (. ref (touch))
@@ -2477,7 +2478,7 @@
   running on this thread. Any uncaught exception will abort the
   transaction and flow out of sync. The exprs may be run more than
   once, but any effects on Refs will be atomic."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [flags-ignored-for-now & body]
   `(. clojure.lang.LockingTransaction
       (runInTransaction (fn [] ~@body))))
@@ -2487,7 +2488,7 @@
   IllegalStateException, else runs body in an implicit do. If the
   first expression in body is a literal string, will use that as the
   exception message."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& body]
   (let [message (when (string? (first body)) (first body))
         body (if message (next body) body)]
@@ -2497,7 +2498,7 @@
 
 (defn volatile!
   "Creates and returns a Volatile with an initial value of val."
-  {:added "1.7"
+  {:added "0.1.0"
    :tag clojure.lang.Volatile}
   [val]
   (clojure.lang.Volatile. val))
@@ -2505,7 +2506,7 @@
 (defn vreset!
   "Sets the value of volatile to newval without regard for the
    current value. Returns newval."
-  {:added "1.7"}
+  {:added "0.1.0"}
   [^clojure.lang.Volatile vol newval]
   (.reset vol newval))
 
@@ -2513,14 +2514,14 @@
   "Non-atomically swaps the value of the volatile as if:
    (apply f current-value-of-vol args). Returns the value that
    was swapped in."
-  {:added "1.7"}
+  {:added "0.1.0"}
   [vol f & args]
   (let [v (with-meta vol {:tag 'clojure.lang.Volatile})]
     `(.reset ~v (~f (.deref ~v) ~@args))))
 
 (defn volatile?
   "Returns true if x is a volatile."
-  {:added "1.7"}
+  {:added "0.1.0"}
   [x]
   (instance? clojure.lang.Volatile x))
 
@@ -2531,7 +2532,7 @@
   of those fns.  The returned fn takes a variable number of args,
   applies the rightmost of fns to the args, the next
   fn (right-to-left) to the result, etc."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([] identity)
   ([f] f)
@@ -2551,7 +2552,7 @@
   returns a vector containing the result of applying each fn to the
   args (left-to-right).
   ((juxt a b c) x) => [(a x) (b x) (c x)]"
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   ([f]
    (fn
@@ -2587,7 +2588,7 @@
   "Takes a function f and fewer than the normal arguments to f, and
   returns a fn that takes a variable number of additional args. When
   called, the returned function calls f with args + additional args."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([f] f)
   ([f arg1]
@@ -2625,7 +2626,7 @@
   items in each coll, until any one of the colls is exhausted.  Any
   remaining items in other colls are ignored. The transform should accept
   number-of-colls arguments"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([coll]
    (if (seq? coll) coll
@@ -2645,7 +2646,7 @@
   "Returns true if (pred x) is logical true for every x in coll, else
   false."
   {:tag Boolean
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [pred coll]
   (cond
@@ -2658,7 +2659,7 @@
     :doc "Returns false if (pred x) is logical true for every x in
   coll, else true."
     :arglists '([pred coll])
-    :added "1.0"}
+    :added "0.1.0"}
   not-every? (comp not every?))
 
 (defn some
@@ -2666,7 +2667,7 @@
   else nil.  One common idiom is to use a set as pred, for example
   this will return :fred if :fred is in the sequence, otherwise nil:
   (some #{:fred} coll)"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [pred coll]
   (when (seq coll)
@@ -2677,7 +2678,7 @@
     :doc "Returns false if (pred x) is logical true for any x in coll,
   else true."
     :arglists '([pred coll])
-    :added "1.0"}
+    :added "0.1.0"}
   not-any? (comp not some))
 
 ;; will be redefed later with arg checks
@@ -2686,7 +2687,7 @@
 
   Repeatedly executes body (presumably for side-effects) with name
   bound to integers from 0 through n-1."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [bindings & body]
   (let [i (first bindings)
         n (second bindings)]
@@ -2703,7 +2704,7 @@
   exhausted.  Any remaining items in other colls are ignored. Function
   f should accept number-of-colls arguments. Returns a transducer when
   no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([f]
    (fn [rf]
@@ -2747,7 +2748,7 @@
 
 (defmacro declare
   "defs the supplied var names with no bindings, useful for making forward declarations."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& names] `(do ~@(map #(list 'def (vary-meta % assoc :declared true)) names)))
 
 (declare cat)
@@ -2756,7 +2757,7 @@
   "Returns the result of applying concat to the result of applying map
   to f and colls.  Thus function f should return a collection. Returns
   a transducer when no collections are provided"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([f] (comp (map f) cat))
   ([f & colls]
@@ -2766,7 +2767,7 @@
   "Returns a lazy sequence of the items in coll for which
   (pred item) returns true. pred must be free of side-effects.
   Returns a transducer when no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([pred]
    (fn [rf]
@@ -2798,7 +2799,7 @@
   "Returns a lazy sequence of the items in coll for which
   (pred item) returns false. pred must be free of side-effects.
   Returns a transducer when no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([pred] (filter (complement pred)))
   ([pred coll]
@@ -2806,7 +2807,7 @@
 
 (defn reduced
   "Wraps x in a way such that a reduce will terminate with the value x"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [x]
   (clojure.lang.Reduced. x))
 
@@ -2814,18 +2815,18 @@
   "Returns true if x is the result of a call to reduced"
   {:inline (fn [x] `(clojure.lang.RT/isReduced ~x))
    :inline-arities #{1}
-   :added "1.5"}
+   :added "0.1.0"}
   ([x] (clojure.lang.RT/isReduced x)))
 
 (defn ensure-reduced
   "If x is already reduced?, returns it, else returns (reduced x)"
-  {:added "1.7"}
+  {:added "0.1.0"}
   [x]
   (if (reduced? x) x (reduced x)))
 
 (defn unreduced
   "If x is reduced?, returns (deref x), else returns x"
-  {:added "1.7"}
+  {:added "0.1.0"}
   [x]
   (if (reduced? x) (deref x) x))
 
@@ -2833,7 +2834,7 @@
   "Returns a lazy sequence of the first n items in coll, or all items if
   there are fewer than n.  Returns a stateful transducer when
   no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([n]
    (fn [rf]
@@ -2860,7 +2861,7 @@
   "Returns a lazy sequence of successive items from coll while
   (pred item) returns true. pred must be free of side-effects.
   Returns a transducer when no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([pred]
    (fn [rf]
@@ -2880,7 +2881,7 @@
 (defn drop
   "Returns a lazy sequence of all but the first n items in coll.
   Returns a stateful transducer when no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([n]
    (fn [rf]
@@ -2904,7 +2905,7 @@
 
 (defn drop-last
   "Return a lazy sequence of all but the last n (default 1) items in coll"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([s] (drop-last 1 s))
   ([n s] (map (fn [x _] x) s (drop n s))))
@@ -2912,7 +2913,7 @@
 (defn take-last
   "Returns a seq of the last n items in coll.  Depending on the type
   of coll may be no better than linear time.  For vectors, see also subvec."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [n coll]
   (loop [s (seq coll), lead (seq (drop n coll))]
@@ -2924,7 +2925,7 @@
   "Returns a lazy sequence of the items in coll starting from the
   first item for which (pred item) returns logical false.  Returns a
   stateful transducer when no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([pred]
    (fn [rf]
@@ -2949,27 +2950,27 @@
 
 (defn cycle
   "Returns a lazy (infinite!) sequence of repetitions of the items in coll."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (clojure.lang.Cycle/create (seq coll)))
 
 (defn split-at
   "Returns a vector of [(take n coll) (drop n coll)]"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [n coll]
   [(take n coll) (drop n coll)])
 
 (defn split-with
   "Returns a vector of [(take-while pred coll) (drop-while pred coll)]"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [pred coll]
   [(take-while pred coll) (drop-while pred coll)])
 
 (defn repeat
   "Returns a lazy (infinite!, or length n if supplied) sequence of xs."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([x] (clojure.lang.Repeat/create x))
   ([n x] (clojure.lang.Repeat/create n x)))
@@ -2977,13 +2978,13 @@
 (defn replicate
   "DEPRECATED: Use 'repeat' instead.
    Returns a lazy seq of n xs."
-  {:added "1.0"
-   :deprecated "1.3"}
+  {:added "0.1.0"
+   :deprecated "0.1.0"}
   [n x] (take n (repeat x)))
 
 (defn iterate
   "Returns a lazy sequence of x, (f x), (f (f x)) etc. f must be free of side-effects"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [f x] (clojure.lang.Iterate/create f x))
 
@@ -2992,7 +2993,7 @@
   (exclusive), by step, where start defaults to 0, step to 1, and end to
   infinity. When step is equal to 0, returns an infinite sequence of
   start. When start is equal to end, returns empty list."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([]
    (iterate inc' 0))
@@ -3013,7 +3014,7 @@
   "Returns a map that consists of the rest of the maps conj-ed onto
   the first.  If a key occurs in more than one map, the mapping from
   the latter (left-to-right) will be the mapping in the result."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [& maps]
   (when (some identity maps)
@@ -3024,7 +3025,7 @@
   the first.  If a key occurs in more than one map, the mapping(s)
   from the latter (left-to-right) will be combined with the mapping in
   the result by calling (f val-in-result val-in-latter)."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [f & maps]
   (when (some identity maps)
@@ -3039,7 +3040,7 @@
 
 (defn zipmap
   "Returns a map with the keys mapped to the corresponding vals."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [keys vals]
   (loop [map {}
@@ -3054,7 +3055,7 @@
 (defn line-seq
   "Returns the lines of text from rdr as a lazy sequence of strings.
   rdr must implement java.io.BufferedReader."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^java.io.BufferedReader rdr]
   (when-let [line (.readLine rdr)]
@@ -3062,7 +3063,7 @@
 
 (defn comparator
   "Returns an implementation of java.util.Comparator based upon pred."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [pred]
   (fn [x y]
@@ -3074,7 +3075,7 @@
   java.util.Comparator.  Guaranteed to be stable: equal elements will
   not be reordered.  If coll is a Java array, it will be modified.  To
   avoid this, sort a copy of the array."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([coll]
    (sort compare coll))
@@ -3092,7 +3093,7 @@
   java.util.Comparator.  Guaranteed to be stable: equal elements will
   not be reordered.  If coll is a Java array, it will be modified.  To
   avoid this, sort a copy of the array."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([keyfn coll]
    (sort-by keyfn compare coll))
@@ -3105,7 +3106,7 @@
   element in the seq do not occur until the seq is consumed. dorun can
   be used to force any effects. Walks through the successive nexts of
   the seq, does not retain the head and returns nil."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([coll]
    (when-let [s (seq coll)]
@@ -3121,7 +3122,7 @@
   be used to force any effects. Walks through the successive nexts of
   the seq, retains the head and returns it, thus causing the entire
   seq to reside in memory at one time."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([coll]
    (dorun coll)
@@ -3132,7 +3133,7 @@
 
 (defn nthnext
   "Returns the nth next of coll, (seq coll) when n is 0."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll n]
   (loop [n n xs (seq coll)]
@@ -3142,7 +3143,7 @@
 
 (defn nthrest
   "Returns the nth rest of coll, coll when n is 0."
-  {:added "1.3"
+  {:added "0.1.0"
    :static true}
   [coll n]
   (loop [n n xs coll]
@@ -3156,7 +3157,7 @@
   do not overlap. If a pad collection is supplied, use its elements as
   necessary to complete last partition upto n items. In case there are
   not enough padding elements, return a partition with less than n items."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([n coll]
    (partition n n coll))
@@ -3178,7 +3179,7 @@
 
 (defn eval
   "Evaluates the form data structure (not text!) and returns the result."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [form] (. clojure.lang.Compiler (eval form)))
 
@@ -3186,7 +3187,7 @@
   "Repeatedly executes body (presumably for side-effects) with
   bindings and filtering as provided by \"for\".  Does not retain
   the head of the sequence. Returns nil."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [seq-exprs & body]
   (assert-args
    (vector? seq-exprs) "a vector for its binding"
@@ -3245,7 +3246,7 @@
   dispatched thus far, from this thread or agent, to the agent(s) have
   occurred.  Will block on failed agents.  Will never return if
   a failed agent is restarted with :clear-actions true."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [& agents]
   (io! "await in transaction"
@@ -3267,7 +3268,7 @@
   far (from this thread or agent) to the agents have occurred, or the
   timeout (in milliseconds) has elapsed. Returns logical false if
   returning due to timeout, logical true otherwise."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [timeout-ms & agents]
   (io! "await-for in transaction"
@@ -3284,7 +3285,7 @@
 
   Repeatedly executes body (presumably for side-effects) with name
   bound to integers from 0 through n-1."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [bindings & body]
   (assert-args
    (vector? bindings) "a vector for its binding"
@@ -3300,7 +3301,7 @@
 ;;;;;;;;;;;;;;;;;;;;; editable collections ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn transient
   "Returns a new, transient version of the collection, in constant time."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.IEditableCollection coll]
   (.asTransient coll))
@@ -3309,7 +3310,7 @@
   "Returns a new, persistent version of the transient collection, in
   constant time. The transient collection cannot be used after this
   call, any such use will throw an exception."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.ITransientCollection coll]
   (.persistent coll))
@@ -3317,7 +3318,7 @@
 (defn conj!
   "Adds x to the transient collection, and return coll. The 'addition'
   may happen at different 'places' depending on the concrete type."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   ([] (transient []))
   ([coll] coll)
@@ -3328,7 +3329,7 @@
   "When applied to a transient map, adds mapping of key(s) to
   val(s). When applied to a transient vector, sets the val at index.
   Note - index must be <= (count vector). Returns coll."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   ([^clojure.lang.ITransientAssociative coll key val] (.assoc coll key val))
   ([^clojure.lang.ITransientAssociative coll key val & kvs]
@@ -3339,7 +3340,7 @@
 
 (defn dissoc!
   "Returns a transient map that doesn't contain a mapping for key(s)."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   ([^clojure.lang.ITransientMap map key] (.without map key))
   ([^clojure.lang.ITransientMap map key & ks]
@@ -3351,7 +3352,7 @@
 (defn pop!
   "Removes the last item from a transient vector. If
   the collection is empty, throws an exception. Returns coll"
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.ITransientVector coll]
   (.pop coll))
@@ -3359,7 +3360,7 @@
 (defn disj!
   "disj[oin]. Returns a transient set of the same (hashed/sorted) type, that
   does not contain key(s)."
-  {:added  "1.1"
+  {:added  "0.1.0"
    :static true}
   ([set] set)
   ([^clojure.lang.ITransientSet set key]
@@ -3374,7 +3375,7 @@
 (defn ^:private into1
   "Returns a new coll consisting of to-coll with all of the items of
   from-coll conjoined."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [to from]
   (if (instance? clojure.lang.IEditableCollection to)
@@ -3387,7 +3388,7 @@
   For each name in class-name-symbols, adds a mapping from name to the
   class named by package.name to the current namespace. Use :import in the ns
   macro in preference to calling this directly."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& import-symbols-or-lists]
   (let [specs (map #(if (and (seq? %) (= 'quote (first %))) (second %) %)
                    import-symbols-or-lists)]
@@ -3405,7 +3406,7 @@
   aseq if present, or Object. All values in aseq must be compatible with
   the component type. Class objects for the primitive types can be obtained
   using, e.g., Integer/TYPE."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([aseq]
    (clojure.lang.RT/seqToTypedArray (seq aseq)))
@@ -3418,13 +3419,13 @@
 
 (defn class
   "Returns the Class of x"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ^Class [^Object x] (if (nil? x) x (. x (getClass))))
 
 (defn type
   "Returns the :type metadata of x, or its Class if none"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x]
   (or (get (meta x) :type) (class x)))
@@ -3433,103 +3434,103 @@
   "Coerce to Number"
   {:tag Number
    :inline (fn  [x] `(. clojure.lang.Numbers (num ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (. clojure.lang.Numbers (num x)))
 
 (defn long
   "Coerce to long"
   {:inline (fn  [x] `(. clojure.lang.RT (longCast ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/longCast x))
 
 (defn float
   "Coerce to float"
   {:inline (fn  [x] `(. clojure.lang.RT (~(if *unchecked-math* 'uncheckedFloatCast 'floatCast) ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/floatCast x))
 
 (defn double
   "Coerce to double"
   {:inline (fn  [x] `(. clojure.lang.RT (doubleCast ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/doubleCast x))
 
 (defn short
   "Coerce to short"
   {:inline (fn  [x] `(. clojure.lang.RT (~(if *unchecked-math* 'uncheckedShortCast 'shortCast) ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/shortCast x))
 
 (defn byte
   "Coerce to byte"
   {:inline (fn  [x] `(. clojure.lang.RT (~(if *unchecked-math* 'uncheckedByteCast 'byteCast) ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/byteCast x))
 
 (defn char
   "Coerce to char"
   {:inline (fn  [x] `(. clojure.lang.RT (~(if *unchecked-math* 'uncheckedCharCast 'charCast) ~x)))
-   :added "1.1"}
+   :added "0.1.0"}
   [x] (. clojure.lang.RT (charCast x)))
 
 (defn boolean
   "Coerce to boolean"
   {:inline (fn  [x] `(. clojure.lang.RT (booleanCast ~x)))
-   :added "1.0"}
+   :added "0.1.0"}
   [x] (clojure.lang.RT/booleanCast x))
 
 (defn unchecked-byte
   "Coerce to byte. Subject to rounding or truncation."
   {:inline (fn  [x] `(. clojure.lang.RT (uncheckedByteCast ~x)))
-   :added "1.3"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/uncheckedByteCast x))
 
 (defn unchecked-short
   "Coerce to short. Subject to rounding or truncation."
   {:inline (fn  [x] `(. clojure.lang.RT (uncheckedShortCast ~x)))
-   :added "1.3"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/uncheckedShortCast x))
 
 (defn unchecked-char
   "Coerce to char. Subject to rounding or truncation."
   {:inline (fn  [x] `(. clojure.lang.RT (uncheckedCharCast ~x)))
-   :added "1.3"}
+   :added "0.1.0"}
   [x] (. clojure.lang.RT (uncheckedCharCast x)))
 
 (defn unchecked-int
   "Coerce to int. Subject to rounding or truncation."
   {:inline (fn  [x] `(. clojure.lang.RT (uncheckedIntCast ~x)))
-   :added "1.3"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/uncheckedIntCast x))
 
 (defn unchecked-long
   "Coerce to long. Subject to rounding or truncation."
   {:inline (fn  [x] `(. clojure.lang.RT (uncheckedLongCast ~x)))
-   :added "1.3"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/uncheckedLongCast x))
 
 (defn unchecked-float
   "Coerce to float. Subject to rounding."
   {:inline (fn  [x] `(. clojure.lang.RT (uncheckedFloatCast ~x)))
-   :added "1.3"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/uncheckedFloatCast x))
 
 (defn unchecked-double
   "Coerce to double. Subject to rounding."
   {:inline (fn  [x] `(. clojure.lang.RT (uncheckedDoubleCast ~x)))
-   :added "1.3"}
+   :added "0.1.0"}
   [^Number x] (clojure.lang.RT/uncheckedDoubleCast x))
 
 (defn number?
   "Returns true if x is a Number"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x]
   (instance? Number x))
 
 (defn mod
   "Modulus of num and div. Truncates toward negative infinity."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [num div]
   (let [m (rem num div)]
@@ -3539,14 +3540,14 @@
 
 (defn ratio?
   "Returns true if n is a Ratio"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [n] (instance? clojure.lang.Ratio n))
 
 (defn numerator
   "Returns the numerator part of a Ratio."
   {:tag BigInteger
-   :added "1.2"
+   :added "0.1.0"
    :static true}
   [r]
   (.numerator ^clojure.lang.Ratio r))
@@ -3554,20 +3555,20 @@
 (defn denominator
   "Returns the denominator part of a Ratio."
   {:tag BigInteger
-   :added "1.2"
+   :added "0.1.0"
    :static true}
   [r]
   (.denominator ^clojure.lang.Ratio r))
 
 (defn decimal?
   "Returns true if n is a BigDecimal"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [n] (instance? BigDecimal n))
 
 (defn float?
   "Returns true if n is a floating point number"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [n]
   (or (instance? Double n)
@@ -3575,7 +3576,7 @@
 
 (defn rational?
   "Returns true if n is a rational number"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [n]
   (or (integer? n) (ratio? n) (decimal? n)))
@@ -3584,7 +3585,7 @@
   "Coerce to BigInt"
   {:tag    clojure.lang.BigInt
    :static true
-   :added  "1.3"}
+   :added  "0.1.0"}
   [x]
   (cond
     (instance? clojure.lang.BigInt x) x
@@ -3598,7 +3599,7 @@
 (defn biginteger
   "Coerce to BigInteger"
   {:tag    BigInteger
-   :added  "1.0"
+   :added  "0.1.0"
    :static true}
   [x]
   (cond
@@ -3613,7 +3614,7 @@
 (defn bigdec
   "Coerce to BigDecimal"
   {:tag    BigDecimal
-   :added  "1.0"
+   :added  "0.1.0"
    :static true}
   [x]
   (cond
@@ -3648,7 +3649,7 @@
   more than one.  By default, pr and prn print in a way that objects
   can be read by the reader"
   {:dynamic true
-   :added "1.0"}
+   :added "0.1.0"}
   ([] nil)
   ([x]
    (pr-on x *out*))
@@ -3664,7 +3665,7 @@
 
 (defn newline
   "Writes a platform-specific newline to *out*"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   []
   (. *out* (append system-newline))
@@ -3673,7 +3674,7 @@
 (defn flush
   "Flushes the output stream that is the current value of
   *out*"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   []
   (. *out* (flush))
@@ -3681,7 +3682,7 @@
 
 (defn prn
   "Same as pr followed by (newline). Observes *flush-on-newline*"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [& more]
   (apply pr more)
@@ -3692,7 +3693,7 @@
 (defn print
   "Prints the object(s) to the output stream that is the current value
   of *out*.  print and println produce output for human consumption."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [& more]
   (binding [*print-readably* nil]
@@ -3700,7 +3701,7 @@
 
 (defn println
   "Same as print followed by (newline)"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [& more]
   (binding [*print-readably* nil]
@@ -3722,7 +3723,7 @@
   and as such should be used only with trusted sources.
 
   For data structure interop use clojure.edn/read"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([]
    (read *in*))
@@ -3737,7 +3738,7 @@
 
 (defn read-line
   "Reads the next line from stream that is the current value of *in* ."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   []
   (if (instance? clojure.lang.LineNumberingPushbackReader *in*)
@@ -3752,7 +3753,7 @@
   and as such should be used only with trusted sources.
 
   For data structure interop use clojure.edn/read-string"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([s] (clojure.lang.RT/readString s))
   ([opts s] (clojure.lang.RT/readString s opts)))
@@ -3763,7 +3764,7 @@
   defaults to (count vector). This operation is O(1) and very fast, as
   the resulting vector shares structure with the original and no
   trimming is done."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([v start]
    (subvec v start (count v)))
@@ -3776,7 +3777,7 @@
   Evaluates body in a try expression with names bound to the values
   of the inits, and a finally clause that calls (.close name) on each
   name in reverse order."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [bindings & body]
   (assert-args
    (vector? bindings) "a vector for its binding"
@@ -3797,7 +3798,7 @@
   are evaluated in order.  Returns x.
 
   (doto (new java.util.HashMap) (.put \"a\" 1) (.put \"b\" 2))"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [x & forms]
   (let [gx (gensym)]
     `(let [~gx ~x]
@@ -3814,7 +3815,7 @@
   object passing the args. Use when you want to treat a Java method as
   a first-class fn. name may be type-hinted with the method receiver's
   type in order to avoid reflective calls."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [name & args]
   (let [t (with-meta (gensym "target")
             (meta name))]
@@ -3824,7 +3825,7 @@
 (defmacro time
   "Evaluates expr and prints the time it took.  Returns the value of
   expr."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [expr]
   `(let [start# (. System (nanoTime))
          ret# ~expr]
@@ -3837,14 +3838,14 @@
   "Returns the length of the Java array. Works on arrays of all
   types."
   {:inline (fn [a] `(. clojure.lang.RT (alength ~a)))
-   :added "1.0"}
+   :added "0.1.0"}
   [array] (. clojure.lang.RT (alength array)))
 
 (defn aclone
   "Returns a clone of the Java array. Works on arrays of known
   types."
   {:inline (fn [a] `(. clojure.lang.RT (aclone ~a)))
-   :added "1.0"}
+   :added "0.1.0"}
   [array] (. clojure.lang.RT (aclone array)))
 
 (defn aget
@@ -3852,7 +3853,7 @@
   types."
   {:inline (fn [a i] `(. clojure.lang.RT (aget ~a (int ~i))))
    :inline-arities #{2}
-   :added "1.0"}
+   :added "0.1.0"}
   ([array idx]
    (clojure.lang.Reflector/prepRet (.getComponentType (class array)) (. Array (get array idx))))
   ([array idx & idxs]
@@ -3863,7 +3864,7 @@
   reference types. Returns val."
   {:inline (fn [a i v] `(. clojure.lang.RT (aset ~a (int ~i) ~v)))
    :inline-arities #{3}
-   :added "1.0"}
+   :added "0.1.0"}
   ([array idx val]
    (. Array (set array idx val))
    val)
@@ -3883,42 +3884,42 @@
 
 (def-aset
   ^{:doc "Sets the value at the index/indices. Works on arrays of int. Returns val."
-    :added "1.0"}
+    :added "0.1.0"}
   aset-int setInt int)
 
 (def-aset
   ^{:doc "Sets the value at the index/indices. Works on arrays of long. Returns val."
-    :added "1.0"}
+    :added "0.1.0"}
   aset-long setLong long)
 
 (def-aset
   ^{:doc "Sets the value at the index/indices. Works on arrays of boolean. Returns val."
-    :added "1.0"}
+    :added "0.1.0"}
   aset-boolean setBoolean boolean)
 
 (def-aset
   ^{:doc "Sets the value at the index/indices. Works on arrays of float. Returns val."
-    :added "1.0"}
+    :added "0.1.0"}
   aset-float setFloat float)
 
 (def-aset
   ^{:doc "Sets the value at the index/indices. Works on arrays of double. Returns val."
-    :added "1.0"}
+    :added "0.1.0"}
   aset-double setDouble double)
 
 (def-aset
   ^{:doc "Sets the value at the index/indices. Works on arrays of short. Returns val."
-    :added "1.0"}
+    :added "0.1.0"}
   aset-short setShort short)
 
 (def-aset
   ^{:doc "Sets the value at the index/indices. Works on arrays of byte. Returns val."
-    :added "1.0"}
+    :added "0.1.0"}
   aset-byte setByte byte)
 
 (def-aset
   ^{:doc "Sets the value at the index/indices. Works on arrays of char. Returns val."
-    :added "1.0"}
+    :added "0.1.0"}
   aset-char setChar char)
 
 (defn make-array
@@ -3927,7 +3928,7 @@
   Class objects can be obtained by using their imported or
   fully-qualified name.  Class objects for the primitive types can be
   obtained using, e.g., Integer/TYPE."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([^Class type len]
    (. Array (newInstance type (int len))))
@@ -3943,7 +3944,7 @@
   containing the contents of coll, which can be any Collection of any
   Collection."
   {:tag "[[Ljava.lang.Object;"
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [^java.util.Collection coll]
   (let [ret (make-array (. Class (forName "[Ljava.lang.Object;")) (. coll (size)))]
@@ -3956,7 +3957,7 @@
 (defn macroexpand-1
   "If form represents a macro form, returns its expansion,
   else returns form."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [form]
   (. clojure.lang.Compiler (macroexpand1 form)))
@@ -3965,7 +3966,7 @@
   "Repeatedly calls macroexpand-1 on form until it no longer
   represents a macro form, then returns it.  Note neither
   macroexpand-1 nor macroexpand expand macros in subforms."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [form]
   (let [ex (macroexpand-1 form)]
@@ -3975,14 +3976,14 @@
 
 (defn create-struct
   "Returns a structure basis object."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [& keys]
   (. clojure.lang.PersistentStructMap (createSlotMap keys)))
 
 (defmacro defstruct
   "Same as (def name (create-struct keys...))"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [name & keys]
   `(def ~name (create-struct ~@keys)))
@@ -3992,7 +3993,7 @@
   structure-basis. keyvals may contain all, some or none of the basis
   keys - where values are not supplied they will default to nil.
   keyvals can also contain keys not in the basis."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [s & inits]
   (. clojure.lang.PersistentStructMap (create s inits)))
@@ -4001,7 +4002,7 @@
   "Returns a new structmap instance with the keys of the
   structure-basis. vals must be supplied for basis keys in order -
   where values are not supplied they will default to nil."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [s & vals]
   (. clojure.lang.PersistentStructMap (construct s vals)))
@@ -4012,7 +4013,7 @@
   returned function should be (slightly) more efficient than using
   get, but such use of accessors should be limited to known
   performance-critical areas."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [s key]
   (. clojure.lang.PersistentStructMap (getAccessor s key)))
@@ -4020,14 +4021,14 @@
 (defn load-reader
   "Sequentially read and evaluate the set of forms contained in the
   stream/file"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [rdr] (. clojure.lang.Compiler (load rdr)))
 
 (defn load-string
   "Sequentially read and evaluate the set of forms contained in the
   string"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [s]
   (let [rdr (-> (java.io.StringReader. s)
@@ -4036,13 +4037,13 @@
 
 (defn set?
   "Returns true if x implements IPersistentSet"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x] (instance? clojure.lang.IPersistentSet x))
 
 (defn set
   "Returns a set of the distinct elements of coll."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll]
   (if (set? coll)
@@ -4063,13 +4064,13 @@
 
 (defn ns?
   "Type predicate. Returns true if o is a Namespace."
-  {:added  "1.9"
+  {:added  "0.1.0"
    :static true}
   [o] (instance? clojure.lang.Namespace o))
 
 (defn find-ns
   "Returns the namespace named by the symbol or nil if it doesn't exist."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [sym] (clojure.lang.Namespace/find sym))
 
@@ -4077,20 +4078,20 @@
   "Create a new namespace named by the symbol if one doesn't already
   exist, returns it or the already-existing namespace of the same
   name."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [sym] (clojure.lang.Namespace/findOrCreate sym))
 
 (defn remove-ns
   "Removes the namespace named by the symbol. Use with caution.
   Cannot be used to remove the clojure namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [sym] (clojure.lang.Namespace/remove sym))
 
 (defn all-ns
   "Returns a sequence of all namespaces."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [] (clojure.lang.Namespace/all))
 
@@ -4098,7 +4099,7 @@
   "If passed a namespace, returns it. Else, when passed a symbol,
   returns the namespace named by it, throwing an exception if not
   found."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   ^clojure.lang.Namespace [x]
   (or (when (ns? x) x)
@@ -4107,28 +4108,28 @@
 
 (defn ns-name
   "Returns the name of the namespace, a symbol."
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   ^clojure.lang.Symbol [ns]
   (.name ^clojure.lang.Namespace (the-ns ns)))
 
 (defn ns-map
   "Returns a map of all the mappings for the namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [ns]
   (.getMappings (the-ns ns)))
 
 (defn ns-unmap
   "Removes the mappings for the symbol from the namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [ns sym]
   (.unmap (the-ns ns) sym))
 
 (defn ns-publics
   "Returns a map of the public intern mappings for the namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [ns]
   (let [ns (the-ns ns)]
@@ -4141,14 +4142,14 @@
 
 (defn ns-imports
   "Returns a map of the import mappings for the namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [ns]
   (filter-key val (partial instance? Class) (ns-map ns)))
 
 (defn ns-interns
   "Returns a map of the intern mappings for the namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [ns]
   (let [ns (the-ns ns)]
@@ -4182,7 +4183,7 @@
   select a subset, via inclusion or exclusion, or to provide a mapping
   to a symbol different from the var's name, in order to prevent
   clashes. Use :use in the ns macro in preference to calling this directly."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [ns-sym & filters]
   (let [ns        (or (find-ns ns-sym) (throw (new Exception (str "No namespace: " ns-sym))))
         fs        (apply hash-map filters)
@@ -4229,7 +4230,7 @@
 
 (defn ns-refers
   "Returns a map of the refer mappings for the namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [ns]
   (let [ns (the-ns ns)]
@@ -4244,7 +4245,7 @@
   namespace. Arguments are two symbols: the alias to be used, and
   the symbolic name of the target namespace. Use :as in the ns macro in preference
   to calling this directly."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [alias namespace-sym]
   (let [other (the-ns namespace-sym)
@@ -4258,14 +4259,14 @@
 
 (defn ns-aliases
   "Returns a map of the aliases for the namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [ns]
   (.getAliases (the-ns ns)))
 
 (defn ns-unalias
   "Removes the alias for the symbol from the namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [ns sym]
   (.removeAlias (the-ns ns) sym))
@@ -4273,7 +4274,7 @@
 (defn take-nth
   "Returns a lazy seq of every nth item in coll.  Returns a stateful
   transducer when no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([n]
    (fn [rf]
@@ -4293,7 +4294,7 @@
 
 (defn interleave
   "Returns a lazy seq of the first item in each coll, then the second etc."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([] ())
   ([c1] (lazy-seq c1))
@@ -4311,14 +4312,14 @@
 
 (defn var-get
   "Gets the value in the var object"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Var x] (. x (get)))
 
 (defn var-set
   "Sets the value in the var object to val. The var must be
   thread-locally bound."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Var x val] (. x (set val)))
 
@@ -4329,7 +4330,7 @@
   vars with per-thread bindings to the init-exprs.  The symbols refer
   to the var objects themselves, and must be accessed with var-get and
   var-set"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [name-vals-vec & body]
   (assert-args
    (vector? name-vals-vec) "a vector for its binding"
@@ -4346,7 +4347,7 @@
   namespace (unless found in the environment), else nil.  Note that
   if the symbol is fully qualified, the var/Class to which it resolves
   need not be present in the namespace."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([ns sym]
    (ns-resolve ns nil sym))
@@ -4356,7 +4357,7 @@
 
 (defn resolve
   "same as (ns-resolve *ns* symbol) or (ns-resolve *ns* &env symbol)"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([sym] (ns-resolve *ns* sym))
   ([env sym] (ns-resolve *ns* env sym)))
@@ -4364,7 +4365,7 @@
 (defn array-map
   "Constructs an array-map. If any keys are equal, they are handled as
   if by repeated uses of assoc."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([] (. clojure.lang.PersistentArrayMap EMPTY))
   ([& keyvals]
@@ -4443,7 +4444,7 @@
   Evaluates the exprs in a lexical context in which the symbols in
   the binding-forms are bound to their respective init-exprs or parts
   therein."
-  {:added "1.0", :special-form true, :forms '[(let [bindings*] exprs*)]}
+  {:added "0.1.0", :special-form true, :forms '[(let [bindings*] exprs*)]}
   [bindings & body]
   (assert-args
    (vector? bindings) "a vector for its binding"
@@ -4476,7 +4477,7 @@
   name => symbol
 
   Defines a function"
-  {:added "1.0", :special-form true,
+  {:added "0.1.0", :special-form true,
    :forms '[(fn name? [params*] exprs*) (fn name? ([params*] exprs*) +)]}
   [& sigs]
   (let [name (if (symbol? (first sigs)) (first sigs) nil)
@@ -4535,7 +4536,7 @@
   "Evaluates the exprs in a lexical context in which the symbols in
   the binding-forms are bound to their respective init-exprs or parts
   therein. Acts as a recur target."
-  {:added "1.0", :special-form true, :forms '[(loop [bindings*] exprs*)]}
+  {:added "0.1.0", :special-form true, :forms '[(loop [bindings*] exprs*)]}
   [bindings & body]
   (assert-args
    (vector? bindings) "a vector for its binding"
@@ -4560,7 +4561,7 @@
   "bindings => x xs
 
   Roughly the same as (when (seq xs) (let [x (first xs)] body)) but xs is evaluated only once"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [bindings & body]
   (assert-args
    (vector? bindings) "a vector for its binding"
@@ -4576,7 +4577,7 @@
   needed.
 
   (lazy-cat xs ys zs) === (concat (lazy-seq xs) (lazy-seq ys) (lazy-seq zs))"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& colls]
   `(concat ~@(map #(list `lazy-seq %) colls)))
 
@@ -4590,7 +4591,7 @@
    :while test, :when test.
 
   (take 100 (for [x (range 100000000) y (range 1000000) :while (< y x)] [x y]))"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [seq-exprs body-expr]
   (assert-args
    (vector? seq-exprs) "a vector for its binding"
@@ -4669,14 +4670,14 @@
 
 (defmacro comment
   "Ignores body, yields nil"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& body])
 
 (defmacro with-out-str
   "Evaluates exprs in a context in which *out* is bound to a fresh
   StringWriter.  Returns the string created by any nested printing
   calls."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& body]
   `(let [s# (new java.io.StringWriter)]
      (binding [*out* s#]
@@ -4686,7 +4687,7 @@
 (defmacro with-in-str
   "Evaluates body in a context in which *in* is bound to a fresh
   StringReader initialized with the string s."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [s & body]
   `(with-open [s# (-> (java.io.StringReader. ~s) clojure.lang.LineNumberingPushbackReader.)]
      (binding [*in* s#]
@@ -4695,7 +4696,7 @@
 (defn pr-str
   "pr to a string, returning it"
   {:tag String
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [& xs]
   (with-out-str
@@ -4704,7 +4705,7 @@
 (defn prn-str
   "prn to a string, returning it"
   {:tag String
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [& xs]
   (with-out-str
@@ -4713,7 +4714,7 @@
 (defn print-str
   "print to a string, returning it"
   {:tag String
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [& xs]
   (with-out-str
@@ -4722,7 +4723,7 @@
 (defn println-str
   "println to a string, returning it"
   {:tag String
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [& xs]
   (with-out-str
@@ -4732,7 +4733,7 @@
 (defn ex-info
   "Create an instance of ExceptionInfo, a RuntimeException subclass
    that carries a map of additional data."
-  {:added "1.4"}
+  {:added "0.1.0"}
   ([msg map]
    (ExceptionInfo. msg map))
   ([msg map cause]
@@ -4741,7 +4742,7 @@
 (defn ex-data
   "Returns exception data (a map) if ex is an IExceptionInfo.
    Otherwise returns nil."
-  {:added "1.4"}
+  {:added "0.1.0"}
   [ex]
   (when (instance? IExceptionInfo ex)
     (.getData ^IExceptionInfo ex)))
@@ -4749,7 +4750,7 @@
 (defmacro assert
   "Evaluates expr and throws an exception if it does not evaluate to
   logical true."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([x]
    (when *assert*
      `(when-not ~x
@@ -4762,7 +4763,7 @@
 (defn test
   "test [v] finds fn at key :test in var metadata and calls it,
   presuming failure will throw exception"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [v]
   (let [f (:test (meta v))]
     (if f
@@ -4773,7 +4774,7 @@
   "Returns an instance of java.util.regex.Pattern, for use, e.g. in
   re-matcher."
   {:tag java.util.regex.Pattern
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [s] (if (instance? java.util.regex.Pattern s)
         s
@@ -4783,7 +4784,7 @@
   "Returns an instance of java.util.regex.Matcher, for use, e.g. in
   re-find."
   {:tag java.util.regex.Matcher
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   [^java.util.regex.Pattern re s]
   (. re (matcher s)))
@@ -4793,7 +4794,7 @@
   nested groups, returns a string of the entire match. If there are
   nested groups, returns a vector of the groups, the first element
   being the entire match."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^java.util.regex.Matcher m]
   (let [gc  (. m (groupCount))]
@@ -4808,7 +4809,7 @@
   "Returns a lazy sequence of successive matches of pattern in string,
   using java.util.regex.Matcher.find(), each such match processed with
   re-groups."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^java.util.regex.Pattern re s]
   (let [m (re-matcher re s)]
@@ -4820,7 +4821,7 @@
   "Returns the match, if any, of string to pattern, using
   java.util.regex.Matcher.matches().  Uses re-groups to return the
   groups."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^java.util.regex.Pattern re s]
   (let [m (re-matcher re s)]
@@ -4831,7 +4832,7 @@
   "Returns the next regex match, if any, of string to pattern, using
   java.util.regex.Matcher.find().  Uses re-groups to return the
   groups."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([^java.util.regex.Matcher m]
    (when (. m (find))
@@ -4843,20 +4844,20 @@
 (defn rand
   "Returns a random floating point number between 0 (inclusive) and
   n (default 1) (exclusive)."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([] (. Math (random)))
   ([n] (* n (rand))))
 
 (defn rand-int
   "Returns a random integer between 0 (inclusive) and n (exclusive)."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [n] (int (rand n)))
 
 (defmacro defn-
   "same as defn, yielding non-public def"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [name & decls]
   (list* `defn (with-meta name (assoc (meta name) :private true)) decls))
 
@@ -4867,7 +4868,7 @@
    arg that returns a sequence of the children. Will only be called on
    nodes for which branch? returns true. Root is the root node of the
   tree."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [branch? children root]
   (let [walk (fn walk [node]
@@ -4879,7 +4880,7 @@
 
 (defn file-seq
   "A tree seq on java.io.Files"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [dir]
   (tree-seq
@@ -4889,7 +4890,7 @@
 
 (defn xml-seq
   "A tree seq on the xml elements as per xml/parse"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [root]
   (tree-seq
@@ -4899,28 +4900,28 @@
 
 (defn special-symbol?
   "Returns true if s names a special form"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [s]
   (contains? (. clojure.lang.Compiler specials) s))
 
 (defn var?
   "Returns true if v is of type clojure.lang.Var"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [v] (instance? clojure.lang.Var v))
 
 (defn subs
   "Returns the substring of s beginning at start inclusive, and ending
   at end (defaults to length of string), exclusive."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   (^String [^String s start] (. s (substring start)))
   (^String [^String s start end] (. s (substring start end))))
 
 (defn max-key
   "Returns the x for which (k x), a number, is greatest."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([k x] x)
   ([k x y] (if (> (k x) (k y)) x y))
@@ -4929,7 +4930,7 @@
 
 (defn min-key
   "Returns the x for which (k x), a number, is least."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([k x] x)
   ([k x y] (if (< (k x) (k y)) x y))
@@ -4939,7 +4940,7 @@
 (defn distinct
   "Returns a lazy sequence of the elements of coll with duplicates removed.
   Returns a stateful transducer when no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([]
    (fn [rf]
@@ -4968,7 +4969,7 @@
   vector/seq with any elements = a key in smap replaced with the
   corresponding val in smap.  Returns a transducer when no collection
   is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([smap]
    (map #(if-let [e (find smap %)] (val e) %)))
@@ -4987,7 +4988,7 @@
   running on this thread. Any uncaught exception will abort the
   transaction and flow out of dosync. The exprs may be run more than
   once, but any effects on Refs will be atomic."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& exprs]
   `(sync nil ~@exprs))
 
@@ -4999,7 +5000,7 @@
 
   The rounding mode is one of CEILING, FLOOR, HALF_UP, HALF_DOWN,
   HALF_EVEN, UP, DOWN and UNNECESSARY; it defaults to HALF_UP."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [precision & exprs]
   (let [[body rm] (if (= (first exprs) :rounding)
                     [(next (next exprs))
@@ -5018,7 +5019,7 @@
   "sc must be a sorted collection, test(s) one of <, <=, > or
   >=. Returns a seq of those entries with keys ek for
   which (test (.. sc comparator (compare ek key)) 0) is true"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([^clojure.lang.Sorted sc test key]
    (let [include (mk-bound-fn sc test key)]
@@ -5035,7 +5036,7 @@
   "sc must be a sorted collection, test(s) one of <, <=, > or
   >=. Returns a reverse seq of those entries with keys ek for
   which (test (.. sc comparator (compare ek key)) 0) is true"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([^clojure.lang.Sorted sc test key]
    (let [include (mk-bound-fn sc test key)]
@@ -5052,7 +5053,7 @@
   "Takes a function of no args, presumably with side effects, and
   returns an infinite (or length n if supplied) lazy sequence of calls
   to it"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([f] (lazy-seq (cons (f) (repeatedly f))))
   ([n f] (take n (repeatedly f))))
@@ -5062,8 +5063,8 @@
 
   Adds the url (String or URL object) to the classpath per
   URLClassLoader.addURL"
-  {:added "1.0"
-   :deprecated "1.1"}
+  {:added "0.1.0"
+   :deprecated "0.1.0"}
   [url]
   (clojure.lang.RT/addURL url))
 
@@ -5072,7 +5073,7 @@
   consistent with =, and thus is different than .hashCode for Integer,
   Short, Byte and Clojure collections."
 
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x] (. clojure.lang.Util (hasheq x)))
 
@@ -5082,7 +5083,7 @@
    of elements included in the basis. Note this is the hash code
    consistent with =, different from .hashCode.
    See http://clojure.org/data_structures#hash for full algorithms."
-  {:added "1.6"
+  {:added "0.1.0"
    :static true}
   ^long
   [^long hash-basis ^long count] (clojure.lang.Murmur3/mixCollHash hash-basis count))
@@ -5091,7 +5092,7 @@
   "Returns the hash code, consistent with =, for an external ordered
    collection implementing Iterable.
    See http://clojure.org/data_structures#hash for full algorithms."
-  {:added "1.6"
+  {:added "0.1.0"
    :static true}
   ^long
   [coll] (clojure.lang.Murmur3/hashOrdered coll))
@@ -5102,7 +5103,7 @@
    return map entries whose hash is computed as
      (hash-ordered-coll [k v]).
    See http://clojure.org/data_structures#hash for full algorithms."
-  {:added "1.6"
+  {:added "0.1.0"
    :static true}
   ^long
   [coll] (clojure.lang.Murmur3/hashUnordered coll))
@@ -5110,7 +5111,7 @@
 (defn interpose
   "Returns a lazy seq of the elements of coll separated by sep.
   Returns a stateful transducer when no collection is provided."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([sep]
    (fn [rf]
@@ -5134,7 +5135,7 @@
   "Experimental - like defmacro, except defines a named function whose
   body is the expansion, calls to which may be expanded inline as if
   it were a macro. Cannot be used with variadic (&) args."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [name & decl]
   (let [[pre-args [args expr]] (split-with (comp not vector?) decl)]
     `(do
@@ -5144,7 +5145,7 @@
 
 (defn empty
   "Returns an empty collection of the same category as coll, or nil"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll]
   (when (instance? clojure.lang.IPersistentCollection coll)
@@ -5155,7 +5156,7 @@
   return value named ret, initialized to a clone of a, then setting
   each element of ret to the evaluation of expr, returning the new
   array ret."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [a idx ret expr]
   `(let [a# ~a
          ~ret (aclone a#)]
@@ -5170,7 +5171,7 @@
   "Reduces an expression across an array a, using an index named idx,
   and return value named ret, initialized to init, setting ret to the
   evaluation of expr at each step, returning ret."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [a idx ret init expr]
   `(let [a# ~a l# (alength a#)]
      (loop  [~idx 0 ~ret ~init]
@@ -5182,7 +5183,7 @@
   "Creates an array of floats"
   {:inline (fn [& args] `(. clojure.lang.Numbers float_array ~@args))
    :inline-arities #{1 2}
-   :added "1.0"}
+   :added "0.1.0"}
   ([size-or-seq] (. clojure.lang.Numbers float_array size-or-seq))
   ([size init-val-or-seq] (. clojure.lang.Numbers float_array size init-val-or-seq)))
 
@@ -5190,7 +5191,7 @@
   "Creates an array of booleans"
   {:inline (fn [& args] `(. clojure.lang.Numbers boolean_array ~@args))
    :inline-arities #{1 2}
-   :added "1.1"}
+   :added "0.1.0"}
   ([size-or-seq] (. clojure.lang.Numbers boolean_array size-or-seq))
   ([size init-val-or-seq] (. clojure.lang.Numbers boolean_array size init-val-or-seq)))
 
@@ -5198,7 +5199,7 @@
   "Creates an array of bytes"
   {:inline (fn [& args] `(. clojure.lang.Numbers byte_array ~@args))
    :inline-arities #{1 2}
-   :added "1.1"}
+   :added "0.1.0"}
   ([size-or-seq] (. clojure.lang.Numbers byte_array size-or-seq))
   ([size init-val-or-seq] (. clojure.lang.Numbers byte_array size init-val-or-seq)))
 
@@ -5206,7 +5207,7 @@
   "Creates an array of chars"
   {:inline (fn [& args] `(. clojure.lang.Numbers char_array ~@args))
    :inline-arities #{1 2}
-   :added "1.1"}
+   :added "0.1.0"}
   ([size-or-seq] (. clojure.lang.Numbers char_array size-or-seq))
   ([size init-val-or-seq] (. clojure.lang.Numbers char_array size init-val-or-seq)))
 
@@ -5214,7 +5215,7 @@
   "Creates an array of shorts"
   {:inline (fn [& args] `(. clojure.lang.Numbers short_array ~@args))
    :inline-arities #{1 2}
-   :added "1.1"}
+   :added "0.1.0"}
   ([size-or-seq] (. clojure.lang.Numbers short_array size-or-seq))
   ([size init-val-or-seq] (. clojure.lang.Numbers short_array size init-val-or-seq)))
 
@@ -5222,7 +5223,7 @@
   "Creates an array of doubles"
   {:inline (fn [& args] `(. clojure.lang.Numbers double_array ~@args))
    :inline-arities #{1 2}
-   :added "1.0"}
+   :added "0.1.0"}
   ([size-or-seq] (. clojure.lang.Numbers double_array size-or-seq))
   ([size init-val-or-seq] (. clojure.lang.Numbers double_array size init-val-or-seq)))
 
@@ -5230,14 +5231,14 @@
   "Creates an array of objects"
   {:inline (fn [arg] `(. clojure.lang.RT object_array ~arg))
    :inline-arities #{1}
-   :added "1.2"}
+   :added "0.1.0"}
   ([size-or-seq] (. clojure.lang.RT object_array size-or-seq)))
 
 (defn int-array
   "Creates an array of ints"
   {:inline (fn [& args] `(. clojure.lang.Numbers int_array ~@args))
    :inline-arities #{1 2}
-   :added "1.0"}
+   :added "0.1.0"}
   ([size-or-seq] (. clojure.lang.Numbers int_array size-or-seq))
   ([size init-val-or-seq] (. clojure.lang.Numbers int_array size init-val-or-seq)))
 
@@ -5245,48 +5246,48 @@
   "Creates an array of longs"
   {:inline (fn [& args] `(. clojure.lang.Numbers long_array ~@args))
    :inline-arities #{1 2}
-   :added "1.0"}
+   :added "0.1.0"}
   ([size-or-seq] (. clojure.lang.Numbers long_array size-or-seq))
   ([size init-val-or-seq] (. clojure.lang.Numbers long_array size init-val-or-seq)))
 
 (definline booleans
   "Casts to boolean[]"
-  {:added "1.1"}
+  {:added "0.1.0"}
   [xs] `(. clojure.lang.Numbers booleans ~xs))
 
 (definline bytes
   "Casts to bytes[]"
-  {:added "1.1"}
+  {:added "0.1.0"}
   [xs] `(. clojure.lang.Numbers bytes ~xs))
 
 (definline chars
   "Casts to chars[]"
-  {:added "1.1"}
+  {:added "0.1.0"}
   [xs] `(. clojure.lang.Numbers chars ~xs))
 
 (definline shorts
   "Casts to shorts[]"
-  {:added "1.1"}
+  {:added "0.1.0"}
   [xs] `(. clojure.lang.Numbers shorts ~xs))
 
 (definline floats
   "Casts to float[]"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [xs] `(. clojure.lang.Numbers floats ~xs))
 
 (definline ints
   "Casts to int[]"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [xs] `(. clojure.lang.Numbers ints ~xs))
 
 (definline doubles
   "Casts to double[]"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [xs] `(. clojure.lang.Numbers doubles ~xs))
 
 (definline longs
   "Casts to long[]"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [xs] `(. clojure.lang.Numbers longs ~xs))
 
 (import '(java.util.concurrent BlockingQueue LinkedBlockingQueue))
@@ -5298,7 +5299,7 @@
   size, or an instance of java.util.concurrent BlockingQueue. Note
   that reading from a seque can block if the reader gets ahead of the
   producer."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([s] (seque 100 s))
   ([n-or-q s]
@@ -5339,7 +5340,7 @@
 
 (defn class?
   "Returns true if x is an instance of Class"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x] (instance? Class x))
 
@@ -5402,14 +5403,14 @@
 (defn alter-var-root
   "Atomically alters the root binding of var v by applying f to its
   current value plus any args"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^clojure.lang.Var v f & args] (.alterRoot v f args))
 
 (defn bound?
   "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
    Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [& vars]
   (every? #(.isBound ^clojure.lang.Var %) vars))
@@ -5417,14 +5418,14 @@
 (defn thread-bound?
   "Returns true if all of the vars provided as arguments have thread-local bindings.
    Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [& vars]
   (every? #(.getThreadBinding ^clojure.lang.Var %) vars))
 
 (defn make-hierarchy
   "Creates a hierarchy object for use with derive, isa? etc."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [] {:parents {} :descendants {} :ancestors {}})
 
@@ -5433,13 +5434,13 @@
 
 (defn not-empty
   "If coll is empty, returns nil, else coll"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (when (seq coll) coll))
 
 (defn bases
   "Returns the immediate superclass and direct interfaces of c, if any"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^Class c]
   (when c
@@ -5449,7 +5450,7 @@
 
 (defn supers
   "Returns the immediate and indirect superclasses and interfaces of c, if any"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [^Class class]
   (loop [ret (set (bases class)) cs ret]
@@ -5464,7 +5465,7 @@
   relationship established via derive. h must be a hierarchy obtained
   from make-hierarchy, if not supplied defaults to the global
   hierarchy"
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([child parent] (isa? global-hierarchy child parent))
   ([h child parent]
    (or (= child parent)
@@ -5484,7 +5485,7 @@
   inheritance relationship or a relationship established via derive. h
   must be a hierarchy obtained from make-hierarchy, if not supplied
   defaults to the global hierarchy"
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([tag] (parents global-hierarchy tag))
   ([h tag] (not-empty
             (let [tp (get (:parents h) tag)]
@@ -5497,7 +5498,7 @@
   inheritance relationship or a relationship established via derive. h
   must be a hierarchy obtained from make-hierarchy, if not supplied
   defaults to the global hierarchy"
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([tag] (ancestors global-hierarchy tag))
   ([h tag] (not-empty
             (let [ta (get (:ancestors h) tag)]
@@ -5514,7 +5515,7 @@
   from make-hierarchy, if not supplied defaults to the global
   hierarchy. Note: does not work on Java type inheritance
   relationships."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([tag] (descendants global-hierarchy tag))
   ([h tag] (if (class? tag)
              (throw (java.lang.UnsupportedOperationException. "Can't get descendants of classes"))
@@ -5526,7 +5527,7 @@
   child can be either a namespace-qualified symbol or keyword or a
   class. h must be a hierarchy obtained from make-hierarchy, if not
   supplied defaults to, and modifies, the global hierarchy."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([tag parent]
    (assert (namespace parent))
    (assert (or (class? tag) (and (instance? clojure.lang.Named tag) (namespace tag))))
@@ -5562,7 +5563,7 @@
   "Removes a parent/child relationship between parent and
   tag. h must be a hierarchy obtained from make-hierarchy, if not
   supplied defaults to, and modifies, the global hierarchy."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([tag parent] (alter-var-root #'global-hierarchy underive tag parent) nil)
   ([h tag parent]
    (let [parentMap (:parents h)
@@ -5581,7 +5582,7 @@
 (defn distinct?
   "Returns true if no two of the arguments are ="
   {:tag Boolean
-   :added "1.0"
+   :added "0.1.0"
    :static true}
   ([x] true)
   ([x y] (not (= x y)))
@@ -5598,7 +5599,7 @@
 (defn resultset-seq
   "Creates and returns a lazy sequence of structmaps corresponding to
   the rows in the java.sql.ResultSet rs"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [^java.sql.ResultSet rs]
   (let [rsmeta (. rs (getMetaData))
         idxs (range 1 (inc (. rsmeta (getColumnCount))))
@@ -5619,14 +5620,14 @@
   providing iterators implement Iterable and thus support seq directly.
   Seqs cache values, thus iterator-seq should not be used on any
   iterator that repeatedly returns the same mutable object."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [iter]
   (clojure.lang.RT/chunkIteratorSeq iter))
 
 (defn enumeration-seq
   "Returns a seq on a java.util.Enumeration"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [e]
   (clojure.lang.EnumerationSeq/create e))
@@ -5634,14 +5635,14 @@
 (defn format
   "Formats a string using java.lang.String.format, see java.util.Formatter for format
   string syntax"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ^String [fmt & args]
   (String/format fmt (to-array args)))
 
 (defn printf
   "Prints formatted output, as per format"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [fmt & args]
   (print (apply format fmt args)))
@@ -5673,34 +5674,37 @@
   individual calls to in-ns/require/use/import:
 
   (ns foo.bar
+    \"Some docs\"
+    {:added   \"0.0.1\"
+     :authors [\"Ada Lovelace <adal@foo.com>\"]}
     (:refer-clojure :exclude [ancestors printf])
     (:require (clojure.contrib sql combinatorics))
     (:use (my.lib this that))
     (:import (java.util Date Timer Random)
              (java.sql Connection Statement)))"
   {:arglists '([name docstring? attr-map? references*])
-   :added "1.0"}
+   :added    "0.1.0"}
   [name & references]
   (let [process-reference
         (fn [[kname & args]]
           `(~(symbol "clojure.core" (clojure.core/name kname))
             ~@(map #(list 'quote %) args)))
-        docstring  (when (string? (first references)) (first references))
-        references (if docstring (next references) references)
-        name (if docstring
-               (vary-meta name assoc :doc docstring)
-               name)
-        metadata   (when (map? (first references)) (first references))
-        references (if metadata (next references) references)
-        name (if metadata
-               (vary-meta name merge metadata)
-               name)
+        docstring        (when (string? (first references)) (first references))
+        references       (if docstring (next references) references)
+        name             (if docstring
+                           (vary-meta name assoc :doc docstring)
+                           name)
+        metadata         (when (map? (first references)) (first references))
+        references       (if metadata (next references) references)
+        name             (if metadata
+                           (vary-meta name merge metadata)
+                           name)
         gen-class-clause (first (filter #(= :gen-class (first %)) references))
         gen-class-call
         (when gen-class-clause
           (list* `gen-class :name (.replace (str name) \- \_) :impl-ns name :main true (next gen-class-clause)))
-        references (remove #(= :gen-class (first %)) references)
-        name-metadata (meta name)]
+        references       (remove #(= :gen-class (first %)) references)
+        name-metadata    (meta name)]
     `(do
        (clojure.core/in-ns '~name)
        ~@(when name-metadata
@@ -5716,14 +5720,14 @@
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& filters]
   `(clojure.core/refer '~'clojure.core ~@filters))
 
 (defmacro defonce
   "defs name to have the root value of the expr iff the named var has no root value,
   else expr is unevaluated"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [name expr]
   (assert-args
    (symbol? name) "Name must be a symbol."
@@ -5965,7 +5969,7 @@
   abbreviated as 's'.
 
   (require '(clojure zip [set :as s]))"
-  {:added "1.0"}
+  {:added "0.1.0"}
 
   [& args]
   (apply load-libs :require args))
@@ -5978,12 +5982,12 @@
   'use accepts additional options in libspecs: :exclude, :only, :rename.
   The arguments and semantics for :exclude, :only, and :rename are the same
   as those documented for clojure.core/refer."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [& args] (apply load-libs :require :use args))
 
 (defn loaded-libs
   "Returns a sorted set of symbols naming the currently loaded libs"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [] @*loaded-libs*)
 
 (defn load
@@ -5991,7 +5995,7 @@
   classpath-relative if it begins with a slash or relative to the root
   directory for the current namespace otherwise."
   {:redef true
-   :added "1.0"}
+   :added "0.1.0"}
   [& paths]
   (doseq [^String path paths]
     (let [^String path (if (.startsWith path "/")
@@ -6011,7 +6015,7 @@
   classpath-relative directory. The output files will go into the
   directory specified by *compile-path*, and that directory too must
   be in the classpath."
-  {:added "1.0"}
+  {:added "0.1.0"}
   [lib]
   (binding [*compile-files* true]
     (load-one lib true true))
@@ -6023,7 +6027,7 @@
   "Returns the value in a nested associative structure,
   where ks is a sequence of keys. Returns nil if the key
   is not present, or the not-found value if supplied."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   ([m ks]
    (reduce1 get m ks))
@@ -6042,7 +6046,7 @@
   "Associates a value in a nested associative structure, where ks is a
   sequence of keys and v is the new value and returns a new nested structure.
   If any levels do not exist, hash-maps will be created."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [m [k & ks] v]
   (if ks
@@ -6055,7 +6059,7 @@
   and any supplied args and return the new value, and returns a new
   nested structure.  If any levels do not exist, hash-maps will be
   created."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([m [k & ks] f & args]
    (if ks
@@ -6067,7 +6071,7 @@
   key and f is a function that will take the old value
   and any supplied args and return the new value, and returns a new
   structure.  If the key does not exist, nil is passed as the old value."
-  {:added "1.7"
+  {:added "0.1.0"
    :static true}
   ([m k f]
    (assoc m k (f (get m k))))
@@ -6083,83 +6087,83 @@
 (defn empty?
   "Returns true if coll has no items - same as (not (seq coll)).
   Please use the idiom (seq x) rather than (not (empty? x))"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (not (seq coll)))
 
 (defn coll?
   "Returns true if x implements IPersistentCollection"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x] (instance? clojure.lang.IPersistentCollection x))
 
 (defn list?
   "Returns true if x implements IPersistentList"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x] (instance? clojure.lang.IPersistentList x))
 
 (defn ifn?
   "Returns true if x implements IFn. Note that many data structures
   (e.g. sets and maps) implement IFn"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x] (instance? clojure.lang.IFn x))
 
 (defn fn?
   "Returns true if x implements Fn, i.e. is an object created via fn."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [x] (instance? clojure.lang.Fn x))
 
 (defn associative?
   "Returns true if coll implements Associative"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (instance? clojure.lang.Associative coll))
 
 (defn sequential?
   "Returns true if coll implements Sequential"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (instance? clojure.lang.Sequential coll))
 
 (defn sorted?
   "Returns true if coll implements Sorted"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (instance? clojure.lang.Sorted coll))
 
 (defn counted?
   "Returns true if coll implements count in constant time"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (instance? clojure.lang.Counted coll))
 
 (defn reversible?
   "Returns true if coll implements Reversible"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [coll] (instance? clojure.lang.Reversible coll))
 
 (def ^:dynamic
   ^{:doc "bound in a repl thread to the most recent value printed"
-    :added "1.0"}
+    :added "0.1.0"}
   *1)
 
 (def ^:dynamic
   ^{:doc "bound in a repl thread to the second most recent value printed"
-    :added "1.0"}
+    :added "0.1.0"}
   *2)
 
 (def ^:dynamic
   ^{:doc "bound in a repl thread to the third most recent value printed"
-    :added "1.0"}
+    :added "0.1.0"}
   *3)
 
 (def ^:dynamic
   ^{:doc "bound in a repl thread to the most recent exception caught by the repl"
-    :added "1.0"}
+    :added "0.1.0"}
   *e)
 
 (defn trampoline
@@ -6170,7 +6174,7 @@
   returns that non-fn value. Note that if you want to return a fn as a
   final value, you must wrap it in some data structure and unpack it
   after trampoline returns."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([f]
    (let [ret (f)]
@@ -6185,7 +6189,7 @@
   ns (which can be a symbol or a namespace), setting its root binding
   to val if supplied. The namespace must exist. The var will adopt any
   metadata from the name symbol.  Returns the var."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([ns ^clojure.lang.Symbol name]
    (let [v (clojure.lang.Var/intern (the-ns ns) name)]
@@ -6199,7 +6203,7 @@
 (defmacro while
   "Repeatedly executes body while test expression is true. Presumes
   some side-effect will cause test to become false/nil. Returns nil"
-  {:added "1.0"}
+  {:added "0.1.0"}
   [test & body]
   `(loop []
      (when ~test
@@ -6211,7 +6215,7 @@
   memoized version of the function keeps a cache of the mapping from arguments
   to results and, when calls with the same arguments are repeated often, has
   higher performance at the expense of higher memory use."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [f]
   (let [mem (atom {})]
@@ -6241,7 +6245,7 @@
   and its value will be returned if no clause matches. If no default
   expression is provided and no clause matches, an
   IllegalArgumentException is thrown."
-  {:added "1.0"}
+  {:added "0.1.0"}
 
   [pred expr & clauses]
   (let [gpred (gensym "pred__")
@@ -6265,46 +6269,46 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; var documentation ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(alter-meta! #'in-ns assoc :added "1.0")
-(alter-meta! #'load-file assoc :added "1.0")
+(alter-meta! #'in-ns assoc :added "0.1.0")
+(alter-meta! #'load-file assoc :added "0.1.0")
 
 (defmacro add-doc-and-meta {:private true} [name docstring meta]
   `(alter-meta! (var ~name) merge (assoc ~meta :doc ~docstring)))
 
 (add-doc-and-meta *agent*
   "The agent currently running an action on this thread, else nil"
-  {:added "1.0"
+  {:added "0.1.0"
    :tag   clojure.lang.Agent})
 
 (add-doc-and-meta *file*
   "The path of the file being evaluated, as a String.
 
   When there is no file, e.g. in the REPL, the value is not defined."
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *line*
   "The line number into *file* of the top level form being evaluated.
 
   Integer valued, 0 by default."
-  {:added "1.9"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *column*
   "The column number into *file*:*line* of the top level form being evaluated.
 
   Integer valued, 0 by default."
-  {:added "1.9"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *command-line-args*
   "A sequence of the supplied command line arguments, or nil if
   none were supplied"
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *warn-on-reflection*
   "When set to true, the compiler will emit warnings when reflection is
   needed to resolve Java method calls or field accesses.
 
   Defaults to false."
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *compile-path*
   "Specifies the directory where 'compile' will write out .class
@@ -6312,18 +6316,18 @@
   work.
 
   Defaults to \"classes\""
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *compile-files*
   "Set to true when compiling files, false otherwise."
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *unchecked-math*
   "While bound to true, compilations of +, -, *, inc, dec and the
   coercions will be done without overflow checks. While bound
   to :warn-on-boxed, same behavior as true, and a warning is emitted
   when compilation uses boxed math. Default: false."
-  {:added "1.3"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *compiler-options*
   "A map of keys to options.
@@ -6338,56 +6342,56 @@
   :pedantic - off by default. Enables all warning switches.
 
   Alpha, subject to change."
-  {:added "1.4"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *ns*
   "A clojure.lang.Namespace object representing the current namespace."
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *in*
   "A java.io.Reader object representing standard input for read operations.
 
   Defaults to System/in, wrapped in a LineNumberingPushbackReader"
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *out*
   "A java.io.Writer object representing standard output for print operations.
 
   Defaults to System/out, wrapped in an OutputStreamWriter"
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *err*
   "A java.io.Writer object representing standard error for print operations.
 
   Defaults to System/err, wrapped in a PrintWriter"
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *flush-on-newline*
   "When set to true, output will be flushed whenever a newline is printed.
 
   Defaults to true."
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *print-meta*
   "If set to logical true, when printing an object, its metadata will also
   be printed in a form that can be read back by the reader.
 
   Defaults to false."
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *print-dup*
   "When set to logical true, objects will be printed in a way that preserves
   their type when read in later.
 
   Defaults to false."
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *print-readably*
   "When set to logical false, strings and characters will be printed with
   non-alphanumeric characters converted to the appropriate escape sequences.
 
   Defaults to true"
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (add-doc-and-meta *read-eval*
   "Defaults to true (or value specified by system property, see below)
@@ -6413,17 +6417,17 @@
   occur in considered contexts. You can also accomplish this in a
   particular scope by binding *read-eval* to :unknown
   "
-  {:added "1.0"})
+  {:added "0.1.0"})
 
 (defn future?
   "Returns true if x is a future"
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [x] (instance? java.util.concurrent.Future x))
 
 (defn future-done?
   "Returns true if future f is done"
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [^java.util.concurrent.Future f] (.isDone f))
 
@@ -6433,7 +6437,7 @@
   Takes a vector of function specs and a body, and generates a set of
   bindings of functions to their names. All of the names are available
   in all of the definitions of the functions, as well as the body."
-  {:added "1.0", :forms '[(letfn [fnspecs*] exprs*)],
+  {:added "0.1.0", :forms '[(letfn [fnspecs*] exprs*)],
    :special-form true, :url nil}
   [fnspecs & body]
   `(letfn* ~(vec (interleave (map first fnspecs)
@@ -6446,7 +6450,7 @@
   versions can replace arguments in the second and third
   positions (y, z). Note that the function f can take any number of
   arguments, not just the one(s) being nil-patched."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   ([f x]
    (fn
@@ -6602,7 +6606,7 @@
   lists are used to group multiple constants that map to the same
   expression, a vector can be used to match a list if needed. The
   test-constants need not be all of the same type."
-  {:added "1.2"}
+  {:added "0.1.0"}
 
   [e & clauses]
   (let [ge (with-meta (gensym) {:tag Object})
@@ -6664,7 +6668,7 @@
   result of applying f to val and the first item in coll, then
   applying f to that result and the 2nd item, etc. If coll contains no
   items, returns val and f is not called."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([f coll]
    (if (instance? clojure.lang.IReduce coll)
      (.reduce ^clojure.lang.IReduce coll f)
@@ -6698,7 +6702,7 @@
   2nd key and value, etc. If coll contains no entries, returns init
   and f is not called. Note that reduce-kv is supported on vectors,
   where the keys will be the ordinals."
-  {:added "1.4"}
+  {:added "0.1.0"}
   ([f init coll]
    (clojure.core.protocols/kv-reduce coll f init)))
 
@@ -6706,7 +6710,7 @@
   "Takes a reducing function f of 2 args and returns a fn suitable for
   transduce by adding an arity-1 signature that calls cf (default -
   identity) on the result argument."
-  {:added "1.7"}
+  {:added "0.1.0"}
   ([f] (completing f identity))
   ([f cf]
    (fn
@@ -6722,7 +6726,7 @@
   of applying (the transformed) xf to init and the first item in coll,
   then applying xf to that result and the 2nd item, etc. If coll
   contains no items, returns init and f is not called. Note that
-  certain transforms may inject or skip items."  {:added "1.7"}
+  certain transforms may inject or skip items."  {:added "0.1.0"}
   ([xform f coll] (transduce xform f (f) coll))
   ([xform f init coll]
    (let [f (xform f)
@@ -6734,7 +6738,7 @@
 (defn into
   "Returns a new coll consisting of to-coll with all of the items of
   from-coll conjoined. A transducer may be supplied."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([to from]
    (if (instance? clojure.lang.IEditableCollection to)
@@ -6751,7 +6755,7 @@
   of second items in each coll, until any one of the colls is
   exhausted.  Any remaining items in other colls are ignored. Function
   f should accept number-of-colls arguments."
-  {:added "1.4"
+  {:added "0.1.0"
    :static true}
   ([f coll]
    (-> (reduce (fn [v o] (conj! v (f o))) (transient []) coll)
@@ -6766,7 +6770,7 @@
 (defn filterv
   "Returns a vector of the items in coll for which
   (pred item) returns true. pred must be free of side-effects."
-  {:added "1.4"
+  {:added "0.1.0"
    :static true}
   [pred coll]
   (-> (reduce (fn [v o] (if (pred o) (conj! v o) v))
@@ -6787,7 +6791,7 @@
 (defn slurp
   "Opens a reader on f and reads all its contents, returning a string.
   See clojure.java.io/reader for a complete list of supported arguments."
-  {:added "1.0"}
+  {:added "0.1.0"}
   ([f & opts]
    (let [opts (normalize-slurp-opts opts)
          sw (java.io.StringWriter.)]
@@ -6798,7 +6802,7 @@
 (defn spit
   "Opposite of slurp.  Opens f with writer, writes content, then
   closes f. Options passed to clojure.java.io/writer."
-  {:added "1.2"}
+  {:added "0.1.0"}
   [f content & options]
   (with-open [^java.io.Writer w (apply jio/writer f options)]
     (.write w (str content))))
@@ -6810,7 +6814,7 @@
   return it on all subsequent calls to deref/@. If the computation has
   not yet finished, calls to deref/@ will block, unless the variant
   of deref with timeout is used. See also - realized?."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [f]
   (let [f (binding-conveyor-fn f)
@@ -6837,18 +6841,18 @@
   return it on all subsequent calls to deref/@. If the computation has
   not yet finished, calls to deref/@ will block, unless the variant of
   deref with timeout is used. See also - realized?."
-  {:added "1.1"}
+  {:added "0.1.0"}
   [& body] `(future-call (^{:once true} fn* [] ~@body)))
 
 (defn future-cancel
   "Cancels the future, if possible."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [^java.util.concurrent.Future f] (.cancel f true))
 
 (defn future-cancelled?
   "Returns true if future f is cancelled"
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [^java.util.concurrent.Future f] (.isCancelled f))
 
@@ -6858,7 +6862,7 @@
   realize the entire result unless required. Only useful for
   computationally intensive functions where the time of f dominates
   the coordination overhead."
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   ([f coll]
    (let [n (+ 2 (.. Runtime getRuntime availableProcessors))
@@ -6880,14 +6884,14 @@
 (defn pcalls
   "Executes the no-arg fns in parallel, returning a lazy sequence of
   their values"
-  {:added "1.0"
+  {:added "0.1.0"
    :static true}
   [& fns] (pmap #(%) fns))
 
 (defmacro pvalues
   "Returns a lazy sequence of the values of the exprs, which are
   evaluated in parallel"
-  {:added  "1.0"
+  {:added  "0.1.0"
    :static true}
   [& exprs]
   `(pcalls ~@(map #(list `fn [] %) exprs)))
@@ -6896,8 +6900,8 @@
 
 (def
   ^{:dynamic    true
-    :deprecated "FIXME"
-    :added      "1.0"}
+    :deprecated "0.1.0"
+    :added      "0.1.0"}
   *clojure-version*
   "DEPRECATED: replaced by *jaunt-version*
 
@@ -6912,8 +6916,8 @@
   "DEPRECATED: replaced by jaunt-version
 
   Returns clojure version as a printable string."
-  {:added      "1.0"
-   :deprecated "FIXME"}
+  {:added      "0.1.0"
+   :deprecated "0.1.0"}
   []
   "1.8.0")
 
@@ -6925,8 +6929,8 @@
 
 (defn- parse-version [v]
   {:pre [(string? v)]}
-  (let [[_ major minor incremental qualifier]
-        (re-matches #"^(\d+)\.(\d+)\.(\d+)(-.*)?$" v)]
+  (let [[_ major minor incremental qualifier] (re-matches #"^(\d+)\.(\d+)\.(\d+)(-.*)?$" v)
+        qualifier                             (or qualifier "")]
     {:major        (Integer/valueOf ^String major)
      :minor        (Integer/valueOf ^String minor)
      :incremental  (Integer/valueOf ^String incremental)
@@ -6982,7 +6986,7 @@
   block, unless the variant of deref with timeout is used. All
   subsequent derefs will return the same delivered value without
   blocking. See also - realized?."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   []
   (let [d (java.util.concurrent.CountDownLatch. 1)
@@ -7010,7 +7014,7 @@
 (defn deliver
   "Delivers the supplied value to the promise, releasing any pending
   derefs. A subsequent call to deliver on a promise will have no effect."
-  {:added "1.1"
+  {:added "0.1.0"
    :static true}
   [promise val] (promise val))
 
@@ -7018,7 +7022,7 @@
   "Takes any nested combination of sequential things (lists, vectors,
   etc.) and returns their contents as a single, flat sequence.
   (flatten nil) returns an empty sequence."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [x]
   (filter (complement sequential?)
@@ -7028,7 +7032,7 @@
   "Returns a map of the elements of coll keyed by the result of
   f on each element. The value at each key will be a vector of the
   corresponding elements, in the order they appeared in coll."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [f coll]
   (persistent!
@@ -7042,7 +7046,7 @@
   "Applies f to each value in coll, splitting it each time f returns a
    new value.  Returns a lazy seq of partitions.  Returns a stateful
    transducer when no collection is provided."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   ([f]
    (fn [rf]
@@ -7084,7 +7088,7 @@
 (defn frequencies
   "Returns a map from distinct items in coll to the number of times
   they appear."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [coll]
   (persistent!
@@ -7095,7 +7099,7 @@
 (defn reductions
   "Returns a lazy seq of the intermediate values of the reduction (as
   per reduce) of coll by f, starting with init."
-  {:added "1.2"}
+  {:added "0.1.0"}
   ([f coll]
    (lazy-seq
     (if-let [s (seq coll)]
@@ -7113,7 +7117,7 @@
   "Return a random element of the (sequential) collection. Will have
   the same performance characteristics as nth for the given
   collection."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [coll]
   (nth coll (rand-int (count coll))))
@@ -7122,7 +7126,7 @@
   "Returns a lazy sequence of lists like partition, but may include
   partitions with fewer than n items at the end.  Returns a stateful
   transducer when no collection is provided."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   ([^long n]
    (fn [rf]
@@ -7154,7 +7158,7 @@
 
 (defn shuffle
   "Return a random permutation of coll"
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   [^java.util.Collection coll]
   (let [al (java.util.ArrayList. coll)]
@@ -7167,7 +7171,7 @@
   item in coll, etc, until coll is exhausted. Thus function f should
   accept 2 arguments, index and item. Returns a stateful transducer when
   no collection is provided."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   ([f]
    (fn [rf]
@@ -7195,7 +7199,7 @@
   "Returns a lazy sequence of the non-nil results of (f item). Note,
   this means false return values will be included.  f must be free of
   side-effects.  Returns a transducer when no collection is provided."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   ([f]
    (fn [rf]
@@ -7229,7 +7233,7 @@
   this means false return values will be included.  f must be free of
   side-effects.  Returns a stateful transducer when no collection is
   provided."
-  {:added "1.2"
+  {:added "0.1.0"
    :static true}
   ([f]
    (fn [rf]
@@ -7267,7 +7271,7 @@
   composing predicates return a logical true value against all of its arguments, else it returns
   false. Note that f is short-circuiting in that it will stop execution on the first
   argument that triggers a logical false result against the original predicates."
-  {:added "1.3"}
+  {:added "0.1.0"}
   ([p]
    (fn ep1
      ([] true)
@@ -7307,7 +7311,7 @@
   returned by one of its composing predicates against any of its arguments, else it returns
   logical false. Note that f is short-circuiting in that it will stop execution on the first
   argument that triggers a logical true result against the original predicates."
-  {:added "1.3"}
+  {:added "0.1.0"}
   ([p]
    (fn sp1
      ([] nil)
@@ -7371,7 +7375,7 @@
   the Vars will be set back to their old values.  These temporary
   changes will be visible in all threads.  Useful for mocking out
   functions during testing."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [binding-map func]
   (let [root-bind (fn [m]
                     (doseq [[a-var a-val] m]
@@ -7393,7 +7397,7 @@
   executed, the root values of all the Vars will be set back to their
   old values.  These temporary changes will be visible in all threads.
   Useful for mocking out functions during testing."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [bindings & body]
   `(with-redefs-fn ~(zipmap (map #(list `var %) (take-nth 2 bindings))
                             (take-nth 2 (next bindings)))
@@ -7401,7 +7405,7 @@
 
 (defn realized?
   "Returns true if a value has been produced for a promise, delay, future or lazy sequence."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [^clojure.lang.IPending x] (.isRealized x))
 
 (defmacro cond->
@@ -7409,7 +7413,7 @@
   through each form for which the corresponding test
   expression is true. Note that, unlike cond branching, cond-> threading does
   not short circuit after the first true test expression."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [expr & clauses]
   (assert (even? (count clauses)))
   (let [g (gensym)
@@ -7426,7 +7430,7 @@
   through each form for which the corresponding test expression
   is true.  Note that, unlike cond branching, cond->> threading does not short circuit
   after the first true test expression."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [expr & clauses]
   (assert (even? (count clauses)))
   (let [g (gensym)
@@ -7442,7 +7446,7 @@
   "Binds name to expr, evaluates the first form in the lexical context
   of that binding, then binds name to that result, repeating for each
   successive form, returning the result of the last form."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [expr name & forms]
   `(let [~name ~expr
          ~@(interleave (repeat name) (butlast forms))]
@@ -7453,7 +7457,7 @@
 (defmacro some->
   "When expr is not nil, threads it into the first form (via ->),
   and when that result is not nil, through the next etc"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [expr & forms]
   (let [g (gensym)
         steps (map (fn [step] `(if (nil? ~g) nil (-> ~g ~step)))
@@ -7467,7 +7471,7 @@
 (defmacro some->>
   "When expr is not nil, threads it into the first form (via ->>),
   and when that result is not nil, through the next etc"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [expr & forms]
   (let [g (gensym)
         steps (map (fn [step] `(if (nil? ~g) nil (->> ~g ~step)))
@@ -7488,7 +7492,7 @@
 (defn cat
   "A transducer which concatenates the contents of each input, which must be a
   collection, into the reduction."
-  {:added "1.7"}
+  {:added "0.1.0"}
   [rf]
   (let [rrf (preserving-reduced rf)]
     (fn
@@ -7500,7 +7504,7 @@
 (defn dedupe
   "Returns a lazy sequence removing consecutive duplicates in coll.
   Returns a transducer when no collection is provided."
-  {:added "1.7"}
+  {:added "0.1.0"}
   ([]
    (fn [rf]
      (let [pv (volatile! ::none)]
@@ -7518,7 +7522,7 @@
 (defn random-sample
   "Returns items from coll with random probability of prob (0.0 -
   1.0).  Returns a transducer when no collection is provided."
-  {:added "1.7"}
+  {:added "0.1.0"}
   ([prob]
    (filter (fn [_] (< (rand) prob))))
   ([prob coll]
@@ -7542,7 +7546,7 @@
   combined with comp. Note that these applications will be
   performed every time reduce/iterator is called."
   {:arglists '([xform* coll])
-   :added "1.7"}
+   :added "0.1.0"}
   [& xforms]
   (Eduction. (apply comp (butlast xforms)) (last xforms)))
 
@@ -7555,46 +7559,46 @@
 (defn run!
   "Runs the supplied procedure (via reduce), for purposes of side
   effects, on successive items in the collection. Returns nil"
-  {:added "1.7"}
+  {:added "0.1.0"}
   [proc coll]
   (reduce #(proc %2) nil coll)
   nil)
 
 (defn tagged-literal?
   "Return true if the value is the data representation of a tagged literal"
-  {:added "1.7"}
+  {:added "0.1.0"}
   [value]
   (instance? clojure.lang.TaggedLiteral value))
 
 (defn tagged-literal
   "Construct a data representation of a tagged literal from a
   tag symbol and a form."
-  {:added "1.7"}
+  {:added "0.1.0"}
   [^clojure.lang.Symbol tag form]
   (clojure.lang.TaggedLiteral/create tag form))
 
 (defn reader-conditional?
   "Return true if the value is the data representation of a reader conditional"
-  {:added "1.7"}
+  {:added "0.1.0"}
   [value]
   (instance? clojure.lang.ReaderConditional value))
 
 (defn reader-conditional
   "Construct a data representation of a reader conditional.
   If true, splicing? indicates read-cond-splicing."
-  {:added "1.7"}
+  {:added "0.1.0"}
   [form ^Boolean splicing?]
   (clojure.lang.ReaderConditional/create form splicing?))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; data readers ;;;;;;;;;;;;;;;;;;
 
-(def ^{:added "1.4"} default-data-readers
+(def ^{:added "0.1.0"} default-data-readers
   "Default map of data reader functions provided by Clojure. May be
   overridden by binding *data-readers*."
   {'inst #'clojure.instant/read-instant-date
    'uuid #'clojure.uuid/default-uuid-reader})
 
-(def ^{:added "1.4" :dynamic true} *data-readers*
+(def ^{:added "0.1.0" :dynamic true} *data-readers*
   "Map from reader tag symbols to data reader Vars.
 
   When Clojure starts, it searches for files named 'data_readers.clj'
@@ -7623,7 +7627,7 @@
   data_readers.clj or by rebinding this Var."
   {})
 
-(def ^{:added "1.5" :dynamic true} *default-data-reader-fn*
+(def ^{:added "0.1.0" :dynamic true} *default-data-reader-fn*
   "When no data reader is found for a tag and *default-data-reader-fn*
   is non-nil, it will be called with two arguments,
   the tag and the value.  If *default-data-reader-fn* is nil (the

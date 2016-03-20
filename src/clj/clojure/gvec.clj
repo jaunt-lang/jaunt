@@ -473,7 +473,7 @@
   but stores the values unboxed internally.
 
   Optionally takes one or more elements to populate the vector."
-  {:added "1.2"
+  {:added "0.1.0"
    :arglists '([t] [t & elements])}
   ([t]
    (let [am ^clojure.core.ArrayManager (ams t)]

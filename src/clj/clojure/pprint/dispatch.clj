@@ -146,7 +146,7 @@
 (defmulti
   simple-dispatch
   "The pretty print dispatch function for simple data structure format."
-  {:added "1.2" :arglists '[[object]]}
+  {:added "0.1.0" :arglists '[[object]]}
   class)
 
 (use-method simple-dispatch clojure.lang.ISeq pprint-list)
@@ -446,7 +446,7 @@
 (defmulti
   code-dispatch
   "The pretty print dispatch function for pretty printing Clojure code."
-  {:added "1.2" :arglists '[[object]]}
+  {:added "0.1.0" :arglists '[[object]]}
   class)
 
 (use-method code-dispatch clojure.lang.ISeq pprint-code-list)
