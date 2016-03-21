@@ -1,6 +1,6 @@
-## Change Log
+# Change Log
 
-### upcoming
+## Jaunt 0.1.0
 - [#108](https://github.com/jaunt-lang/jaunt/pull/107) Add tests against CIDER (@arrdem).
 - [#107](https://github.com/jaunt-lang/jaunt/pull/107) Set version to 0.1.0 (@arrdem).
   - Fix a minor bug in `*jaunt-version*` loading due to the Maven qualifier being empty/`nil`
@@ -92,6 +92,6 @@
   - Added `:pedantic` (false by default) as a compiler option. When true, all compiler warnings are
     enabled. False by default so that users may more easily selectively mask warnings.
   
-### Clojure 1.8
+## Clojure 1.8
 - Jaunt was forked from Clojure just after the 1.8 release, see Clojure's changelog for project
   history.
