@@ -8,40 +8,37 @@
 
 ;; Originally contributed by Stephen C. Gilardi
 
-(ns ^{:doc "Top-level main function for Clojure REPL and scripts."
-       :author "Stephen C. Gilardi and Rich Hickey"}
-  clojure.main
+(ns clojure.main
+  "Top-level main function for Clojure REPL and scripts."
+  {:authors ["Stephen C. Gilardi <bsmith.occs@gmail.com>"
+             "Rich Hickey <richhickey@gmail.com>"]
+   :added   "0.1.0"}
   (:refer-clojure :exclude [with-bindings])
-  (:import (clojure.lang Compiler Compiler$CompilerException
-                         LineNumberingPushbackReader RT))
-  ;;(:use [clojure.repl :only (demunge root-cause stack-element-str)])
-  )
+  (:import (clojure.lang
+            RT
+            Compiler
+            Compiler$CompilerException
+            LineNumberingPushbackReader)))
 
 (declare main)
 
 ;;;;;;;;;;;;;;;;;;; redundantly copied from clojure.repl to avoid dep ;;;;;;;;;;;;;;
-#_(defn root-cause [x] x)
-#_(defn stack-element-str
-  "Returns a (possibly unmunged) string representation of a StackTraceElement"
-  {:added "1.3"}
-  [^StackTraceElement el]
-  (.getClassName el))
 
 (defn demunge
   "Given a string representation of a fn class,
   as in a stack trace element, returns a readable version."
-  {:added "1.3"}
+  {:added "0.1.0"}
   [fn-name]
-  (clojure.lang.Compiler/demunge fn-name))
+  (Compiler/demunge fn-name))
 
 (defn root-cause
   "Returns the initial cause of an exception or error by peeling off all of
   its wrappers"
-  {:added "1.3"}
+  {:added "0.1.0"}
   [^Throwable t]
   (loop [cause t]
-    (if (and (instance? clojure.lang.Compiler$CompilerException cause)
-             (not= (.source ^clojure.lang.Compiler$CompilerException cause) "NO_SOURCE_FILE"))
+    (if (and (instance? Compiler$CompilerException cause)
+             (not= (.source ^Compiler$CompilerException cause) "NO_SOURCE_FILE"))
       cause
       (if-let [cause (.getCause cause)]
         (recur cause)
@@ -49,9 +46,9 @@
 
 (defn stack-element-str
   "Returns a (possibly unmunged) string representation of a StackTraceElement"
-  {:added "1.3"}
+  {:added "0.1.0"}
   [^StackTraceElement el]
-  (let [file (.getFileName el)
+  (let [file        (.getFileName el)
         clojure-fn? (and file (or (.endsWith file ".clj")
                                   (.endsWith file ".cljc")
                                   (= file "NO_SOURCE_FILE")))]
@@ -59,31 +56,32 @@
            (demunge (.getClassName el))
            (str (.getClassName el) "." (.getMethodName el)))
          " (" (.getFileName el) ":" (.getLineNumber el) ")")))
-;;;;;;;;;;;;;;;;;;; end of redundantly copied from clojure.repl to avoid dep ;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;; end of redundantly copied from clojure.repl to avoid dep ;;;;;;;;;;;;;;
 
 (defmacro with-bindings
   "Executes body in the context of thread-local bindings for several vars
   that often need to be set!: *ns* *warn-on-reflection* *math-context*
   *print-meta* *print-length* *print-level* *compile-path*
-  *command-line-args* *1 *2 *3 *e"
+  *command-line-args* *1 *2 *3 *e *compiler-options*"
   [& body]
-  `(binding [*ns* *ns*
-             *warn-on-reflection* *warn-on-reflection*
-             *math-context* *math-context*
-             *print-meta* *print-meta*
-             *print-length* *print-length*
-             *print-level* *print-level*
-             *data-readers* *data-readers*
+  `(binding [*ns*                     *ns*
+             *warn-on-reflection*     *warn-on-reflection*
+             *math-context*           *math-context*
+             *print-meta*             *print-meta*
+             *print-length*           *print-length*
+             *print-level*            *print-level*
+             *data-readers*           *data-readers*
              *default-data-reader-fn* *default-data-reader-fn*
-             *compile-path* (System/getProperty "clojure.compile.path" "classes")
-             *command-line-args* *command-line-args*
-             *unchecked-math* *unchecked-math*
-             *assert* *assert*
-             *1 nil
-             *2 nil
-             *3 nil
-             *e nil]
+             *compile-path*           (System/getProperty "clojure.compile.path" "classes")
+             *command-line-args*      *command-line-args*
+             *unchecked-math*         *unchecked-math*
+             *assert*                 *assert*
+             *1                       nil
+             *2                       nil
+             *3                       nil
+             *e                       nil
+             *compiler-options*       *compiler-options*]
      ~@body))
 
 (defn repl-prompt
@@ -101,9 +99,9 @@
   [s]
   (let [c (.read s)]
     (cond
-     (= c (int \newline)) :line-start
-     (= c -1) :stream-end
-     :else (do (.unread s c) :body))))
+      (= c (int \newline)) :line-start
+      (= c -1) :stream-end
+      :else (do (.unread s c) :body))))
 
 (defn skip-whitespace
   "Skips whitespace characters on stream s. Returns :line-start, :stream-end,
@@ -117,11 +115,11 @@
   [s]
   (loop [c (.read s)]
     (cond
-     (= c (int \newline)) :line-start
-     (= c -1) :stream-end
-     (= c (int \;)) (do (.readLine s) :line-start)
-     (or (Character/isWhitespace (char c)) (= c (int \,))) (recur (.read s))
-     :else (do (.unread s c) :body))))
+      (= c (int \newline)) :line-start
+      (= c -1) :stream-end
+      (= c (int \;)) (do (.readLine s) :line-start)
+      (or (Character/isWhitespace (char c)) (= c (int \,))) (recur (.read s))
+      :else (do (.unread s c) :body))))
 
 (defn repl-read
   "Default :read hook for repl. Reads from *in* which must either be an
@@ -155,11 +153,12 @@
     (binding [*out* *err*]
       (println (str (-> ex class .getSimpleName)
                     " " (.getMessage ex) " "
-                    (when-not (instance? clojure.lang.Compiler$CompilerException ex)
+                    (when-not (instance? Compiler$CompilerException ex)
                       (str " " (if el (stack-element-str el) "[trace missing]"))))))))
 
-(def ^{:doc "A sequence of lib specs that are applied to `require`
-by default when a new command-line REPL is started."} repl-requires
+(def repl-requires
+  "A sequence of lib specs that are applied to `require` by default when a new
+  command-line REPL is started."
   '[[clojure.repl :refer (source apropos dir pst doc find-doc)]
     [clojure.java.javadoc :refer (javadoc)]
     [clojure.pprint :refer (pp pprint)]])
@@ -236,34 +235,34 @@ by default when a new command-line REPL is started."} repl-requires
           (try
             (let [read-eval *read-eval*
                   input (with-read-known (read request-prompt request-exit))]
-             (or (#{request-prompt request-exit} input)
-                 (let [value (binding [*read-eval* read-eval] (eval input))]
-                   (print value)
-                   (set! *3 *2)
-                   (set! *2 *1)
-                   (set! *1 value))))
-           (catch Throwable e
-             (caught e)
-             (set! *e e))))]
+              (or (#{request-prompt request-exit} input)
+                  (let [value (binding [*read-eval* read-eval] (eval input))]
+                    (print value)
+                    (set! *3 *2)
+                    (set! *2 *1)
+                    (set! *1 value))))
+            (catch Throwable e
+              (caught e)
+              (set! *e e))))]
     (with-bindings
-     (try
-      (init)
-      (catch Throwable e
-        (caught e)
-        (set! *e e)))
-     (prompt)
-     (flush)
-     (loop []
-       (when-not 
-       	 (try (identical? (read-eval-print) request-exit)
-	  (catch Throwable e
-	   (caught e)
-	   (set! *e e)
-	   nil))
-         (when (need-prompt)
-           (prompt)
-           (flush))
-         (recur))))))
+      (try
+        (init)
+        (catch Throwable e
+          (caught e)
+          (set! *e e)))
+      (prompt)
+      (flush)
+      (loop []
+        (when-not
+         (try (identical? (read-eval-print) request-exit)
+              (catch Throwable e
+                (caught e)
+                (set! *e e)
+                nil))
+          (when (need-prompt)
+            (prompt)
+            (flush))
+          (recur))))))
 
 (defn load-script
   "Loads Clojure source from a file or resource given its path. Paths
@@ -284,12 +283,12 @@ by default when a new command-line REPL is started."} repl-requires
   [str]
   (let [eof (Object.)
         reader (LineNumberingPushbackReader. (java.io.StringReader. str))]
-      (loop [input (with-read-known (read reader false eof))]
-        (when-not (= input eof)
-          (let [value (eval input)]
-            (when-not (nil? value)
-              (prn value))
-            (recur (with-read-known (read reader false eof))))))))
+    (loop [input (with-read-known (read reader false eof))]
+      (when-not (= input eof)
+        (let [value (eval input)]
+          (when-not (nil? value)
+            (prn value))
+          (recur (with-read-known (read reader false eof))))))))
 
 (defn- init-dispatch
   "Returns the handler associated with an init opt"
@@ -320,7 +319,7 @@ by default when a new command-line REPL is started."} repl-requires
   present"
   [[_ & args] inits]
   (when-not (some #(= eval-opt (init-dispatch (first %))) inits)
-    (println "Clojure" (clojure-version)))
+    (printf "Jaunt %s (Clojure %s derived)\n" (jaunt-version) (clojure-version)))
   (repl :init (fn []
                 (initialize args inits)
                 (apply require repl-requires)))
@@ -414,12 +413,12 @@ java -cp clojure.jar clojure.main -i init.clj script.clj args...")
   classpath. Classpath-relative paths have prefix of @ or @/"
   [& args]
   (try
-   (if args
-     (loop [[opt arg & more :as args] args inits []]
-       (if (init-dispatch opt)
-         (recur more (conj inits [opt arg]))
-         ((main-dispatch opt) args inits)))
-     (repl-opt nil nil))
-   (finally 
-     (flush))))
+    (if args
+      (loop [[opt arg & more :as args] args inits []]
+        (if (init-dispatch opt)
+          (recur more (conj inits [opt arg]))
+          ((main-dispatch opt) args inits)))
+      (repl-opt nil nil))
+    (finally
+      (flush))))
 

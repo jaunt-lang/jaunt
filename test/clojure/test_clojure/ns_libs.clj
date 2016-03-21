@@ -1,41 +1,67 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-; Authors: Frantisek Sodomka, Stuart Halloway
+;; Authors: Frantisek Sodomka, Stuart Halloway
 
 (ns clojure.test-clojure.ns-libs
   (:use clojure.test))
 
-; http://clojure.org/namespaces
+;; http://clojure.org/namespaces
 
-; in-ns ns create-ns
-; alias import intern refer
-; all-ns find-ns
-; ns-name ns-aliases ns-imports ns-interns ns-map ns-publics ns-refers
-; resolve ns-resolve namespace
-; ns-unalias ns-unmap remove-ns
+;; in-ns ns create-ns
+;; alias import intern refer
+;; all-ns find-ns
+;; ns-name ns-aliases ns-imports ns-interns ns-map ns-publics ns-refers
+;; resolve ns-resolve namespace
+;; ns-unalias ns-unmap remove-ns
 
 
-; http://clojure.org/libs
+;; http://clojure.org/libs
 
-; require use
-; loaded-libs
+;; require use
+;; loaded-libs
 
 (deftest test-alias
-	(is (thrown-with-msg? Exception #"No namespace: epicfail found" (alias 'bogus 'epicfail))))
-	
+  (is (thrown-with-msg? Exception #"No namespace: epicfail found" (alias 'bogus 'epicfail)))
+  (is (let [err (with-out-str
+                  (binding [*err* *out*
+                            *ns*  *ns*]
+                    (eval '(do (ns exporter-d {:deprecated true})
+                               (def otherd 3)
+                               (ns importer-d)
+                               (alias 'e 'exporter-d)))))]
+        (re-find #"aliasing deprecated ns:" err))))
+
+(deftest test-refer
+  (is (let [err (with-out-str
+                  (binding [*err* *out*
+                            *ns*  *ns*]
+                    (eval '(do (ns exporter-r1 {:deprecated true})
+                               (def otherd 3)
+                               (ns importer-r1)
+                               (refer 'exporter-r1 :only '(otherd))))))]
+        (re-find #"referring deprecated var:" err)))
+  (is (let [err (with-out-str
+                  (binding [*err* *out*
+                            *ns*  *ns*]
+                    (eval '(do (ns exporter-r2)
+                               (def ^:deprecated otherd 3)
+                               (ns importer-r2)
+                               (refer 'exporter-r2 :only '(otherd))))))]
+        (re-find #"referring deprecated var:" err))))
+
 (deftest test-require
-         (is (thrown? Exception (require :foo)))
-         (is (thrown? Exception (require))))
+  (is (thrown? Exception (require :foo)))
+  (is (thrown? Exception (require))))
 
 (deftest test-use
-         (is (thrown? Exception (use :foo)))
-         (is (thrown? Exception (use))))
+  (is (thrown? Exception (use :foo)))
+  (is (thrown? Exception (use))))
 
 (deftest reimporting-deftypes
   (let [inst1 (binding [*ns* *ns*]
@@ -55,14 +81,14 @@
       (is (= [:a :b] (keys inst2))))
     ;fragile tests, please fix
     #_(testing "you cannot import same local name from a different namespace"
-      (is (thrown? clojure.lang.Compiler$CompilerException
-                  #"ReimportMe already refers to: class exporter.ReimportMe in namespace: importer"
-                  (binding [*ns* *ns*]
-                    (eval '(do (ns exporter-2)
-                               (defrecord ReimportMe [a b])
-                               (ns importer)
-                               (import exporter-2.ReimportMe)
-                               (ReimportMe. 1 2)))))))))
+        (is (thrown? clojure.lang.Compiler$CompilerException
+                     #"ReimportMe already refers to: class exporter.ReimportMe in namespace: importer"
+                     (binding [*ns* *ns*]
+                       (eval '(do (ns exporter-2)
+                                  (defrecord ReimportMe [a b])
+                                  (ns importer)
+                                  (import exporter-2.ReimportMe)
+                                  (ReimportMe. 1 2)))))))))
 
 (deftest naming-types
   (testing "you cannot use a name already referred from another namespace"
@@ -79,11 +105,11 @@
 (deftest resolution
   (let [s (gensym)]
     (are [result expr] (= result expr)
-         #'clojure.core/first (ns-resolve 'clojure.core 'first)
-         nil (ns-resolve 'clojure.core s)
-         nil (ns-resolve 'clojure.core {'first :local-first} 'first)
-         nil (ns-resolve 'clojure.core {'first :local-first} s))))
-  
+      #'clojure.core/first (ns-resolve 'clojure.core 'first)
+      nil (ns-resolve 'clojure.core s)
+      nil (ns-resolve 'clojure.core {'first :local-first} 'first)
+      nil (ns-resolve 'clojure.core {'first :local-first} s))))
+
 (deftest refer-error-messages
   (let [temp-ns (gensym)]
     (binding [*ns* *ns*]
@@ -91,10 +117,10 @@
       (eval '(def ^{:private true} hidden-var)))
     (testing "referring to something that does not exist"
       (is (thrown-with-msg? IllegalAccessError #"nonexistent-var does not exist"
-            (refer temp-ns :only '(nonexistent-var)))))
+                            (refer temp-ns :only '(nonexistent-var)))))
     (testing "referring to something non-public"
       (is (thrown-with-msg? IllegalAccessError #"hidden-var is not public"
-            (refer temp-ns :only '(hidden-var)))))))
+                            (refer temp-ns :only '(hidden-var)))))))
 
 (deftest test-defrecord-deftype-err-msg
   (is (thrown-with-msg? clojure.lang.Compiler$CompilerException

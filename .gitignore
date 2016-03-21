@@ -6,4 +6,9 @@ nbproject/private/
 maven-classpath
 maven-classpath.properties
 .idea/
-settings.xml
+src/resources/
+user.clj
+*.html
+.lein-env
+*.iml
+cider-nrepl

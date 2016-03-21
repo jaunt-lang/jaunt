@@ -2,11 +2,13 @@
 
   <description>
     Build with "ant" and then start the
-    REPL with: "java -cp clojarr.jar clojure.main".
+    REPL with: "java -cp jaunt.jar clojure.main".
 
     Note: You may need to run the antsetup.sh script included.
   </description>
 
+  <property environment="env"/>
+  
   <property name="src" location="src"/>
   <property name="test" location="test"/>
   <property name="jsrc" location="${src}/jvm"/>
@@ -19,34 +21,72 @@
   <property name="target" location="target"/>
   <property name="build" location="${target}/classes"/>
   <property name="test-classes" location="${target}/test-classes"/>
-  <property name="dist" location="dist"/>
   <property file="maven-classpath.properties"/>
+    <condition property="dist" value="${env.CIRCLE_ARTIFACTS}" else="dist">
+    <isset property="env.CIRCLE_ARTIFACTS"/>
+  </condition>
 
   <!-- Get the version string out of the POM -->
   <xmlproperty file="pom.xml" prefix="pom"/>
   <property name="clojure.version.label" value="${pom.project.version}"/>
-  <property name="version.properties" value="${build}/clojure/version.properties"/>
+  <property name="version.properties" value="${build}/jaunt/version.properties"/>
 
-  <property name="clojure_jar" location="clojarr-${clojure.version.label}.jar"/>
-  <property name="clojure_noversion_jar" location="clojarr.jar"/>
+  <property name="clojure_jar" location="${dist}/jaunt-${clojure.version.label}.jar"/>
+  <property name="clojure_noversion_jar" location="${dist}/jaunt.jar"/>
 
   <property name="directlinking" value="true"/>
 
-  <target name="init" depends="clean">
+  <!-- Lazy compilation flag files -->
+  <property name="compile-java-flag" value="${target}/compile-java.flag"/>
+  <property name="compile-clojure-flag" value="${target}/compile-clojure.flag"/>
+  <property name="compile-tests-flag" value="${target}/compile-tests.flag"/>
+  <property name="test-example-flag" value="${target}/test-example.flag"/>
+  <property name="test-generative-flag" value="${target}/test-generative.flag"/>
+
+  <target name="init" depends="">
     <tstamp/>
     <mkdir dir="${build}"/>
     <mkdir dir="${build}/clojure"/>
     <echo file="${version.properties}">version=${clojure.version.label}</echo>
   </target>
 
-  <target name="compile-java" depends="init"
+  <target name="compile-java.check">
+    <condition property="compile-java.uptodate">
+      <uptodate targetfile="${compile-java-flag}">
+        <srcfiles dir= "${jsrc}" includes="**/*.java"/>
+      </uptodate>
+    </condition>
+  </target>
+
+  <target name="compile-java"
+          depends="init,compile-java.check"
+          unless="compile-java.uptodate"
           description="Compile Java sources.">
     <javac srcdir="${jsrc}" destdir="${build}" includeJavaRuntime="yes"
            includeAntRuntime="false"
            debug="true" source="1.6" target="1.6"/>
+    <touch file="${compile-java-flag}"/>
+  </target>
+  
+  <target name="compile-clojure.check"
+          depends="compile-java.check">
+    <uptodate property="compile-clojure.files.uptodate">
+      <srcfiles dir="${cljsrc}" includes="**/*.clj"/>
+      <srcfiles dir="${cljsrc}" includes="**/*.cljc"/>
+      <srcfiles dir="${cljsrc}" includes="**/*.edn"/>
+      <mapper type="merge" to="${compile-clojure-flag}"/>
+    </uptodate>
+    <condition property="compile-clojure.uptodate">
+      <and>
+        <istrue value="${compile-java.uptodate}"/>
+        <istrue value="${compile-clojure.files.uptodate}"/>
+      </and>
+    </condition>
   </target>
 
   <target name="compile-clojure"
+          depends="compile-java,compile-clojure.check"
+          unless="compile-clojure.uptodate"
           description="Compile Clojure sources.">
     <java classname="clojure.lang.Compile"
           classpath="${maven.compile.classpath}:${build}:${cljsrc}"
@@ -84,11 +124,29 @@
       <arg value="clojure.data"/>
       <arg value="clojure.reflect"/>
     </java>
+    <touch file="${compile-clojure-flag}"/>
+  </target>
+
+  <target name="compile-tests.check"
+          depends="compile-clojure.check">
+    <uptodate property="compile-tests.files.uptodate">
+      <srcfiles dir="${test}" includes="**/*.clj"/>
+      <srcfiles dir="${test}" includes="**/*.cljc"/>
+      <srcfiles dir="${test}" includes="**/*.edn"/>
+      <mapper type="merge" to="${compile-tests-flag}"/>
+    </uptodate>
+    <condition property="compile-tests.uptodate">
+      <and>
+        <istrue value="${compile-clojure.uptodate}"/>
+        <istrue value="${compile-tests.files.uptodate}"/>
+      </and>
+    </condition>
   </target>
 
   <target name="compile-tests"
           description="Compile the subset of tests that require compilation."
-          unless="maven.test.skip">
+          depends="compile-clojure,compile-tests.check"
+          unless="compile-tests.uptodate">
     <mkdir dir="${test-classes}"/>
     <javac srcdir="${jtestsrc}" destdir="${test-classes}" includeJavaRuntime="yes"
            debug="true" source="1.6" target="1.6" includeantruntime="no"/>
@@ -106,12 +164,34 @@
       <arg value="clojure.test-clojure.compilation.load-ns"/>
       <arg value="clojure.test-clojure.annotations"/>
     </java>
+    <touch file="${compile-tests-flag}"/>
   </target>
 
+  <target name="test-example.check">
+    <condition property="test-example.files.uptodate">
+      <uptodate targetfile="${test-example-flag}">
+        <srcfiles dir="${test}" includes="**/*.clj"/>
+        <srcfiles dir="${test}" includes="**/*.cljc"/>
+        <srcfiles dir="${test}" includes="**/*.edn"/>
+      </uptodate>
+    </condition>
+    
+    <condition property="test-example.uptodate">
+      <or>
+        <istrue value="${maven.test.skip}"/>
+        <and>
+          <istrue value="${compile-tests.uptodate}"/>
+          <istrue value="${compile-clojure.uptodate}"/>
+          <istrue value="${test-example.files.uptodate}"/>
+        </and>
+      </or>
+    </condition>
+  </target>
+  
   <target name="test-example"
           description="Run clojure tests without recompiling clojure."
-          depends="compile-tests"
-          unless="maven.test.skip">
+          depends="compile-tests,test-example.check"
+          unless="test-example.uptodate">
     <java classname="clojure.main"
           failonerror="true"
           fork="true"
@@ -128,12 +208,34 @@
       </classpath>
       <arg value="${test-script}"/>
     </java>
+    <touch file="${test-example-flag}"/>
+  </target>
+
+  <target name="test-generative.check"
+          depends="compile-clojure.check,compile-tests.check">
+    <condition property="test-generative.files.uptodate">
+      <uptodate targetfile="${test-generative-flag}">
+        <srcfiles dir="${test}" includes="**/*.clj"/>
+        <srcfiles dir="${test}" includes="**/*.cljc"/>
+        <srcfiles dir="${test}" includes="**/*.edn"/>
+      </uptodate>
+    </condition>
+    <condition property="test-generative.uptodate">
+      <or>
+        <istrue value="${maven.test.skip}"/>
+        <and>
+          <istrue value="${compile-tests.uptodate}"/>
+          <istrue value="${compile-clojure.uptodate}"/>
+          <istrue value="${test-generative.files.uptodate}"/>
+        </and>
+      </or>
+    </condition>
   </target>
 
   <target name="test-generative"
           description="Run test generative tests without recompiling clojure."
-          depends="compile-tests"
-          unless="maven.test.skip">
+          depends="compile-tests,test-generative.check"
+          unless="test-generative.uptodate">
     <java classname="clojure.main"
           failonerror="true"
           fork="true"
@@ -148,6 +250,7 @@
       </classpath>
       <arg value="${test-generative-script}"/>
     </java>
+    <touch file="${test-generative-flag}"/>
   </target>
 
   <target name="test"
@@ -158,7 +261,29 @@
           description="Build Clojure (compilation only, no tests)."
           depends="compile-java, compile-clojure"/>
 
-  <target name="jar" depends="build"
+  <target name="jar.check"
+          depends="compile-java.check,compile-clojure.check">
+    <condition property="jar.files.uptodate">
+      <uptodate targetfile="${clojure_jar}">
+        <srcfiles dir="${src}" includes="**/*.clj"/>
+        <srcfiles dir="${src}" includes="**/*.cljc"/>
+        <srcfiles dir="${src}" includes="**/*.edn"/>
+        <srcfiles dir="${build}" includes="**/*.class"/>
+      </uptodate>
+    </condition>
+
+    <condition property="jar.uptodate">
+      <and>
+        <istrue value="${compile-java.uptodate}"/>
+        <istrue value="${compile-clojure.uptodate}"/>
+        <istrue value="${jar.files.uptodate}"/>
+      </and>
+    </condition>
+  </target>
+  
+  <target name="jar"
+          depends="build,jar.check"
+          unless="jar.uptodate"
           description="Create clojure jar file.">
     <jar jarfile="${clojure_jar}" basedir="${build}">
       <fileset dir="${cljsrc}">

@@ -1,14 +1,14 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 (ns ^{:doc "Tests for clojure.core/gen-class"
       :author "Stuart Halloway, Daniel Solano Gómez"}
-  clojure.test-clojure.genclass
+ clojure.test-clojure.genclass
   (:use clojure.test clojure.test-helper)
   (:require clojure.test_clojure.genclass.examples)
   (:import [clojure.test_clojure.genclass.examples
@@ -19,9 +19,9 @@
             ArrayGenInterface]
 
            [java.lang.annotation ElementType
-                                 Retention
-                                 RetentionPolicy
-                                 Target]))
+            Retention
+            RetentionPolicy
+            Target]))
 
 (deftest arg-support
   (let [example (ExampleClass.)
@@ -39,37 +39,37 @@
 
 ;todo - fix this, it depends on the order of things out of a hash-map
 #_(deftest test-annotations
-  (let [annot-class ExampleAnnotationClass
-        foo-method          (.getDeclaredMethod annot-class "foo" (into-array [String]))]
-    (testing "Class annotations:"
-      (is (= 2 (count (.getDeclaredAnnotations annot-class))))
-      (testing "@Deprecated"
-        (let [deprecated (.getAnnotation annot-class Deprecated)]
-          (is deprecated)))
-      (testing "@Target([])"
-        (let [resource (.getAnnotation annot-class Target)]
-          (is (= 0 (count (.value resource)))))))
-    (testing "Method annotations:"
-      (testing "@Deprecated void foo(String):"
-        (is (= 1 (count (.getDeclaredAnnotations foo-method))))
-        (is (.getAnnotation foo-method Deprecated))))
-    (testing "Parameter annotations:"
-      (let [param-annots (.getParameterAnnotations foo-method)]
-        (is (= 1 (alength param-annots)))
-        (let [first-param-annots (aget param-annots 0)]
-          (is (= 2 (alength first-param-annots)))
-          (testing "void foo(@Retention(…) String)"
-            (let [retention (aget first-param-annots 0)]
-              (is (instance? Retention retention))
-              (= RetentionPolicy/SOURCE (.value retention))))
-          (testing "void foo(@Target(…) String)"
-            (let [target (aget first-param-annots 1)]
-              (is (instance? Target target))
-              (is (= [ElementType/TYPE ElementType/PARAMETER] (seq (.value target)))))))))))
+    (let [annot-class ExampleAnnotationClass
+          foo-method          (.getDeclaredMethod annot-class "foo" (into-array [String]))]
+      (testing "Class annotations:"
+        (is (= 2 (count (.getDeclaredAnnotations annot-class))))
+        (testing "@Deprecated"
+          (let [deprecated (.getAnnotation annot-class Deprecated)]
+            (is deprecated)))
+        (testing "@Target([])"
+          (let [resource (.getAnnotation annot-class Target)]
+            (is (= 0 (count (.value resource)))))))
+      (testing "Method annotations:"
+        (testing "@Deprecated void foo(String):"
+          (is (= 1 (count (.getDeclaredAnnotations foo-method))))
+          (is (.getAnnotation foo-method Deprecated))))
+      (testing "Parameter annotations:"
+        (let [param-annots (.getParameterAnnotations foo-method)]
+          (is (= 1 (alength param-annots)))
+          (let [first-param-annots (aget param-annots 0)]
+            (is (= 2 (alength first-param-annots)))
+            (testing "void foo(@Retention(…) String)"
+              (let [retention (aget first-param-annots 0)]
+                (is (instance? Retention retention))
+                (= RetentionPolicy/SOURCE (.value retention))))
+            (testing "void foo(@Target(…) String)"
+              (let [target (aget first-param-annots 1)]
+                (is (instance? Target target))
+                (is (= [ElementType/TYPE ElementType/PARAMETER] (seq (.value target)))))))))))
 
 (deftest genclass-option-validation
   (is (fails-with-cause? IllegalArgumentException #"Not a valid method name: has-hyphen"
-        (@#'clojure.core/validate-generate-class-options {:methods '[[fine [] void] [has-hyphen [] void]]}))))
+                         (@#'clojure.core/validate-generate-class-options {:methods '[[fine [] void] [has-hyphen [] void]]}))))
 
 (deftest protected-final-access
   (let [obj (ProtectedFinalTester.)]
@@ -98,49 +98,49 @@
         (testing "sugar primitive array hints"
           (are [name type] (= (type array-types)
                               (parameter-type (method-with-name name)))
-               "takesByteArray"    :bytes
-               "takesCharArray"    :chars
-               "takesShortArray"   :shorts
-               "takesIntArray"     :ints
-               "takesLongArray"    :longs
-               "takesFloatArray"   :floats
-               "takesDoubleArray"  :doubles
-               "takesBooleanArray" :booleans))
+            "takesByteArray"    :bytes
+            "takesCharArray"    :chars
+            "takesShortArray"   :shorts
+            "takesIntArray"     :ints
+            "takesLongArray"    :longs
+            "takesFloatArray"   :floats
+            "takesDoubleArray"  :doubles
+            "takesBooleanArray" :booleans))
         (testing "raw primitive array hints"
           (are [name type] (= (type array-types)
                               (return-type (method-with-name name)))
-               "returnsByteArray"    :bytes
-               "returnsCharArray"    :chars
-               "returnsShortArray"   :shorts
-               "returnsIntArray"     :ints
-               "returnsLongArray"    :longs
-               "returnsFloatArray"   :floats
-               "returnsDoubleArray"  :doubles
-               "returnsBooleanArray" :booleans))))
+            "returnsByteArray"    :bytes
+            "returnsCharArray"    :chars
+            "returnsShortArray"   :shorts
+            "returnsIntArray"     :ints
+            "returnsLongArray"    :longs
+            "returnsFloatArray"   :floats
+            "returnsDoubleArray"  :doubles
+            "returnsBooleanArray" :booleans))))
     (testing "gen-interface"
       (let [method-with-name #(method-with-name % (.getMethods ArrayGenInterface))]
         (testing "sugar primitive array hints"
           (are [name type] (= (type array-types)
                               (parameter-type (method-with-name name)))
-               "takesByteArray"    :bytes
-               "takesCharArray"    :chars
-               "takesShortArray"   :shorts
-               "takesIntArray"     :ints
-               "takesLongArray"    :longs
-               "takesFloatArray"   :floats
-               "takesDoubleArray"  :doubles
-               "takesBooleanArray" :booleans))
+            "takesByteArray"    :bytes
+            "takesCharArray"    :chars
+            "takesShortArray"   :shorts
+            "takesIntArray"     :ints
+            "takesLongArray"    :longs
+            "takesFloatArray"   :floats
+            "takesDoubleArray"  :doubles
+            "takesBooleanArray" :booleans))
         (testing "raw primitive array hints"
           (are [name type] (= (type array-types)
                               (return-type (method-with-name name)))
-               "returnsByteArray"    :bytes
-               "returnsCharArray"    :chars
-               "returnsShortArray"   :shorts
-               "returnsIntArray"     :ints
-               "returnsLongArray"    :longs
-               "returnsFloatArray"   :floats
-               "returnsDoubleArray"  :doubles
-               "returnsBooleanArray" :booleans))))))
+            "returnsByteArray"    :bytes
+            "returnsCharArray"    :chars
+            "returnsShortArray"   :shorts
+            "returnsIntArray"     :ints
+            "returnsLongArray"    :longs
+            "returnsFloatArray"   :floats
+            "returnsDoubleArray"  :doubles
+            "returnsBooleanArray" :booleans))))))
 
 (deftest gen-interface-source-file
   (let [classReader (clojure.asm.ClassReader. "clojure.test_clojure.genclass.examples.ArrayGenInterface")

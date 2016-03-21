@@ -1,34 +1,39 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 ;; Java-specific parts of clojure.reflect
 (in-ns 'clojure.reflect)
 
 (require '[clojure.set :as set]
          '[clojure.string :as str])
-(import '[clojure.asm ClassReader ClassVisitor Type Opcodes]
-         '[java.lang.reflect Modifier]
-         java.io.InputStream)
+
+(import '[clojure.asm
+          ClassReader
+          ClassVisitor
+          Type
+          Opcodes]
+        java.lang.reflect.Modifier
+        java.io.InputStream)
 
 (extend-protocol TypeReference
   clojure.lang.Symbol
   (typename [s] (str/replace (str s) "<>" "[]"))
-  
+
   Class
   ;; neither .getName not .getSimpleName returns the right thing, so best to delegate to Type
   (typename
-   [c]
-   (typename (Type/getType c)))
-  
+    [c]
+    (typename (Type/getType c)))
+
   Type
   (typename
-   [t]
-   (-> (.getClassName t))))
+    [t]
+    (-> (.getClassName t))))
 
 (defn- typesym
   "Given a typeref, create a legal Clojure symbol version of the
@@ -80,7 +85,7 @@ the kinds of objects to which they can apply."}
          [:final 0x0010  :class :field :method]
          ;; :super is ancient history and is unfindable (?) by
          ;; reflection. skip it
-         #_[:super 0x0020  :class]        
+         #_[:super 0x0020  :class]
          [:synchronized 0x0020  :method]
          [:volatile 0x0040  :field]
          [:bridge 0x0040  :method]
@@ -107,7 +112,7 @@ the kinds of objects to which they can apply."}
    flag-descriptors))
 
 (defrecord Constructor
-  [name declaring-class parameter-types exception-types flags])
+           [name declaring-class parameter-types exception-types flags])
 
 (defn- constructor->map
   [^java.lang.reflect.Constructor constructor]
@@ -126,7 +131,7 @@ the kinds of objects to which they can apply."}
         (.getDeclaredConstructors cls))))
 
 (defrecord Method
-  [name return-type declaring-class parameter-types exception-types flags])
+           [name return-type declaring-class parameter-types exception-types flags])
 
 (defn- method->map
   [^java.lang.reflect.Method method]
@@ -146,7 +151,7 @@ the kinds of objects to which they can apply."}
         (.getDeclaredMethods cls))))
 
 (defrecord Field
-  [name type declaring-class flags])
+           [name type declaring-class flags])
 
 (defn- field->map
   [^java.lang.reflect.Field field]
@@ -166,15 +171,15 @@ the kinds of objects to which they can apply."}
 (deftype JavaReflector [classloader]
   Reflector
   (do-reflect [_ typeref]
-           (let [cls (clojure.lang.RT/classForName (typename typeref) false classloader)]
-             {:bases (not-empty (set (map typesym (bases cls))))
-              :flags (parse-flags (.getModifiers cls) :class)
-              :members (set/union (declared-fields cls)
-                                  (declared-methods cls)
-                                  (declared-constructors cls))})))
+    (let [cls (clojure.lang.RT/classForName (typename typeref) false classloader)]
+      {:bases (not-empty (set (map typesym (bases cls))))
+       :flags (parse-flags (.getModifiers cls) :class)
+       :members (set/union (declared-fields cls)
+                           (declared-methods cls)
+                           (declared-constructors cls))})))
 
 (def ^:private default-reflector
-     (JavaReflector. (.getContextClassLoader (Thread/currentThread))))
+  (JavaReflector. (.getContextClassLoader (Thread/currentThread))))
 
 (defn- parse-method-descriptor
   [^String md]
@@ -183,15 +188,15 @@ the kinds of objects to which they can apply."}
 
 (defprotocol ClassResolver
   (^InputStream resolve-class [this name]
-                "Given a class name, return that typeref's class bytes as an InputStream."))
+    "Given a class name, return that typeref's class bytes as an InputStream."))
 
 (extend-protocol ClassResolver
   clojure.lang.Fn
   (resolve-class [this typeref] (this typeref))
-  
+
   ClassLoader
   (resolve-class [this typeref]
-                 (.getResourceAsStream this (resource-name typeref))))
+    (.getResourceAsStream this (resource-name typeref))))
 
 (deftype AsmReflector [class-resolver]
   Reflector
@@ -205,51 +210,50 @@ the kinds of objects to which they can apply."}
          (proxy
           [ClassVisitor]
           [Opcodes/ASM4]
-          (visit [version access name signature superName interfaces]
-                 (let [flags (parse-flags access :class)
+           (visit [version access name signature superName interfaces]
+             (let [flags (parse-flags access :class)
                        ;; ignore java.lang.Object on interfaces to match reflection
-                       superName (if (and (flags :interface)
-                                          (= superName "java/lang/Object"))
-                                   nil
-                                   superName)
-                       bases (->> (cons superName interfaces)
-                                  (remove nil?)
-                                  (map internal-name->class-symbol)
-                                  (map symbol)
-                                  (set)
-                                  (not-empty))]
-                   (swap! result merge {:bases bases 
-                                        :flags flags})))
-          (visitAnnotation [desc visible])
-          (visitSource [name debug])
-          (visitInnerClass [name outerName innerName access])
-          (visitField [access name desc signature value]
-                      (swap! result update :members (fnil conj #{})
-                             (Field. (symbol name)
-                                     (field-descriptor->class-symbol desc)
+                   superName (if (and (flags :interface)
+                                      (= superName "java/lang/Object"))
+                               nil
+                               superName)
+                   bases (->> (cons superName interfaces)
+                              (remove nil?)
+                              (map internal-name->class-symbol)
+                              (map symbol)
+                              (set)
+                              (not-empty))]
+               (swap! result merge {:bases bases
+                                    :flags flags})))
+           (visitAnnotation [desc visible])
+           (visitSource [name debug])
+           (visitInnerClass [name outerName innerName access])
+           (visitField [access name desc signature value]
+             (swap! result update :members (fnil conj #{})
+                    (Field. (symbol name)
+                            (field-descriptor->class-symbol desc)
+                            class-symbol
+                            (parse-flags access :field)))
+             nil)
+           (visitMethod [access name desc signature exceptions]
+             (when-not (= name "<clinit>")
+               (let [constructor? (= name "<init>")]
+                 (swap! result update :members (fnil conj #{})
+                        (let [{:keys [parameter-types return-type]} (parse-method-descriptor desc)
+                              flags (parse-flags access :method)]
+                          (if constructor?
+                            (Constructor. class-symbol
+                                          class-symbol
+                                          parameter-types
+                                          (vec (map internal-name->class-symbol exceptions))
+                                          flags)
+                            (Method. (symbol name)
+                                     return-type
                                      class-symbol
-                                     (parse-flags access :field)))
-                      nil)
-          (visitMethod [access name desc signature exceptions]
-                       (when-not (= name "<clinit>")
-                         (let [constructor? (= name "<init>")]
-                           (swap! result update :members (fnil conj #{})
-                                  (let [{:keys [parameter-types return-type]} (parse-method-descriptor desc)
-                                        flags (parse-flags access :method)]
-                                    (if constructor?
-                                      (Constructor. class-symbol
-                                                    class-symbol
-                                                    parameter-types
-                                                    (vec (map internal-name->class-symbol exceptions))
-                                                    flags)
-                                      (Method. (symbol name)
-                                               return-type
-                                               class-symbol
-                                               parameter-types
-                                               (vec (map internal-name->class-symbol exceptions))
-                                               flags))))))
-                       nil)
-          (visitEnd [])
-          ) 0)
+                                     parameter-types
+                                     (vec (map internal-name->class-symbol exceptions))
+                                     flags))))))
+             nil)
+           (visitEnd [])) 0)
         @result))))
 

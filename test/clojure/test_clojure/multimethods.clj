@@ -1,25 +1,25 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-; Author: Frantisek Sodomka, Robert Lachlan
+;; Author: Frantisek Sodomka, Robert Lachlan
 
 (ns clojure.test-clojure.multimethods
   (:use clojure.test [clojure.test-helper :only (with-var-roots)])
   (:require [clojure.set :as set]))
 
-; http://clojure.org/multimethods
+;; http://clojure.org/multimethods
 
-; defmulti
-; defmethod
-; remove-method
-; prefer-method
-; methods
-; prefers
+;; defmulti
+;; defmethod
+;; remove-method
+;; prefer-method
+;; methods
+;; prefers
 
 (defmacro for-all
   [& args]
@@ -55,37 +55,37 @@
   (let [tags (hierarchy-tags h)]
     (testing "ancestors are the transitive closure of parents"
       (for-all [tag tags]
-        (is (= (transitive-closure tag #(parents h %))
-               (or (ancestors h tag) #{})))))
+               (is (= (transitive-closure tag #(parents h %))
+                      (or (ancestors h tag) #{})))))
     (testing "ancestors are transitive"
       (for-all [tag tags]
-        (is (= (transitive-closure tag #(ancestors h %))
-               (or (ancestors h tag) #{})))))
+               (is (= (transitive-closure tag #(ancestors h %))
+                      (or (ancestors h tag) #{})))))
     (testing "tag descendants are transitive"
       (for-all [tag tags]
-        (is (= (transitive-closure tag #(tag-descendants h %))
-               (or (tag-descendants h tag) #{})))))
+               (is (= (transitive-closure tag #(tag-descendants h %))
+                      (or (tag-descendants h tag) #{})))))
     (testing "a tag isa? all of its parents"
       (for-all [tag tags
-               :let [parents (parents h tag)]
-               parent parents]
-        (is (isa? h tag parent))))
+                :let [parents (parents h tag)]
+                parent parents]
+               (is (isa? h tag parent))))
     (testing "a tag isa? all of its ancestors"
       (for-all [tag tags
-               :let [ancestors (ancestors h tag)]
-               ancestor ancestors]
-        (is (isa? h tag ancestor))))
+                :let [ancestors (ancestors h tag)]
+                ancestor ancestors]
+               (is (isa? h tag ancestor))))
     (testing "all my descendants have me as an ancestor"
       (for-all [tag tags
-               :let [descendants (descendants h tag)]
+                :let [descendants (descendants h tag)]
                 descendant descendants]
-        (is (isa? h descendant tag))))
+               (is (isa? h descendant tag))))
     (testing "there are no cycles in parents"
       (for-all [tag tags]
-        (is (not (contains? (transitive-closure tag #(parents h %)) tag)))))
+               (is (not (contains? (transitive-closure tag #(parents h %)) tag)))))
     (testing "there are no cycles in descendants"
       (for-all [tag tags]
-        (is (not (contains? (descendants h tag) tag)))))))
+               (is (not (contains? (descendants h tag) tag)))))))
 
 (def family
   (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
@@ -98,10 +98,10 @@
 (deftest cycles-are-forbidden
   (testing "a tag cannot be its own parent"
     (is (thrown-with-msg? Throwable #"\(not= tag parent\)"
-          (derive family ::child ::child))))
+                          (derive family ::child ::child))))
   (testing "a tag cannot be its own ancestor"
     (is (thrown-with-msg? Throwable #"Cyclic derivation: :clojure.test-clojure.multimethods/child has :clojure.test-clojure.multimethods/ancestor-1 as ancestor"
-          (derive family ::ancestor-1 ::child)))))
+                          (derive family ::ancestor-1 ::child)))))
 
 (deftest using-diamond-inheritance
   (let [diamond (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
@@ -152,11 +152,11 @@
       (is (nil? (ancestors ::manx))))))
 
 #_(defmacro for-all
-  "Better than the actual for-all, if only it worked."
-  [& args]
-  `(reduce
-    #(and %1 %2)
-    (map true? (for ~@args))))
+    "Better than the actual for-all, if only it worked."
+    [& args]
+    `(reduce
+      #(and %1 %2)
+      (map true? (for ~@args))))
 
 (deftest basic-multimethod-test
   (testing "Check basic dispatch"
@@ -187,7 +187,7 @@
     (is (= :a-string (foo "bar")))))
 
 (deftest preferences-multimethod-test
- (testing "Multiple method match dispatch error is caught"
+  (testing "Multiple method match dispatch error is caught"
     ;; Example from the multimethod docs.
     (derive ::rect ::shape)
     (defmulti bar (fn [x y] [x y]))
@@ -195,13 +195,13 @@
     (defmethod bar [::shape ::rect] [x y] :shape-rect)
     (is (thrown? java.lang.IllegalArgumentException
                  (bar ::rect ::rect))))
- (testing "The prefers method returns empty table w/ no prefs"
-   (is (= {} (prefers bar))))
- (testing "Adding a preference to resolve it dispatches correctly"
-   (prefer-method bar [::rect ::shape] [::shape ::rect])
-   (is (= :rect-shape (bar ::rect ::rect))))
- (testing "The prefers method now returns the correct table"
-   (is (= {[::rect ::shape] #{[::shape ::rect]}} (prefers bar)))))
+  (testing "The prefers method returns empty table w/ no prefs"
+    (is (= {} (prefers bar))))
+  (testing "Adding a preference to resolve it dispatches correctly"
+    (prefer-method bar [::rect ::shape] [::shape ::rect])
+    (is (= :rect-shape (bar ::rect ::rect))))
+  (testing "The prefers method now returns the correct table"
+    (is (= {[::rect ::shape] #{[::shape ::rect]}} (prefers bar)))))
 
 (deftest remove-all-methods-test
   (testing "Core function remove-all-methods works"

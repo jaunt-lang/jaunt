@@ -1,12 +1,12 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-; Author: Stuart Halloway
+;; Author: Stuart Halloway
 
 (ns clojure.test-clojure.rt
   (:require clojure.set)
@@ -17,10 +17,10 @@
   [x]
   (with-out-str
     (try
-     (push-thread-bindings {#'clojure.core/print-initialized false})
-     (clojure.lang.RT/print x *out*)
-     (finally
-      (pop-thread-bindings)))))
+      (push-thread-bindings {#'clojure.core/print-initialized false})
+      (clojure.lang.RT/print x *out*)
+      (finally
+        (pop-thread-bindings)))))
 
 (deftest rt-print-prior-to-print-initialize
   (testing "pattern literals"
@@ -29,7 +29,7 @@
 (deftest error-messages
   (testing "binding a core var that already refers to something"
     (should-print-err-message
-     #"WARNING: prefers already refers to: #'clojure.core/prefers in namespace: .*\r?\n"
+     #"Warning: prefers already refers to: #'clojure.core/prefers in namespace: .*\r?\n"
      (defn prefers [] (throw (RuntimeException. "rebound!")))))
   (testing "reflection cannot resolve field"
     (should-print-err-message
@@ -78,7 +78,7 @@
 (deftest last-var-wins-for-core
   (testing "you can replace a core name, with warning"
     (let [ns (temp-ns)
-        replacement (gensym)]
+          replacement (gensym)]
       (with-err-string-writer (intern ns 'prefers replacement))
       (is (= replacement @('prefers (ns-publics ns))))))
   (testing "you can replace a name you defined before"
@@ -103,3 +103,34 @@
                    (.refer ns 'subset? #'clojure.set/intersection)))
       (is (nil? ('subset? (ns-publics ns))))
       (is (= #'clojure.set/subset? ('subset? (ns-refers ns)))))))
+
+(defmacro silenced [& forms]
+  `(binding [*err* (new java.io.StringWriter)]
+     ~@forms))
+
+(deftest var-meta-tests
+  (testing "Var.resetMeta should clear flags, getters"
+    (let [v (def a-test-v)]
+      (do (silenced
+           (.resetMeta v {}))
+          (is (.isPublic v))
+          (is (not (.isDynamic v)))
+          (is (not (.isMacro v))))
+
+      (do (silenced
+           (.resetMeta v {:private true}))
+          (is (not (.isPublic v)))
+          (is (not (.isDynamic v)))
+          (is (not (.isMacro v))))
+
+      (do (silenced
+           (.resetMeta v {:dynamic true}))
+          (is (.isPublic v))
+          (is (.isDynamic v))
+          (is (not (.isMacro v))))
+
+      (do (silenced
+           (.resetMeta v {:macro true}))
+          (is (.isPublic v))
+          (is (not (.isDynamic v)))
+          (is (.isMacro v))))))

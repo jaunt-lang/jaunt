@@ -1,3 +1,42 @@
 machine:
   java:
     version: oraclejdk8
+  environment:
+    _JAVA_OPTIONS: -Xmx2g
+
+dependencies:
+  cache_directories:
+    - ~/bin
+  pre:
+    - bash etc/bin/make-astyle.sh
+    - bash etc/bin/circle-deps.sh
+  post:
+    - mvn dependency:resolve-plugins
+
+test:
+  pre:
+    - bash etc/bin/check-whitespace.sh
+    - bash etc/bin/check-changelog.sh
+    - lein cljfmt check
+    - grep -Hnr '[[:blank:]]\+$' src test && exit 1 || exit 0
+  override:
+    - bash etc/bin/run-tests.sh:
+        parallel: true
+  post:
+    - ant jar
+
+deployment:
+  staging:
+    branch: /develop/
+    commands:
+      - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)-SNAPSHOT
+      - (( $CIRCLE_NODE_INDEX == 0 )) && mvn -Dmaven.test.skip=true -s settings.xml deploy
+  release:
+    tag: /v[0-9]+(\.[0-9]+)*/
+    commands:
+      - mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)
+      - (( $CIRCLE_NODE_INDEX == 0 )) && mvn -Dmaven.test.skip=true -s settings.xml deploy
+
+notify:
+  webhooks:
+    - url: https://webhooks.gitter.im/e/568057f9a2c7ed9fb7f1

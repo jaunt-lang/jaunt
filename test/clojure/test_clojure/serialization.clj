@@ -1,10 +1,10 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
 ;; Author: Chas Emerick
 ;;         cemerick@snowtide.com
@@ -12,7 +12,7 @@
 (ns clojure.test-clojure.serialization
   (:use clojure.test)
   (:import (java.io ObjectOutputStream ObjectInputStream
-             ByteArrayOutputStream ByteArrayInputStream)))
+                    ByteArrayOutputStream ByteArrayInputStream)))
 
 (defn- serialize
   "Serializes a single object, returning a byte array."
@@ -35,17 +35,17 @@
 (defn- build-via-transient
   [coll]
   (persistent!
-    (reduce conj! (transient coll) (map vec (partition 2 (range 1000))))))
+   (reduce conj! (transient coll) (map vec (partition 2 (range 1000))))))
 
 (defn- roundtrip
   [v]
   (let [rt (-> v serialize deserialize)
         rt-seq (-> v seq serialize deserialize)]
     (and (= v rt)
-      (= (seq v) (seq rt))
-      (= (seq v) rt-seq)
-      (= (hash v) (hash rt))
-      (= (.hashCode v) (.hashCode rt)))))
+         (= (seq v) (seq rt))
+         (= (seq v) rt-seq)
+         (= (hash v) (hash rt))
+         (= (.hashCode v) (.hashCode rt)))))
 
 (deftest sequable-serialization
   (are [val] (roundtrip val)
@@ -143,7 +143,7 @@
 (deftest interned-serializations
   (are [v] (identical? v (-> v serialize deserialize))
     clojure.lang.RT/DEFAULT_COMPARATOR
-    
+
     ; namespaces just get deserialized back into the same-named ns in the present runtime
     ; (they're referred to by defrecord instances)
     *ns*))

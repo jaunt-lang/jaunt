@@ -17,7 +17,9 @@ import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class Namespace extends AReference implements Serializable {
+public class Namespace
+  extends AReference
+  implements Serializable, Named {
   final public Symbol name;
   transient final AtomicReference<IPersistentMap> mappings = new AtomicReference<IPersistentMap>();
   transient final AtomicReference<IPersistentMap> aliases = new AtomicReference<IPersistentMap>();
@@ -26,6 +28,14 @@ public class Namespace extends AReference implements Serializable {
 
   public String toString() {
     return name.toString();
+  }
+
+  public String getName() {
+    return name.toString();
+  }
+
+  public String getNamespace() {
+    return null;
   }
 
   Namespace(Symbol name) {
@@ -37,10 +47,6 @@ public class Namespace extends AReference implements Serializable {
 
   public static ISeq all() {
     return RT.seq(namespaces.values());
-  }
-
-  public Symbol getName() {
-    return name;
   }
 
   public IPersistentMap getMappings() {
@@ -89,7 +95,7 @@ public class Namespace extends AReference implements Serializable {
         throw new IllegalStateException(sym + " already refers to: " + o + " in namespace: " + name);
       }
     }
-    RT.errPrintWriter().println("WARNING: " + sym + " already refers to: " + o + " in namespace: " + name
+    RT.errPrintWriter().println("Warning: " + sym + " already refers to: " + o + " in namespace: " + name
                                 + ", being replaced by: " + v);
   }
 

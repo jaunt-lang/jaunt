@@ -3,17 +3,17 @@
 
 (deftest popping-off
   (testing "across a node boundary"
-    (are [n] 
-      (let [v (-> (range n) vec)]
-        (= (subvec v 0 (- n 2)) (-> v transient pop! pop! persistent!)))
+    (are [n]
+         (let [v (-> (range n) vec)]
+           (= (subvec v 0 (- n 2)) (-> v transient pop! pop! persistent!)))
       33 (+ 32 (inc (* 32 32))) (+ 32 (inc (* 32 32 32)))))
   (testing "off the end"
     (is (thrown-with-msg? IllegalStateException #"Can't pop empty vector"
-          (-> [] transient pop!))))
+                          (-> [] transient pop!))))
   (testing "copying array from a non-editable when put in tail position")
-    (is (= 31 (let [pv (vec (range 34))]
-                (-> pv transient pop! pop! pop! (conj! 42))
-                (nth pv 31)))))
+  (is (= 31 (let [pv (vec (range 34))]
+              (-> pv transient pop! pop! pop! (conj! 42))
+              (nth pv 31)))))
 
 (defn- hash-obj [hash]
   (reify Object (hashCode [this] hash)))
@@ -37,7 +37,7 @@
     (let [a (reify Object (hashCode [_] 42))
           b (reify Object (hashCode [_] 42))]
       (is (= (-> #{a b} transient (disj! a) persistent! (conj a))
-            (-> #{a b} transient (disj! a) persistent! (conj a)))))))
+             (-> #{a b} transient (disj! a) persistent! (conj a)))))))
 
 (deftest transient-mod-after-persistent
   (let [v [1 2 3]

@@ -12,6 +12,7 @@
 
 (deftest test-source
   (is (= "(defn foo [])" (source-fn 'clojure.test-clojure.repl.example/foo)))
+  (is (= "(defn qux [] ::s/foo)" (source-fn 'clojure.test-clojure.repl.example/qux)))
   (is (= (platform-newlines "(defn foo [])\n") (with-out-str (source clojure.test-clojure.repl.example/foo))))
   (is (nil? (source-fn 'non-existent-fn))))
 
@@ -23,8 +24,8 @@
 
 (deftest test-dir
   (is (thrown? Exception (dir-fn 'non-existent-ns)))
-  (is (= '[bar foo] (dir-fn 'clojure.test-clojure.repl.example)))
-  (is (= (platform-newlines "bar\nfoo\n") (with-out-str (dir clojure.test-clojure.repl.example)))))
+  (is (= '[bar foo qux] (dir-fn 'clojure.test-clojure.repl.example)))
+  (is (= (platform-newlines "bar\nfoo\nqux\n") (with-out-str (dir clojure.test-clojure.repl.example)))))
 
 (deftest test-apropos
   (testing "with a regular expression"
@@ -42,16 +43,15 @@
     (is (some #{'clojure.core/defmacro} (apropos 'efmac)))
     (is (= [] (apropos 'nothing-has-this-name)))))
 
-
-(defmacro call-ns 
+(defmacro call-ns
   "Call ns with a unique namespace name. Return the result of calling ns"
   []  `(ns a#))
-(defmacro call-ns-sym 
+(defmacro call-ns-sym
   "Call ns wih a unique namespace name. Return the namespace symbol."
   [] `(do (ns a#) 'a#))
 
 (deftest test-dynamic-ns
   (testing "a call to ns returns nil"
-   (is (= nil (call-ns))))
+    (is (= nil (call-ns))))
   (testing "requiring a dynamically created ns should not throw an exception"
     (is (= nil (let [a (call-ns-sym)] (require a))))))

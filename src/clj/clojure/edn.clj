@@ -1,14 +1,15 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "edn reading."
-      :author "Rich Hickey"}
-  clojure.edn
+(ns clojure.edn
+  {:doc    "edn reading."
+   :author "Rich Hickey"
+   :added  "0.1.0"}
   (:refer-clojure :exclude [read read-string]))
 
 (defn read
@@ -25,14 +26,14 @@
               When not supplied, only the default-data-readers will be used.
   :default - A function of two args, that will, if present and no reader is found for a tag,
              be called with the tag and the value."
-  
-  {:added "1.5"}
+
+  {:added "0.1.0"}
   ([]
    (read *in*))
   ([stream]
    (read {} stream))
   ([opts stream]
-     (clojure.lang.EdnReader/read stream opts)))
+   (clojure.lang.EdnReader/read stream opts)))
 
 (defn read-string
   "Reads one object from the string s. Returns nil when s is nil or empty.
@@ -41,6 +42,6 @@
   http://edn-format.org
 
   opts is a map as per clojure.edn/read"
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([s] (read-string {:eof nil} s))
   ([opts s] (when s (clojure.lang.EdnReader/readString s opts))))

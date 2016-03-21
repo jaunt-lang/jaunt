@@ -1,18 +1,17 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc
-      "A library for reduction and parallel folding. Alpha and subject
-      to change.  Note that fold and its derivatives require Java 7+ or
-      Java 6 + jsr166y.jar for fork/join support. See Clojure's pom.xml for the
-      dependency info."
-      :author "Rich Hickey"}
-  clojure.core.reducers
+(ns clojure.core.reducers
+  "A library for reduction and parallel folding. Alpha and subject to change.
+  Note that fold and its derivatives require Java 7+ or Java 6 + jsr166y.jar
+  for fork/join support. See Clojure's pom.xml for the dependency info."
+  {:authors ["Rich Hickey <richhickey@gmail.com>"]
+   :added   "0.1.0"}
   (:refer-clojure :exclude [reduce map mapcat filter remove take take-while drop flatten cat])
   (:require [clojure.walk :as walk]))
 
@@ -74,9 +73,9 @@
      Maps are reduced with reduce-kv"
   ([f coll] (reduce f (f) coll))
   ([f init coll]
-     (if (instance? java.util.Map coll)
-       (clojure.core.protocols/kv-reduce coll f init)
-       (clojure.core.protocols/coll-reduce coll f init))))
+   (if (instance? java.util.Map coll)
+     (clojure.core.protocols/kv-reduce coll f init)
+     (clojure.core.protocols/coll-reduce coll f init))))
 
 (defprotocol CollFold
   (coll-fold [coll n combinef reducef]))
@@ -91,43 +90,43 @@
   arguments, (combinef) must produce its identity element. These
   operations may be performed in parallel, but the results will
   preserve order."
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([reducef coll] (fold reducef reducef coll))
   ([combinef reducef coll] (fold 512 combinef reducef coll))
   ([n combinef reducef coll]
-     (coll-fold coll n combinef reducef)))
+   (coll-fold coll n combinef reducef)))
 
 (defn reducer
   "Given a reducible collection, and a transformation function xf,
   returns a reducible collection, where any supplied reducing
   fn will be transformed by xf. xf is a function of reducing fn to
   reducing fn."
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([coll xf]
-     (reify
-      clojure.core.protocols/CollReduce
-      (coll-reduce [this f1]
-                   (clojure.core.protocols/coll-reduce this f1 (f1)))
-      (coll-reduce [_ f1 init]
-                   (clojure.core.protocols/coll-reduce coll (xf f1) init)))))
+   (reify
+     clojure.core.protocols/CollReduce
+     (coll-reduce [this f1]
+       (clojure.core.protocols/coll-reduce this f1 (f1)))
+     (coll-reduce [_ f1 init]
+       (clojure.core.protocols/coll-reduce coll (xf f1) init)))))
 
 (defn folder
   "Given a foldable collection, and a transformation function xf,
   returns a foldable collection, where any supplied reducing
   fn will be transformed by xf. xf is a function of reducing fn to
   reducing fn."
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([coll xf]
-     (reify
-      clojure.core.protocols/CollReduce
-      (coll-reduce [_ f1]
-                   (clojure.core.protocols/coll-reduce coll (xf f1) (f1)))
-      (coll-reduce [_ f1 init]
-                   (clojure.core.protocols/coll-reduce coll (xf f1) init))
+   (reify
+     clojure.core.protocols/CollReduce
+     (coll-reduce [_ f1]
+       (clojure.core.protocols/coll-reduce coll (xf f1) (f1)))
+     (coll-reduce [_ f1 init]
+       (clojure.core.protocols/coll-reduce coll (xf f1) init))
 
-      CollFold
-      (coll-fold [_ n combinef reducef]
-                 (coll-fold coll n combinef (xf reducef))))))
+     CollFold
+     (coll-fold [_ n combinef reducef]
+       (coll-fold coll n combinef (xf reducef))))))
 
 (defn- do-curried
   [name doc meta args body]
@@ -160,47 +159,47 @@
 
 (defcurried map
   "Applies f to every value in the reduction of coll. Foldable."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [f coll]
   (folder coll
-   (fn [f1]
-     (rfn [f1 k]
-          ([ret k v]
-             (f1 ret (f k v)))))))
+          (fn [f1]
+            (rfn [f1 k]
+              ([ret k v]
+               (f1 ret (f k v)))))))
 
 (defcurried mapcat
   "Applies f to every value in the reduction of coll, concatenating the result
   colls of (f val). Foldable."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [f coll]
   (folder coll
-   (fn [f1]
-     (let [f1 (fn
-                ([ret v]
-                  (let [x (f1 ret v)] (if (reduced? x) (reduced x) x)))
+          (fn [f1]
+            (let [f1 (fn
+                       ([ret v]
+                        (let [x (f1 ret v)] (if (reduced? x) (reduced x) x)))
+                       ([ret k v]
+                        (let [x (f1 ret k v)] (if (reduced? x) (reduced x) x))))]
+              (rfn [f1 k]
                 ([ret k v]
-                  (let [x (f1 ret k v)] (if (reduced? x) (reduced x) x))))]
-       (rfn [f1 k]
-            ([ret k v]
-               (reduce f1 ret (f k v))))))))
+                 (reduce f1 ret (f k v))))))))
 
 (defcurried filter
   "Retains values in the reduction of coll for which (pred val)
   returns logical true. Foldable."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [pred coll]
   (folder coll
-   (fn [f1]
-     (rfn [f1 k]
-          ([ret k v]
-             (if (pred k v)
-               (f1 ret k v)
-               ret))))))
+          (fn [f1]
+            (rfn [f1 k]
+              ([ret k v]
+               (if (pred k v)
+                 (f1 ret k v)
+                 ret))))))
 
 (defcurried remove
   "Removes values in the reduction of coll for which (pred val)
   returns logical true. Foldable."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [pred coll]
   (filter (complement pred) coll))
 
@@ -208,56 +207,56 @@
   "Takes any nested combination of sequential things (lists, vectors,
   etc.) and returns their contents as a single, flat foldable
   collection."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [coll]
   (folder coll
-   (fn [f1]
-     (fn
-       ([] (f1))
-       ([ret v]
-          (if (sequential? v)
-            (clojure.core.protocols/coll-reduce (flatten v) f1 ret)
-            (f1 ret v)))))))
+          (fn [f1]
+            (fn
+              ([] (f1))
+              ([ret v]
+               (if (sequential? v)
+                 (clojure.core.protocols/coll-reduce (flatten v) f1 ret)
+                 (f1 ret v)))))))
 
 (defcurried take-while
   "Ends the reduction of coll when (pred val) returns logical false."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [pred coll]
   (reducer coll
-   (fn [f1]
-     (rfn [f1 k]
-          ([ret k v]
-             (if (pred k v)
-               (f1 ret k v)
-               (reduced ret)))))))
+           (fn [f1]
+             (rfn [f1 k]
+               ([ret k v]
+                (if (pred k v)
+                  (f1 ret k v)
+                  (reduced ret)))))))
 
 (defcurried take
   "Ends the reduction of coll after consuming n values."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [n coll]
   (reducer coll
-   (fn [f1]
-     (let [cnt (atom n)]
-       (rfn [f1 k]
-         ([ret k v]
-            (swap! cnt dec)
-            (if (neg? @cnt)
-              (reduced ret)
-              (f1 ret k v))))))))
+           (fn [f1]
+             (let [cnt (atom n)]
+               (rfn [f1 k]
+                 ([ret k v]
+                  (swap! cnt dec)
+                  (if (neg? @cnt)
+                    (reduced ret)
+                    (f1 ret k v))))))))
 
 (defcurried drop
   "Elides the first n values from the reduction of coll."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [n coll]
   (reducer coll
-   (fn [f1]
-     (let [cnt (atom n)]
-       (rfn [f1 k]
-         ([ret k v]
-            (swap! cnt dec)
-            (if (neg? @cnt)
-              (f1 ret k v)
-              ret)))))))
+           (fn [f1]
+             (let [cnt (atom n)]
+               (rfn [f1 k]
+                 ([ret k v]
+                  (swap! cnt dec)
+                  (if (neg? @cnt)
+                    (f1 ret k v)
+                    ret)))))))
 
 ;;do not construct this directly, use cat
 (deftype Cat [cnt left right]
@@ -270,20 +269,20 @@
   clojure.core.protocols/CollReduce
   (coll-reduce [this f1] (clojure.core.protocols/coll-reduce this f1 (f1)))
   (coll-reduce
-   [_  f1 init]
-   (clojure.core.protocols/coll-reduce
-    right f1
-    (clojure.core.protocols/coll-reduce left f1 init)))
+    [_  f1 init]
+    (clojure.core.protocols/coll-reduce
+     right f1
+     (clojure.core.protocols/coll-reduce left f1 init)))
 
   CollFold
   (coll-fold
-   [_ n combinef reducef]
-   (fjinvoke
-    (fn []
-      (let [rt (fjfork (fjtask #(coll-fold right n combinef reducef)))]
-        (combinef
-         (coll-fold left n combinef reducef)
-         (fjjoin rt)))))))
+    [_ n combinef reducef]
+    (fjinvoke
+     (fn []
+       (let [rt (fjfork (fjtask #(coll-fold right n combinef reducef)))]
+         (combinef
+          (coll-fold left n combinef reducef)
+          (fjjoin rt)))))))
 
 (defn cat
   "A high-performance combining fn that yields the catenation of the
@@ -292,28 +291,28 @@
   and counted. The single argument version will build a combining fn
   with the supplied identity constructor. Tests for identity
   with (zero? (count x)). See also foldcat."
-  {:added "1.5"}
+  {:added "0.1.0"}
   ([] (java.util.ArrayList.))
   ([ctor]
-     (fn
-       ([] (ctor))
-       ([left right] (cat left right))))
+   (fn
+     ([] (ctor))
+     ([left right] (cat left right))))
   ([left right]
-     (cond
-      (zero? (count left)) right
-      (zero? (count right)) left
-      :else
-      (Cat. (+ (count left) (count right)) left right))))
+   (cond
+     (zero? (count left)) right
+     (zero? (count right)) left
+     :else
+     (Cat. (+ (count left) (count right)) left right))))
 
 (defn append!
   ".adds x to acc and returns acc"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [^java.util.Collection acc x]
   (doto acc (.add x)))
 
 (defn foldcat
   "Equivalent to (fold cat append! coll)"
-  {:added "1.5"}
+  {:added "0.1.0"}
   [coll]
   (fold cat append! coll))
 
@@ -321,7 +320,7 @@
   "Builds a combining fn out of the supplied operator and identity
   constructor. op must be associative and ctor called with no args
   must return an identity value for it."
-  {:added "1.5"}
+  {:added "0.1.0"}
   [op ctor]
   (fn m
     ([] (ctor))
@@ -331,37 +330,37 @@
 (defn- foldvec
   [v n combinef reducef]
   (cond
-   (empty? v) (combinef)
-   (<= (count v) n) (reduce reducef (combinef) v)
-   :else
-   (let [split (quot (count v) 2)
-         v1 (subvec v 0 split)
-         v2 (subvec v split (count v))
-         fc (fn [child] #(foldvec child n combinef reducef))]
-     (fjinvoke
-      #(let [f1 (fc v1)
-             t2 (fjtask (fc v2))]
-         (fjfork t2)
-         (combinef (f1) (fjjoin t2)))))))
+    (empty? v) (combinef)
+    (<= (count v) n) (reduce reducef (combinef) v)
+    :else
+    (let [split (quot (count v) 2)
+          v1 (subvec v 0 split)
+          v2 (subvec v split (count v))
+          fc (fn [child] #(foldvec child n combinef reducef))]
+      (fjinvoke
+       #(let [f1 (fc v1)
+              t2 (fjtask (fc v2))]
+          (fjfork t2)
+          (combinef (f1) (fjjoin t2)))))))
 
 (extend-protocol CollFold
- nil
- (coll-fold
-  [coll n combinef reducef]
-  (combinef))
+  nil
+  (coll-fold
+    [coll n combinef reducef]
+    (combinef))
 
- Object
- (coll-fold
-  [coll n combinef reducef]
+  Object
+  (coll-fold
+    [coll n combinef reducef]
   ;;can't fold, single reduce
-  (reduce reducef (combinef) coll))
+    (reduce reducef (combinef) coll))
 
- clojure.lang.IPersistentVector
- (coll-fold
-  [v n combinef reducef]
-  (foldvec v n combinef reducef))
+  clojure.lang.IPersistentVector
+  (coll-fold
+    [v n combinef reducef]
+    (foldvec v n combinef reducef))
 
- clojure.lang.PersistentHashMap
- (coll-fold
-  [m n combinef reducef]
-  (.fold m n combinef reducef fjinvoke fjtask fjfork fjjoin)))
+  clojure.lang.PersistentHashMap
+  (coll-fold
+    [m n combinef reducef]
+    (.fold m n combinef reducef fjinvoke fjtask fjfork fjjoin)))

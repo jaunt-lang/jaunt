@@ -1,14 +1,15 @@
-;   Copyright (c) Rich Hickey. All rights reserved.
-;   The use and distribution terms for this software are covered by the
-;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
-;   which can be found in the file epl-v10.html at the root of this distribution.
-;   By using this software in any fashion, you are agreeing to be bound by
-;   the terms of this license.
-;   You must not remove this notice, or any other, from this software.
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "Socket server support"
-      :author "Alex Miller"}
-  clojure.core.server
+(ns clojure.core.server
+  "Socket server support"
+  {:authors ["Alex Miller <alex.miller@cognitect.com>"]
+   :added   "0.1.0"}
   (:require [clojure.string :as str]
             [clojure.edn :as edn]
             [clojure.main :as m])
@@ -35,8 +36,8 @@
 (defmacro ^:private thread
   [^String name daemon & body]
   `(doto (Thread. (fn [] ~@body) ~name)
-    (.setDaemon ~daemon)
-    (.start)))
+     (.setDaemon ~daemon)
+     (.start)))
 
 (defn- required
   "Throw if opts does not contain prop."
@@ -95,8 +96,8 @@
          :or {bind-err true
               server-daemon true
               client-daemon true}} opts
-         address (InetAddress/getByName address)  ;; nil returns loopback
-         socket (ServerSocket. port 0 address)]
+        address (InetAddress/getByName address)  ;; nil returns loopback
+        socket (ServerSocket. port 0 address)]
     (with-lock lock
       (alter-var-root #'servers assoc name {:name name, :socket socket, :sessions {}}))
     (thread
@@ -144,12 +145,12 @@
   "Parse clojure.server.* from properties to produce a map of server configs."
   [props]
   (reduce
-    (fn [acc [^String k ^String v]]
-      (let [[k1 k2 k3] (str/split k #"\.")]
-        (if (and (= k1 "clojure") (= k2 "server"))
-          (conj acc (merge {:name k3} (edn/read-string v)))
-          acc)))
-    [] props))
+   (fn [acc [^String k ^String v]]
+     (let [[k1 k2 k3] (str/split k #"\.")]
+       (if (and (= k1 "clojure") (= k2 "server"))
+         (conj acc (merge {:name k3} (edn/read-string v)))
+         acc)))
+   [] props))
 
 (defn start-servers
   "Start all servers specified in the system properties."
@@ -167,7 +168,7 @@
   "Enhanced :read hook for repl supporting :repl/quit."
   [request-prompt request-exit]
   (or ({:line-start request-prompt :stream-end request-exit}
-        (m/skip-whitespace *in*))
+       (m/skip-whitespace *in*))
       (let [input (read {:read-cond :allow} *in*)]
         (m/skip-if-eol *in*)
         (case input
@@ -178,5 +179,5 @@
   "REPL with predefined hooks for attachable socket server."
   []
   (m/repl
-    :init repl-init
-    :read repl-read))
+   :init repl-init
+   :read repl-read))
