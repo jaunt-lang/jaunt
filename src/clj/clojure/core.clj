@@ -155,12 +155,40 @@
     (. clojure.lang.RT (seq coll))))
 
 (def
+  ^{:arglists '(^clojure.lang.ISeq [coll])
+    :doc      "Returns true if coll has no items - same as(not (seq coll)). Please use the idiom (seq x) rather than (not (empty? x))"
+    :tag      Boolean
+    :added    "0.1.0"
+    :static   true}
+  empty?
+  (fn ^:static  [coll]
+    (if (seq coll) false true)))
+
+(def
   ^{:arglists '([^Class c x])
     :doc      "Evaluates x and tests if it is an instance of the class c. Returns true or false"
     :added    "0.1.0"}
   instance?
   (fn instance? [^Class c x]
     (. c (isInstance x))))
+
+(def
+  ^{:arglists '([x])
+    :doc      "Returns true if x implements IPersistentCollection"
+    :added    "0.1.0"
+    :static   true}
+  coll?
+  (fn ^:static coll? [x]
+    (instance? clojure.lang.IPersistentCollection x)))
+
+(def
+  ^{:arglists '([x])
+    :doc      "Returns true if x implements IPersistentList"
+    :added    "0.1.0"
+    :static   true}
+  list?
+  (fn ^:static list? [x]
+    (instance? clojure.lang.IPersistentList x)))
 
 (def
   ^{:arglists '([x])
@@ -215,6 +243,15 @@
   var?
   (fn ^:static var? [x]
     (instance? clojure.lang.Var x)))
+
+(def
+  ^{:arglists '([coll])
+    :doc      "Returns true if coll implements Associative"
+    :added    "0.1.0"
+    :static   true}
+  associative?
+  (fn ^:static associative? [coll]
+    (instance? clojure.lang.Associative coll)))
 
 (def
   ^{:arglists '([map key val] [map key val & kvs])
@@ -6088,25 +6125,6 @@
   ([m k f x y z & more]
    (assoc m k (apply f (get m k) x y z more))))
 
-(defn empty?
-  "Returns true if coll has no items - same as (not (seq coll)).
-  Please use the idiom (seq x) rather than (not (empty? x))"
-  {:added "0.1.0"
-   :static true}
-  [coll] (not (seq coll)))
-
-(defn coll?
-  "Returns true if x implements IPersistentCollection"
-  {:added "0.1.0"
-   :static true}
-  [x] (instance? clojure.lang.IPersistentCollection x))
-
-(defn list?
-  "Returns true if x implements IPersistentList"
-  {:added "0.1.0"
-   :static true}
-  [x] (instance? clojure.lang.IPersistentList x))
-
 (defn ifn?
   "Returns true if x implements IFn. Note that many data structures
   (e.g. sets and maps) implement IFn"
@@ -6119,12 +6137,6 @@
   {:added "0.1.0"
    :static true}
   [x] (instance? clojure.lang.Fn x))
-
-(defn associative?
-  "Returns true if coll implements Associative"
-  {:added "0.1.0"
-   :static true}
-  [coll] (instance? clojure.lang.Associative coll))
 
 (defn sequential?
   "Returns true if coll implements Sequential"
