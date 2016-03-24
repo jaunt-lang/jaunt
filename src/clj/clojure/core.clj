@@ -5975,14 +5975,18 @@
   (apply load-libs :require args))
 
 (defn use
-  "Like 'require, but also refers to each lib's namespace using
-  clojure.core/refer. Use :use in the ns macro in preference to calling
-  this directly.
+  "DEPRECATED: Unrestricted referrals are difficult to reason about and should be avoided in favor
+  of qualified imports. Restricted and unrestricted referrals can both be achieved via require, so
+  use has no special value.
 
-  'use accepts additional options in libspecs: :exclude, :only, :rename.
-  The arguments and semantics for :exclude, :only, and :rename are the same
-  as those documented for clojure.core/refer."
-  {:added "0.1.0"}
+  Like 'require, but also refers to each lib's namespace using clojure.core/refer. Use :use in the
+  ns macro in preference to calling this directly.
+
+  'use accepts additional options in libspecs: :exclude, :only, :rename.  The arguments and
+  semantics for :exclude, :only, and :rename are the same as those documented for
+  clojure.core/refer."
+  {:added      "0.1.0"
+   :deprecated "0.2.0"}
   [& args] (apply load-libs :require :use args))
 
 (defn loaded-libs
