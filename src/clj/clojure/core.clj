@@ -4594,6 +4594,21 @@
                   (let ~(vec (interleave bs gs))
                     ~@body)))))))
 
+(defn sift
+  "Takes a predicate and a seq, returns two seqs being respectively the elements for which pred
+  returned truthy and falsey."
+  {:added  "0.2.0"
+   :static true}
+  [pred coll]
+  (loop [t                    []
+         f                    []
+         [e & coll' :as coll] coll]
+    (if (empty? coll)
+      [t f]
+      (if (pred e)
+        (recur (conj t e) f coll')
+        (recur t (conj f e) coll')))))
+
 (defmacro when-first
   "bindings => x xs
 
