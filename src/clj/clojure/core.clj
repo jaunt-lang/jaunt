@@ -6026,6 +6026,113 @@
   [& args]
   (apply load-libs :require args))
 
+;; (use 'sym)
+;; (use '[sym])
+;; (use '[sym c1 c2 c3])
+;; (use '[sym.c1 :as c])
+;; (use '[clojure.core.match :only [match]])
+;; (use '[clojure.core.logic :exclude [is] :as l])
+;; (use '[clojure.string :only (split) :rename {split spl}])
+
+(defn- collect-nss [spec]
+  (if (symbol? spec)
+    [spec]
+    (let [[prefix & nss] (take-while symbol? spec)]
+      (if-not (empty? nss)
+        (map #(symbol (str (name prefix) "." (name %))) nss)
+        [prefix]))))
+
+(defn- collect-kwopt [kw spec]
+  (when-not (symbol? spec)
+    (when-let [tail (->> spec
+                         (drop-while symbol?)
+                         (drop-while #(not= % kw)))]
+      (let [[_ opt & tail] tail]
+        (when (some #{kw} tail)
+          (. (errwriter)
+             (println (format "Warning: multiple %s clauses parsing use (%s), first one wins" opt spec))))
+        opt))))
+
+(defn- collect-alias [spec]
+  (when-let [alias (collect-kwopt :as spec)]
+    (assert (symbol? alias)
+            (format "Parsing use, :as requires a symbol! %s" spec))
+    alias))
+
+(defn- collect-exclude [spec]
+  (when-let [excluded (collect-kwopt :exclude spec)]
+    (assert (every? symbol? excluded)
+            (format "Parsing use, :exclude only accepts symbols! %s" spec))
+    excluded))
+
+(defn- collect-only [spec]
+  (when-let [refers (collect-kwopt :only spec)]
+    (assert (every? symbol? refers)
+            (format "Parsing use, :only only accepts symbols! %s" spec))
+    refers))
+
+(defn- collect-rename [spec]
+  (when-let [remapping (collect-kwopt :rename spec)]
+    (assert (every? symbol? (concat (keys remapping) (vals remapping)))
+            (format "Parsing use, :rename only accepts symbols! %s" spec))
+    remapping))
+
+(declare update update-in)
+
+(defn merge-refers [l r]
+  (if (or (= l :all) (= r :all))
+    :all
+    (apply sorted-set (concat l r))))
+
+(defn- build-refers [state spec]
+  (let [name     (if (symbol? spec) spec (first spec))
+        alias    (collect-alias spec)
+        excludes (collect-exclude spec)
+        refers   (or (collect-only spec) :all)
+        rename   (collect-rename spec)
+        prior    (get state name {})]
+    (try
+      (assoc state name
+             {:as      (or (:as prior) alias)
+              :exclude (apply sorted-set (concat excludes (seq (:exclude prior))))
+              :refer   (merge-refers refers (:refer prior))
+              :rename  (merge rename (:rename prior))})
+      (catch Exception e
+        (throw (ex-info "Failed to build refers!"
+                        {:state       state
+                         :spec        spec
+                         :spec/name   name
+                         :spec/alias  alias
+                         :spec/refers refers
+                         :spec/rename rename
+                         :spec/prior  prior}))))))
+
+(defn- make-require [[ns opts]]
+  (let [{:keys [as exclude
+                refer rename]} opts
+        final-refers           (if (and (not= :all refer) exclude)
+                                 (vec (apply sorted-set (remove exclude refer)))
+                                 (if (not= :all refer)
+                                   (vec refer)
+                                   refer))]
+    `[~ns
+      ~@(when as [:as as])
+      :refer ~final-refers
+      ~@(when (seq exclude) [:exclude (vec exclude)])
+      ~@(when rename [:rename rename])]))
+
+(defn- rewrite-use [specs]
+  (let [imports (apply sorted-set (mapcat collect-nss specs))
+        specs   (reduce1 build-refers {} specs)
+        blob    (apply merge-with #(or %1 %2) (vals specs))
+        rename? (:rename blob)]
+    [rename? (map make-require (reverse specs))]))
+
+(defn- format-prefix-list [prefix bodies]
+  (let [prefix  (format "  (%s " prefix)
+        padding (apply str \newline (repeat (count prefix) \space))]
+    (str prefix (apply str (interpose padding bodies)) ")\n")))
+
 (defn use
   "DEPRECATED: Unrestricted referrals are difficult to reason about and should be avoided in favor
   of qualified imports. Restricted and unrestricted referrals can both be achieved via require, so
@@ -6039,7 +6146,20 @@
   clojure.core/refer."
   {:added      "0.1.0"
    :deprecated "0.2.0"}
-  [& args] (apply load-libs :require :use args))
+  [& args]
+  (let [[rename? requires] (rewrite-use args)]
+    (. (errwriter)
+       (println
+        (format
+         (str "Use is deprecated, require should be preferred. %s\n"
+              "Instead of:\n%s"
+              "Try:\n%s\n"
+              (when rename?
+                "Note: renaming is a code smell and may be deprecated in the future."))
+         (str "(" *file* ":" *line* ":" *column* ")")
+         (format-prefix-list :use args)
+         (format-prefix-list :require requires)))))
+  (apply load-libs :require :use args))
 
 (defn loaded-libs
   "Returns a sorted set of symbols naming the currently loaded libs"
