@@ -9,10 +9,10 @@
 
 ### Build Status
 
-Branch | Status | Version
+Branch | Status | Artifact
 ----------|--------|--------
 `master` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/master.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/master) | `[org.jaunt-lang/jaunt "0.1.0"]`
-`develop` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop) | [![Snapshot Version](https://img.shields.io/clojars/v/org.jaunt-lang/jaunt.svg)](https://clojars.org/org.jaunt-lang/jaunt)
+`develop` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop) | `[org.jaunt-lang/jaunt "0.2.0-SNAPSHOT"]`
 
 ## What
 
