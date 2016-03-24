@@ -4856,8 +4856,11 @@
   [n] (int (rand n)))
 
 (defmacro defn-
-  "same as defn, yielding non-public def"
-  {:added "0.1.0"}
+  "DEPRECATED: For symmetry with def, (defn ^:private foo ...) should be preferred.
+
+  same as defn, yielding non-public def"
+  {:added      "0.1.0"
+   :deprecated "0.2.0"}
   [name & decls]
   (list* `defn (with-meta name (assoc (meta name) :private true)) decls))
 
