@@ -6525,6 +6525,12 @@ public class Compiler implements Opcodes {
       //macro expansion
       Var v = isMacro(op);
       if (v != null) {
+        if (isDeprecated(v) &&
+            warnOnDeprecated()) {
+          RT.errPrintWriter().println(
+            String.format("Warning: expanding deprecated macro: %s (%s:%d:%d)",
+                          v.toString(), SOURCE_PATH.get(), lineDeref(), columnDeref()));
+        }
         try {
           return v.applyTo(RT.cons(form,RT.cons(LOCAL_ENV.get(),form.next())));
         } catch (ArityException e) {

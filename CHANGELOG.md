@@ -1,6 +1,7 @@
 # Change Log
 
 ## upcomming
+- [#111](https://github.com/jaunt-lang/jaunt/pull/111) Add a warning when expanding deprecated macros (@arrdem).
 
 ## Jaunt 0.1.0
 - [#108](https://github.com/jaunt-lang/jaunt/pull/108) Add tests against CIDER (@arrdem).
