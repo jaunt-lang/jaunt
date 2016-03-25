@@ -13,9 +13,9 @@
   (:import (clojure.lang Compiler Compiler$CompilerException))
   (:require [clojure.test.generative :refer (defspec)]
             [clojure.data.generators :as gen]
-            [clojure.test-clojure.compilation.line-number-examples :as line])
-  (:use clojure.test
-        [clojure.test-helper :only (should-not-reflect should-print-err-message)]))
+            [clojure.test-clojure.compilation.line-number-examples :as line]
+            [clojure.test-helper :refer [should-not-reflect should-print-err-message]]
+            [clojure.test :refer :all]))
 
 ;; http://clojure.org/compilation
 
@@ -26,23 +26,23 @@
 (deftest test-compiler-metadata
   (let [m (meta #'when)]
     (are [x y]  (= x y)
-      (list? (:arglists m)) true
+      (list? (:arglists m))       true
       (> (count (:arglists m)) 0) true
 
-      (string? (:doc m)) true
-      (> (.length (:doc m)) 0) true
+      (string? (:doc m))          true
+      (> (.length (:doc m)) 0)    true
 
-      (string? (:file m)) true
-      (> (.length (:file m)) 0) true
+      (string? (:file m))         true
+      (> (.length (:file m)) 0)   true
 
-      (integer? (:line m)) true
-      (> (:line m) 0) true
+      (integer? (:line m))        true
+      (> (:line m) 0)             true
 
-      (integer? (:column m)) true
-      (> (:column m) 0) true
+      (integer? (:column m))      true
+      (> (:column m) 0)           true
 
-      (:macro m) true
-      (:name m) 'when)))
+      (:macro m)                  true
+      (:name m)                   'when)))
 
 (deftest test-embedded-constants
   (testing "Embedded constants"

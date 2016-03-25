@@ -17,11 +17,11 @@
 ;;  Created 22 October 2008
 
 (ns clojure.test-clojure.reader
-  (:use clojure.test)
-  (:use [clojure.instant :only [read-instant-date
-                                read-instant-calendar
-                                read-instant-timestamp]])
-  (:require clojure.walk
+  (:require [clojure.test :refer :all]
+            [clojure.instant :refer [read-instant-date
+                                     read-instant-calendar
+                                     read-instant-timestamp]]
+            clojure.walk
             [clojure.test.generative :refer (defspec)]
             [clojure.test-clojure.generators :as cgen])
   (:import [clojure.lang BigInt Ratio]
@@ -469,8 +469,8 @@
   (is (= clojure.core// /))
   (binding [*ns* *ns*]
     (eval '(do (ns foo
-                 (:require [clojure.core :as bar])
-                 (:use [clojure.test]))
+                 (:require [clojure.core :as bar]
+                           [clojure.test :refer :all]))
                (is (= clojure.core// bar//))))))
 
 (deftest Instants

@@ -1,6 +1,6 @@
 (ns clojure.test-clojure.clojure-walk
-  (:require [clojure.walk :as w])
-  (:use clojure.test))
+  (:require [clojure.walk :as w]
+            [clojure.test :refer :all]))
 
 (deftest t-prewalk-replace
   (is (= (w/prewalk-replace {:a :b} [:a {:a :a} (list 3 :c :a)])

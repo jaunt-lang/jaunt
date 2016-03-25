@@ -6,18 +6,19 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc "Tests for clojure.core/gen-class"
-      :author "Stuart Halloway, Daniel Solano Gómez"}
- clojure.test-clojure.genclass
-  (:use clojure.test clojure.test-helper)
-  (:require clojure.test_clojure.genclass.examples)
+(ns clojure.test-clojure.genclass
+  {:doc     "Tests for clojure.core/gen-class"
+   :authors ["Stuart Halloway"
+             "Daniel Solano Gómez"]}
+  (:require [clojure.test :refer :all]
+            [clojure.test-helper :refer :all]
+            clojure.test_clojure.genclass.examples)
   (:import [clojure.test_clojure.genclass.examples
             ExampleClass
             ExampleAnnotationClass
             ProtectedFinalTester
             ArrayDefInterface
             ArrayGenInterface]
-
            [java.lang.annotation ElementType
             Retention
             RetentionPolicy

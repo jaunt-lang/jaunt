@@ -1,5 +1,5 @@
 (ns clojure.test-clojure.protocols.hash-collisions
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (defprotocol TestProtocolA
   (method-a [this] "Test method A"))

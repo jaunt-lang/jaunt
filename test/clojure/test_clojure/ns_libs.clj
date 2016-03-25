@@ -9,7 +9,8 @@
 ;; Authors: Frantisek Sodomka, Stuart Halloway
 
 (ns clojure.test-clojure.ns-libs
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]
+            [clojure.test-helper :refer [silenced]]))
 
 ;; http://clojure.org/namespaces
 
@@ -60,8 +61,9 @@
   (is (thrown? Exception (require))))
 
 (deftest test-use
-  (is (thrown? Exception (use :foo)))
-  (is (thrown? Exception (use))))
+  (silenced
+   (is (thrown? Exception (use :foo)))
+   (is (thrown? Exception (use)))))
 
 (deftest reimporting-deftypes
   (let [inst1 (binding [*ns* *ns*]
@@ -79,7 +81,7 @@
     (testing "you can reimport a changed class and see the changes"
       (is (= [:a] (keys inst1)))
       (is (= [:a :b] (keys inst2))))
-    ;fragile tests, please fix
+    ;; fragile tests, please fix
     #_(testing "you cannot import same local name from a different namespace"
         (is (thrown? clojure.lang.Compiler$CompilerException
                      #"ReimportMe already refers to: class exporter.ReimportMe in namespace: importer"

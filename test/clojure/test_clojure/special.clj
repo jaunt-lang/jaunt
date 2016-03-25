@@ -13,7 +13,7 @@
 ;;
 
 (ns clojure.test-clojure.special
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 ;; http://clojure.org/special_forms
 

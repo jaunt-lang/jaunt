@@ -7,16 +7,16 @@
 ;;    You must not remove this notice, or any other, from this software.
 
 (ns clojure.test-clojure.java.javadoc
-  (:use clojure.test
-        [clojure.java.javadoc :as j])
+  (:require [clojure.test :refer :all]
+            [clojure.java.javadoc :as j])
   (:import (java.io File)))
 
 (deftest javadoc-url-test
   (testing "for a core api"
-    (binding [*feeling-lucky* false]
+    (binding [j/*feeling-lucky* false]
       (are [x y] (= x (#'j/javadoc-url y))
-        nil "foo.Bar"
-        (str *core-java-api* "java/lang/String.html") "java.lang.String")))
+        nil                                             "foo.Bar"
+        (str j/*core-java-api* "java/lang/String.html") "java.lang.String")))
   (testing "for a remote javadoc"
-    (binding [*remote-javadocs* (ref (sorted-map "java." "http://example.com/"))]
+    (binding [j/*remote-javadocs* (ref (sorted-map "java." "http://example.com/"))]
       (is (= "http://example.com/java/lang/Number.html" (#'j/javadoc-url "java.lang.Number"))))))

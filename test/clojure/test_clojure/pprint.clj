@@ -10,11 +10,11 @@
 
 (ns clojure.test-clojure.pprint
   (:refer-clojure :exclude [format])
-  (:require [clojure.string :as str])
-  (:use [clojure.test :only (deftest is are run-tests)]
-        [clojure.test-helper :only [platform-newlines]]
-        clojure.test-clojure.pprint.test-helper
-        clojure.pprint))
+  (:require [clojure.string :as str]
+            [clojure.test :refer [deftest is are run-tests]]
+            [clojure.test-helper :refer [platform-newlines]]
+            [clojure.test-clojure.pprint.test-helper :refer :all]
+            [clojure.pprint :refer :all]))
 
 (load "pprint/test_cl_format")
 (load "pprint/test_pretty")

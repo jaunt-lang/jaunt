@@ -7,7 +7,7 @@
 ;;    You must not remove this notice, or any other, from this software.
 
 (ns clojure.test-clojure.keywords
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (let [this-ns (str (.name *ns*))]
   (deftest test-find-keyword

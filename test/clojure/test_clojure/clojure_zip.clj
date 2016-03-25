@@ -10,8 +10,8 @@
 
 
 (ns clojure.test-clojure.clojure-zip
-  (:use clojure.test)
-  (:require [clojure.zip :as zip]))
+  (:require [clojure.test :refer :all]
+            [clojure.zip :as zip]))
 
 ;; zipper
 ;

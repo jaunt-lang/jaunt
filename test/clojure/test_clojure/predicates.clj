@@ -12,7 +12,7 @@
 ;;  Created 1/28/2009
 
 (ns clojure.test-clojure.predicates
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 ;; *** Type predicates ***
 

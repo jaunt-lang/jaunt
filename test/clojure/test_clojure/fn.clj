@@ -9,7 +9,7 @@
 ;; Author: Ambrose Bonnaire-Sergeant
 
 (ns clojure.test-clojure.fn
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (deftest fn-error-checking
   (testing "bad arglist"

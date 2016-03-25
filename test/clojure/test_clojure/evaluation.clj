@@ -15,7 +15,7 @@
 ;;  Created 22 October 2008
 
 (ns clojure.test-clojure.evaluation
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (import '(java.lang Boolean)
         '(clojure.lang Compiler Compiler$CompilerException))

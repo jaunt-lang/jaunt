@@ -9,7 +9,7 @@
 ;;Author: Frantisek Sodomka
 
 (ns clojure.test-clojure.atoms
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 ;; http://clojure.org/atoms
 

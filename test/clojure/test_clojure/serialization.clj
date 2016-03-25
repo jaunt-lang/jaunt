@@ -10,7 +10,7 @@
 ;;         cemerick@snowtide.com
 
 (ns clojure.test-clojure.serialization
-  (:use clojure.test)
+  (:require [clojure.test :refer :all])
   (:import (java.io ObjectOutputStream ObjectInputStream
                     ByteArrayOutputStream ByteArrayInputStream)))
 

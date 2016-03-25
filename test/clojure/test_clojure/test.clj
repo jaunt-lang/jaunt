@@ -14,10 +14,9 @@
 ;; Thanks to Chas Emerick, Allen Rohner, and Stuart Halloway for
 ;; contributions and suggestions.
 
-
 (ns clojure.test-clojure.test
-  (:use clojure.test)
-  (:require [clojure.stacktrace :as stack]))
+  (:require [clojure.test :refer :all]
+            [clojure.stacktrace :as stack]))
 
 (deftest can-test-symbol
   (let [x true]

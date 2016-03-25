@@ -10,9 +10,9 @@
 
 
 (ns clojure.test-clojure.main
-  (:use clojure.test
-        [clojure.test-helper :only [platform-newlines]])
-  (:require [clojure.main :as main]))
+  (:require [clojure.test :refer :all]
+            [clojure.test-helper :refer [platform-newlines]]
+            [clojure.main :as main]))
 
 (deftest eval-opt
   (testing "evals and prints forms"

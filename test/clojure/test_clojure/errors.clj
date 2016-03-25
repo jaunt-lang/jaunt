@@ -9,7 +9,7 @@
 ;; Tests for error handling and messages
 
 (ns clojure.test-clojure.errors
-  (:use clojure.test)
+  (:require [clojure.test :refer :all])
   (:import clojure.lang.ArityException))
 
 (defn f0 [] 0)
