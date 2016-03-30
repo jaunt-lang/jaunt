@@ -1,6 +1,6 @@
 # Change Log
 
-## upcomming
+## Upcoming
 - [#117](https://github.com/jaunt-lang/jaunt/pull/117) Fix typo in arglists (@arrdem).
 - [#112](https://github.com/jaunt-lang/jaunt/pull/112) Self-refactoring use (@arrdem).
   - Add `clojure.core/sift`.
