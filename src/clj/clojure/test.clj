@@ -444,9 +444,9 @@
     `(let [values# (list ~@args)
            result# (apply ~pred values#)]
        (if result#
-         (do-report {:type :pass, :message ~msg,
+         (do-report {:type :pass, :message ~msg
                      :expected '~form, :actual (cons ~pred values#)})
-         (do-report {:type :fail, :message ~msg,
+         (do-report {:type :fail, :message ~msg
                      :expected '~form, :actual (list '~'not (cons '~pred values#))}))
        result#)))
 
@@ -457,9 +457,9 @@
   [msg form]
   `(let [value# ~form]
      (if value#
-       (do-report {:type :pass, :message ~msg,
+       (do-report {:type :pass, :message ~msg
                    :expected '~form, :actual value#})
-       (do-report {:type :fail, :message ~msg,
+       (do-report {:type :fail, :message ~msg
                    :expected '~form, :actual value#}))
      value#))
 
@@ -491,9 +491,9 @@
          object# ~(nth form 2)]
      (let [result# (instance? klass# object#)]
        (if result#
-         (do-report {:type :pass, :message ~msg,
+         (do-report {:type :pass, :message ~msg
                      :expected '~form, :actual (class object#)})
-         (do-report {:type :fail, :message ~msg,
+         (do-report {:type :fail, :message ~msg
                      :expected '~form, :actual (class object#)}))
        result#)))
 
@@ -504,10 +504,10 @@
   (let [klass (second form)
         body (nthnext form 2)]
     `(try ~@body
-          (do-report {:type :fail, :message ~msg,
+          (do-report {:type :fail, :message ~msg
                       :expected '~form, :actual nil})
           (catch ~klass e#
-            (do-report {:type :pass, :message ~msg,
+            (do-report {:type :pass, :message ~msg
                         :expected '~form, :actual e#})
             e#))))
 
@@ -524,9 +524,9 @@
           (catch ~klass e#
             (let [m# (.getMessage e#)]
               (if (re-find ~re m#)
-                (do-report {:type :pass, :message ~msg,
+                (do-report {:type :pass, :message ~msg
                             :expected '~form, :actual e#})
-                (do-report {:type :fail, :message ~msg,
+                (do-report {:type :fail, :message ~msg
                             :expected '~form, :actual e#})))
             e#))))
 
@@ -537,7 +537,7 @@
   [msg form]
   `(try ~(assert-expr msg form)
         (catch Throwable t#
-          (do-report {:type :error, :message ~msg,
+          (do-report {:type :error, :message ~msg
                       :expected '~form, :actual t#}))))
 
 ;;; ASSERTION MACROS

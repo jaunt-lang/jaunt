@@ -58,9 +58,9 @@
                     (= ~exception-class (class cause#))
                     (re-find ~msg-re (.getMessage cause#))))
                  (causes t#))
-         (report {:type :pass, :message ~msg,
+         (report {:type :pass, :message ~msg
                   :expected '~form, :actual t#})
-         (report {:type :fail, :message ~msg,
+         (report {:type :fail, :message ~msg
                   :expected '~form, :actual t#})))))
 
 (defn get-field

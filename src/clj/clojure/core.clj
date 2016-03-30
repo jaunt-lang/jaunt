@@ -3262,7 +3262,7 @@
                            steppair-chunk (step recform-chunk (nnext exprs))
                            subform-chunk (steppair-chunk 1)]
                        [true
-                        `(loop [~seq- (seq ~v), ~chunk- nil,
+                        `(loop [~seq- (seq ~v), ~chunk- nil
                                 ~count- 0, ~i- 0]
                            (if (< ~i- ~count-)
                              (let [~k (.nth ~chunk- ~i-)]
@@ -4451,7 +4451,7 @@
                                               (dissoc bes (key entry))
                                               ((key entry) bes)))
                                    (dissoc b :as :or)
-                                   {:keys #(if (keyword? %) % (keyword (str %))),
+                                   {:keys #(if (keyword? %) % (keyword (str %)))
                                     :strs str, :syms #(list `quote %)})]
                          (if (seq bes)
                            (let [bb (key (first bes))
@@ -4514,7 +4514,7 @@
   name => symbol
 
   Defines a function"
-  {:added "0.1.0", :special-form true,
+  {:added "0.1.0", :special-form true
    :forms '[(fn name? [params*] exprs*) (fn name? ([params*] exprs*) +)]}
   [& sigs]
   (let [name (if (symbol? (first sigs)) (first sigs) nil)
@@ -6588,7 +6588,7 @@
   Takes a vector of function specs and a body, and generates a set of
   bindings of functions to their names. All of the names are available
   in all of the definitions of the functions, as well as the body."
-  {:added "0.1.0", :forms '[(letfn [fnspecs*] exprs*)],
+  {:added "0.1.0", :forms '[(letfn [fnspecs*] exprs*)]
    :special-form true, :url nil}
   [fnspecs & body]
   `(letfn* ~(vec (interleave (map first fnspecs)

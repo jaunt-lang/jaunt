@@ -109,7 +109,7 @@
                  (= event :error) (= msg "Should error")
                  :else true)]
     (if passed
-      (original-report {:type :pass, :message msg,
+      (original-report {:type :pass, :message msg
                         :expected expected, :actual actual})
       (original-report {:type :fail, :message (str msg " but got " event)
                         :expected expected, :actual actual}))))

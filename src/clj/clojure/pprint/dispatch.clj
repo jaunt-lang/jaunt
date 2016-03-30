@@ -43,7 +43,7 @@
 ;;; :keyword, \char, or ""). The notable exception is #() which is special-cased.
 
 (def ^{:private true} reader-macros
-  {'quote "'", 'clojure.core/deref "@",
+  {'quote "'", 'clojure.core/deref "@"
    'var "#'", 'clojure.core/unquote "~"})
 
 (defn- pprint-reader-macro [alis]
@@ -109,7 +109,7 @@
 (def ^{:private true} pprint-set (formatter-out "~<#{~;~@{~w~^ ~:_~}~;}~:>"))
 
 (def ^{:private true}
-  type-map {"core$future_call" "Future",
+  type-map {"core$future_call" "Future"
             "core$promise" "Promise"})
 
 (defn- map-ref-type
@@ -417,17 +417,17 @@
 (def ^:dynamic ^{:private true} *code-table*
   (two-forms
    (add-core-ns
-    {'def pprint-hold-first, 'defonce pprint-hold-first,
-     'defn pprint-defn, 'defn- pprint-defn, 'defmacro pprint-defn, 'fn pprint-defn,
-     'let pprint-let, 'loop pprint-let, 'binding pprint-let,
-     'with-local-vars pprint-let, 'with-open pprint-let, 'when-let pprint-let,
-     'if-let pprint-let, 'doseq pprint-let, 'dotimes pprint-let,
-     'when-first pprint-let,
-     'if pprint-if, 'if-not pprint-if, 'when pprint-if, 'when-not pprint-if,
-     'cond pprint-cond, 'condp pprint-condp,
-     'fn* pprint-anon-func,
-     '. pprint-hold-first, '.. pprint-hold-first, '-> pprint-hold-first,
-     'locking pprint-hold-first, 'struct pprint-hold-first,
+    {'def pprint-hold-first, 'defonce pprint-hold-first
+     'defn pprint-defn, 'defn- pprint-defn, 'defmacro pprint-defn, 'fn pprint-defn
+     'let pprint-let, 'loop pprint-let, 'binding pprint-let
+     'with-local-vars pprint-let, 'with-open pprint-let, 'when-let pprint-let
+     'if-let pprint-let, 'doseq pprint-let, 'dotimes pprint-let
+     'when-first pprint-let
+     'if pprint-if, 'if-not pprint-if, 'when pprint-if, 'when-not pprint-if
+     'cond pprint-cond, 'condp pprint-condp
+     'fn* pprint-anon-func
+     '. pprint-hold-first, '.. pprint-hold-first, '-> pprint-hold-first
+     'locking pprint-hold-first, 'struct pprint-hold-first
      'struct-map pprint-hold-first, 'ns pprint-ns})))
 
 (defn- pprint-code-list [alis]

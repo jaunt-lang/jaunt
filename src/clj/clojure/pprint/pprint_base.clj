@@ -33,39 +33,39 @@
 
 (defonce ^:dynamic ; If folks have added stuff here, don't overwrite
   ^{:doc "The pretty print dispatch function. Use with-pprint-dispatch or set-pprint-dispatch
-to modify.",
+to modify."
     :added "0.1.0"}
   *print-pprint-dispatch* nil)
 
 (def ^:dynamic
   ^{:doc "Pretty printing will try to avoid anything going beyond this column.
 Set it to nil to have pprint let the line be arbitrarily long. This will ignore all
-non-mandatory newlines.",
+non-mandatory newlines."
     :added "0.1.0"}
   *print-right-margin* 72)
 
 (def ^:dynamic
   ^{:doc "The column at which to enter miser style. Depending on the dispatch table,
 miser style add newlines in more places to try to keep lines short allowing for further
-levels of nesting.",
+levels of nesting."
     :added "0.1.0"}
   *print-miser-width* 40)
 
 ;;; TODO implement output limiting
 (def ^:dynamic
-  ^{:private true,
+  ^{:private true
     :doc "Maximum number of lines to print in a pretty print instance (N.B. This is not yet used)"}
   *print-lines* nil)
 
 ;;; TODO: implement circle and shared
 (def ^:dynamic
-  ^{:private true,
+  ^{:private true
     :doc "Mark circular structures (N.B. This is not yet used)"}
   *print-circle* nil)
 
 ;;; TODO: should we just use *print-dup* here?
 (def ^:dynamic
-  ^{:private true,
+  ^{:private true
     :doc "Mark repeated structures rather than repeat them (N.B. This is not yet used)"}
   *print-shared* nil)
 
@@ -115,20 +115,20 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 
 (def ^{:private true} write-option-table
   {;:array            *print-array*
-   :base             'clojure.pprint/*print-base*,
+   :base             'clojure.pprint/*print-base*
       ;;:case             *print-case*,
-   :circle           'clojure.pprint/*print-circle*,
+   :circle           'clojure.pprint/*print-circle*
       ;;:escape           *print-escape*,
       ;;:gensym           *print-gensym*,
-   :length           'clojure.core/*print-length*,
-   :level            'clojure.core/*print-level*,
-   :lines            'clojure.pprint/*print-lines*,
-   :miser-width      'clojure.pprint/*print-miser-width*,
-   :dispatch         'clojure.pprint/*print-pprint-dispatch*,
-   :pretty           'clojure.pprint/*print-pretty*,
-   :radix            'clojure.pprint/*print-radix*,
-   :readably         'clojure.core/*print-readably*,
-   :right-margin     'clojure.pprint/*print-right-margin*,
+   :length           'clojure.core/*print-length*
+   :level            'clojure.core/*print-level*
+   :lines            'clojure.pprint/*print-lines*
+   :miser-width      'clojure.pprint/*print-miser-width*
+   :dispatch         'clojure.pprint/*print-pprint-dispatch*
+   :pretty           'clojure.pprint/*print-pretty*
+   :radix            'clojure.pprint/*print-radix*
+   :readably         'clojure.core/*print-readably*
+   :right-margin     'clojure.pprint/*print-right-margin*
    :suppress-namespaces 'clojure.pprint/*print-suppress-namespaces*})
 
 (defmacro ^{:private true} binding-map [amap & body]

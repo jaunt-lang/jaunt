@@ -140,7 +140,7 @@
 
 (defn subset?
   "Is set1 a subset of set2?"
-  {:added "0.1.0",
+  {:added "0.1.0"
    :tag Boolean}
   [set1 set2]
   (and (<= (count set1) (count set2))
@@ -148,7 +148,7 @@
 
 (defn superset?
   "Is set1 a superset of set2?"
-  {:added "0.1.0",
+  {:added "0.1.0"
    :tag Boolean}
   [set1 set2]
   (and (>= (count set1) (count set2))

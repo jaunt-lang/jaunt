@@ -55,7 +55,7 @@
 (defn- javadoc-url
   "Searches for a URL for the given class name.  Tries
   *local-javadocs* first, then *remote-javadocs*.  Returns a string."
-  {:tag String,
+  {:tag String
    :added "0.1.0"}
   [^String classname]
   (let [file-path (.replace classname \. File/separatorChar)

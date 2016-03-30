@@ -49,7 +49,7 @@
 
 (def expected-annotations
   #{{:annotationType java.lang.annotation.Retention, :value RetentionPolicy/RUNTIME}
-    {:annotationType javax.xml.ws.WebServiceRefs,
+    {:annotationType javax.xml.ws.WebServiceRefs
      :value [{:annotationType javax.xml.ws.WebServiceRef, :name "fred", :mappedName "", :type java.lang.String, :wsdlLocation "", :value java.lang.Object}
              {:annotationType javax.xml.ws.WebServiceRef, :name "ethel", :mappedName "lucy", :type java.lang.Object, :wsdlLocation "", :value java.lang.Object}]}
     {:annotationType javax.xml.ws.soap.Addressing, :enabled false, :required true}
