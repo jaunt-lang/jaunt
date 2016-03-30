@@ -144,7 +144,7 @@
     (next (next x))))
 
 (def
-  ^{:arglists '(^clojure.lang.ISeq [coll])
+  ^{:arglists '([^clojure.lang.ISeq coll])
     :doc      "Returns a seq on the collection. If the collection is empty, returns nil.  (seq nil) returns nil. seq also works on Strings, native Java arrays (of reference types) and any objects that implement Iterable. Note that seqs cache values, thus seq should not be used on any Iterable whose iterator repeatedly returns the same mutable object."
     :tag      clojure.lang.ISeq
     :added    "0.1.0"
@@ -155,7 +155,7 @@
     (. clojure.lang.RT (seq coll))))
 
 (def
-  ^{:arglists '(^clojure.lang.ISeq [coll])
+  ^{:arglists '([^clojure.lang.ISeq coll])
     :doc      "Returns true if coll has no items - same as(not (seq coll)). Please use the idiom (seq x) rather than (not (empty? x))"
     :tag      Boolean
     :added    "0.1.0"
