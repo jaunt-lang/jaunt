@@ -5990,7 +5990,7 @@
           (doseq [opt filter-opts]
             (printf " %s '%s" (key opt) (print-str (val opt))))
           (printf ")\n"))
-        (apply refer lib (mapcat seq filter-opts))))))
+        (apply refer* *ns* lib (mapcat seq filter-opts))))))
 
 (defn- load-libs
   "Loads libs, interpreting libspecs, prefix lists, and flags for
