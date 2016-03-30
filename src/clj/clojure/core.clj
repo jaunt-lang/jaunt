@@ -5842,7 +5842,7 @@
   "Same as (refer 'clojure.core <filters>)"
   {:added "0.1.0"}
   [& filters]
-  `(clojure.core/refer '~'clojure.core ~@filters))
+  `(clojure.core/refer* *ns* '~'clojure.core ~@filters))
 
 (defmacro defonce
   "defs name to have the root value of the expr iff the named var has no root value,
