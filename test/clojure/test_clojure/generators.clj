@@ -1,3 +1,11 @@
+;;    Copyright (c) Rich Hickey. All rights reserved.
+;;    The use and distribution terms for this software are covered by the
+;;    Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;;    which can be found in the file epl-v10.html at the root of this distribution.
+;;    By using this software in any fashion, you are agreeing to be bound by
+;;    the terms of this license.
+;;    You must not remove this notice, or any other, from this software.
+
 (ns clojure.test-clojure.generators
   (:require [clojure.data.generators :as gen])
   (:refer-clojure :exclude [namespace]))
@@ -21,20 +29,24 @@
         fldct (gen/geometric 0.1)]
     `(defrecord ~(symbol rname) ~(vec (map #(symbol (str "f" %)) (range fldct))))))
 
+(defn make-in-ns [ns src]
+  (binding [*ns* (the-ns ns)]
+    (eval src)))
+
 (defn generate-namespaces
   "Returns a map with :nses, :vars, :records"
   [{:keys [nses vars-per-ns records-per-ns]}]
-  (let [nses (mapv #(create-ns (symbol (str "clojure.generated.ns" %)))
-                   (range nses))
-        _ (doseq [ns nses] (binding [*ns* ns] (refer 'clojure.core)))
-        make-in-ns (fn [ns src] (binding [*ns* ns] (eval src)))
-        vars (->> (mapcat
-                   (fn [ns]
-                     (map
-                      #(make-in-ns ns (var-source %))
-                      (range vars-per-ns)))
-                   nses)
-                  (into []))
+  (let [nses    (mapv #(create-ns (symbol (str "clojure.generated.ns" %))) (range nses))
+        _       (doseq [ns nses]
+                  (binding [*ns* ns]
+                    (require '[clojure.core :refer :all])))
+        vars    (->> (mapcat
+                      (fn [ns]
+                        (map
+                         #(make-in-ns ns (var-source %))
+                         (range vars-per-ns)))
+                      nses)
+                     (into []))
         records (->> (mapcat
                       (fn [ns]
                         (map
@@ -42,8 +54,8 @@
                          (range records-per-ns)))
                       nses)
                      (into []))]
-    {:nses nses
-     :vars vars
+    {:nses    nses
+     :vars    vars
      :records records}))
 
 (def shared-generation

@@ -13,11 +13,10 @@
 
 (ns clojure.test-clojure.numbers
   (:require [clojure.test :refer :all]
-            clojure.test.generative
+            [clojure.test.generative :refer :all :exclude [is]]
             [clojure.data.generators :as gen]
             [clojure.template :refer :all]
-            [clojure.test-helper :as helper])
-  (:refer clojure.test.generative :exclude [is]))
+            [clojure.test-helper :as helper]))
 
 ;; TODO:
 ;; ==
