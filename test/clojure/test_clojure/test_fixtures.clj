@@ -12,7 +12,7 @@
 ;; March 28, 2009
 
 (ns clojure.test-clojure.test-fixtures
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (declare ^:dynamic *a* ^:dynamic *b* ^:dynamic *c* ^:dynamic *d*)
 

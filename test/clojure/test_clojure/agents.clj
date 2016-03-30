@@ -9,7 +9,7 @@
 ;; Author: Shawn Hoover
 
 (ns clojure.test-clojure.agents
-  (:use clojure.test)
+  (:require [clojure.test :refer :all])
   (:import [java.util.concurrent CountDownLatch TimeUnit]))
 
 ;; tests are fragile. If wait fails, could indicate that

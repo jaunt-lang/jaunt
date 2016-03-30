@@ -1,6 +1,10 @@
 # Change Log
 
 ## upcomming
+- [#112](https://github.com/jaunt-lang/jaunt/pull/112) Self-refactoring use (@arrdem).
+  - Add `clojure.core/sift`.
+  - Refactor `clojure.core/use` to emit a warning describing how to rewrite use into require/refer.
+  - Refactor out uses of `use`.
 - [#111](https://github.com/jaunt-lang/jaunt/pull/111) Add a warning when expanding deprecated macros (@arrdem).
 
 ## Jaunt 0.1.0

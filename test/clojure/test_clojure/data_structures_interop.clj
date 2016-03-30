@@ -10,7 +10,7 @@
   (:require [clojure.test :refer :all]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [clojure.test.check.clojure-test :refer (defspec)]))
+            [clojure.test.check.clojure-test :refer [defspec]]))
 
 (defn gen-range [min max]
   (gen/bind (gen/choose min max) (fn [n] (gen/tuple (gen/return n)

@@ -9,9 +9,9 @@
 ;; Authors: Stuart Halloway, Frantisek Sodomka
 
 (ns clojure.test-clojure.metadata
-  (:use clojure.test
-        [clojure.test-helper :only (eval-in-temp-ns)])
-  (:require [clojure.set :as set]))
+  (:require [clojure.test :refer :all]
+            [clojure.test-helper :refer (eval-in-temp-ns)]
+            [clojure.set :as set]))
 
 (def public-namespaces
   '[clojure.core

@@ -8,9 +8,8 @@
 
 ;; Author: Frantisek Sodomka, Stephen C. Gilardi
 
-
 (ns clojure.test-clojure.vars
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 ;; http://clojure.org/vars
 

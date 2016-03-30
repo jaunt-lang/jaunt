@@ -9,7 +9,7 @@
 ;; Author: Frantisek Sodomka
 
 (ns clojure.test-clojure.macros
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 ;; http://clojure.org/macros
 

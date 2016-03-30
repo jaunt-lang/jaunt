@@ -15,10 +15,11 @@
 ;; This is just a macro to make my tests a little cleaner
 
 (ns clojure.test-clojure.pprint.test-helper
-  (:use [clojure.test :only (deftest is)]
-        [clojure.test-helper :only [platform-newlines]]))
+  (:require [clojure.test :refer [deftest is]]
+            [clojure.test-helper :refer [platform-newlines]]))
 
-(defn- back-match [x y] (re-matches y x))
+(defn- back-match [x y]
+  (re-matches y x))
 
 (defmacro simple-tests [name & test-pairs]
   `(deftest ~name

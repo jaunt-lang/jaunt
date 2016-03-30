@@ -12,8 +12,8 @@
 ;;  Created 1/29/2009
 
 (ns clojure.test-clojure.logic
-  (:use clojure.test
-        [clojure.test-helper :only (exception)]))
+  (:require [clojure.test :refer :all]
+            [clojure.test-helper :refer [exception]]))
 
 ;; *** Tests ***
 

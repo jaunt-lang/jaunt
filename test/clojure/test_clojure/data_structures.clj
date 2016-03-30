@@ -10,11 +10,12 @@
 
 
 (ns clojure.test-clojure.data-structures
-  (:use clojure.test
-        [clojure.test.generative :exclude (is)])
   (:require [clojure.test-clojure.generators :as cgen]
             [clojure.data.generators :as gen]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.test :refer :all]
+            clojure.test.generative)
+  (:refer clojure.test.generative :exclude (is)))
 
 ;; *** Helper functions ***
 

@@ -1,5 +1,5 @@
 (ns clojure.test-clojure.delays
-  (:use clojure.test))
+  (:require [clojure.test :refer [deftest is]]))
 
 (deftest calls-once
   (let [a (atom 0)

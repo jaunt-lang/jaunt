@@ -10,7 +10,7 @@
 
 
 (ns clojure.test-clojure.parallel
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 ;; !! Tests for the parallel library will be in a separate file clojure_parallel.clj !!
 
@@ -20,9 +20,8 @@
 ;; pcalls
 ;; pvalues
 
-
 ;; pmap
-;;
+
 (deftest pmap-does-its-thing
   ;; regression fixed in r1218; was OutOfMemoryError
   (is (= '(1) (pmap inc [0]))))

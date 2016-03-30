@@ -16,30 +16,33 @@
 ;;  Created 04 November 2010
 
 (ns clojure.test-helper
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (let [nl (System/getProperty "line.separator")]
   (defn platform-newlines [s] (.replace s "\n" nl)))
 
 (defn temp-ns
-  "Create and return a temporary ns, using clojure.core + uses"
-  [& uses]
+  "Create and return a temporary ns, using clojure.core + requires"
+  [& requires]
   (binding [*ns* *ns*]
-    (in-ns (gensym))
-    (apply clojure.core/use 'clojure.core uses)
+    (eval `(ns ~(gensym)
+             ~@(when requires [(cons :require requires)])))
     *ns*))
 
 (defmacro eval-in-temp-ns [& forms]
   `(binding [*ns* *ns*]
-     (in-ns (gensym))
-     (clojure.core/use 'clojure.core)
+     (ns ~(gensym))
      (eval
       '(do ~@forms))))
+
+(defmacro silenced [& forms]
+  `(binding [*err* (new java.io.StringWriter)]
+     ~@forms))
 
 (defn causes
   [^Throwable throwable]
   (loop [causes []
-         t throwable]
+         t      throwable]
     (if t (recur (conj causes t) (.getCause t)) causes)))
 
 ;; this is how I wish clojure.test/thrown? worked...

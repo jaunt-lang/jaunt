@@ -155,12 +155,40 @@
     (. clojure.lang.RT (seq coll))))
 
 (def
+  ^{:arglists '(^clojure.lang.ISeq [coll])
+    :doc      "Returns true if coll has no items - same as(not (seq coll)). Please use the idiom (seq x) rather than (not (empty? x))"
+    :tag      Boolean
+    :added    "0.1.0"
+    :static   true}
+  empty?
+  (fn ^:static  [coll]
+    (if (seq coll) false true)))
+
+(def
   ^{:arglists '([^Class c x])
     :doc      "Evaluates x and tests if it is an instance of the class c. Returns true or false"
     :added    "0.1.0"}
   instance?
   (fn instance? [^Class c x]
     (. c (isInstance x))))
+
+(def
+  ^{:arglists '([x])
+    :doc      "Returns true if x implements IPersistentCollection"
+    :added    "0.1.0"
+    :static   true}
+  coll?
+  (fn ^:static coll? [x]
+    (instance? clojure.lang.IPersistentCollection x)))
+
+(def
+  ^{:arglists '([x])
+    :doc      "Returns true if x implements IPersistentList"
+    :added    "0.1.0"
+    :static   true}
+  list?
+  (fn ^:static list? [x]
+    (instance? clojure.lang.IPersistentList x)))
 
 (def
   ^{:arglists '([x])
@@ -215,6 +243,15 @@
   var?
   (fn ^:static var? [x]
     (instance? clojure.lang.Var x)))
+
+(def
+  ^{:arglists '([coll])
+    :doc      "Returns true if coll implements Associative"
+    :added    "0.1.0"
+    :static   true}
+  associative?
+  (fn ^:static associative? [coll]
+    (instance? clojure.lang.Associative coll)))
 
 (def
   ^{:arglists '([map key val] [map key val & kvs])
@@ -4557,6 +4594,21 @@
                   (let ~(vec (interleave bs gs))
                     ~@body)))))))
 
+(defn sift
+  "Takes a predicate and a seq, returns two seqs being respectively the elements for which pred
+  returned truthy and falsey."
+  {:added  "0.2.0"
+   :static true}
+  [pred coll]
+  (loop [t                    []
+         f                    []
+         [e & coll' :as coll] coll]
+    (if (empty? coll)
+      [t f]
+      (if (pred e)
+        (recur (conj t e) f coll')
+        (recur t (conj f e) coll')))))
+
 (defmacro when-first
   "bindings => x xs
 
@@ -5974,16 +6026,140 @@
   [& args]
   (apply load-libs :require args))
 
-(defn use
-  "Like 'require, but also refers to each lib's namespace using
-  clojure.core/refer. Use :use in the ns macro in preference to calling
-  this directly.
+;; (use 'sym)
+;; (use '[sym])
+;; (use '[sym c1 c2 c3])
+;; (use '[sym.c1 :as c])
+;; (use '[clojure.core.match :only [match]])
+;; (use '[clojure.core.logic :exclude [is] :as l])
+;; (use '[clojure.string :only (split) :rename {split spl}])
 
-  'use accepts additional options in libspecs: :exclude, :only, :rename.
-  The arguments and semantics for :exclude, :only, and :rename are the same
-  as those documented for clojure.core/refer."
-  {:added "0.1.0"}
-  [& args] (apply load-libs :require :use args))
+(defn- collect-nss [spec]
+  (if (symbol? spec)
+    [spec]
+    (let [[prefix & nss] (take-while symbol? spec)]
+      (if-not (empty? nss)
+        (map #(symbol (str (name prefix) "." (name %))) nss)
+        [prefix]))))
+
+(defn- collect-kwopt [kw spec]
+  (when-not (symbol? spec)
+    (when-let [tail (->> spec
+                         (drop-while symbol?)
+                         (drop-while #(not= % kw)))]
+      (let [[_ opt & tail] tail]
+        (when (some #{kw} tail)
+          (. (errwriter)
+             (println (format "Warning: multiple %s clauses parsing use (%s), first one wins" opt spec))))
+        opt))))
+
+(defn- collect-alias [spec]
+  (when-let [alias (collect-kwopt :as spec)]
+    (assert (symbol? alias)
+            (format "Parsing use, :as requires a symbol! %s" spec))
+    alias))
+
+(defn- collect-exclude [spec]
+  (when-let [excluded (collect-kwopt :exclude spec)]
+    (assert (every? symbol? excluded)
+            (format "Parsing use, :exclude only accepts symbols! %s" spec))
+    excluded))
+
+(defn- collect-only [spec]
+  (when-let [refers (collect-kwopt :only spec)]
+    (assert (every? symbol? refers)
+            (format "Parsing use, :only only accepts symbols! %s" spec))
+    refers))
+
+(defn- collect-rename [spec]
+  (when-let [remapping (collect-kwopt :rename spec)]
+    (assert (every? symbol? (concat (keys remapping) (vals remapping)))
+            (format "Parsing use, :rename only accepts symbols! %s" spec))
+    remapping))
+
+(declare update update-in)
+
+(defn merge-refers [l r]
+  (if (or (= l :all) (= r :all))
+    :all
+    (apply sorted-set (concat l r))))
+
+(defn- build-refers [state spec]
+  (let [name     (if (symbol? spec) spec (first spec))
+        alias    (collect-alias spec)
+        excludes (collect-exclude spec)
+        refers   (or (collect-only spec) :all)
+        rename   (collect-rename spec)
+        prior    (get state name {})]
+    (try
+      (assoc state name
+             {:as      (or (:as prior) alias)
+              :exclude (apply sorted-set (concat excludes (seq (:exclude prior))))
+              :refer   (merge-refers refers (:refer prior))
+              :rename  (merge rename (:rename prior))})
+      (catch Exception e
+        (throw (ex-info "Failed to build refers!"
+                        {:state       state
+                         :spec        spec
+                         :spec/name   name
+                         :spec/alias  alias
+                         :spec/refers refers
+                         :spec/rename rename
+                         :spec/prior  prior}))))))
+
+(defn- make-require [[ns opts]]
+  (let [{:keys [as exclude
+                refer rename]} opts
+        final-refers           (if (and (not= :all refer) exclude)
+                                 (vec (apply sorted-set (remove exclude refer)))
+                                 (if (not= :all refer)
+                                   (vec refer)
+                                   refer))]
+    `[~ns
+      ~@(when as [:as as])
+      :refer ~final-refers
+      ~@(when (seq exclude) [:exclude (vec exclude)])
+      ~@(when rename [:rename rename])]))
+
+(defn- rewrite-use [specs]
+  (let [imports (apply sorted-set (mapcat collect-nss specs))
+        specs   (reduce1 build-refers {} specs)
+        blob    (apply merge-with #(or %1 %2) (vals specs))
+        rename? (:rename blob)]
+    [rename? (map make-require (reverse specs))]))
+
+(defn- format-prefix-list [prefix bodies]
+  (let [prefix  (format "  (%s " prefix)
+        padding (apply str \newline (repeat (count prefix) \space))]
+    (str prefix (apply str (interpose padding bodies)) ")\n")))
+
+(defn use
+  "DEPRECATED: Unrestricted referrals are difficult to reason about and should be avoided in favor
+  of qualified imports. Restricted and unrestricted referrals can both be achieved via require, so
+  use has no special value.
+
+  Like 'require, but also refers to each lib's namespace using clojure.core/refer. Use :use in the
+  ns macro in preference to calling this directly.
+
+  'use accepts additional options in libspecs: :exclude, :only, :rename.  The arguments and
+  semantics for :exclude, :only, and :rename are the same as those documented for
+  clojure.core/refer."
+  {:added      "0.1.0"
+   :deprecated "0.2.0"}
+  [& args]
+  (let [[rename? requires] (rewrite-use args)]
+    (. (errwriter)
+       (println
+        (format
+         (str "Use is deprecated, require should be preferred. %s\n"
+              "Instead of:\n%s"
+              "Try:\n%s\n"
+              (when rename?
+                "Note: renaming is a code smell and may be deprecated in the future."))
+         (str "(" *file* ":" *line* ":" *column* ")")
+         (format-prefix-list :use args)
+         (format-prefix-list :require requires)))))
+  (apply load-libs :require :use args))
 
 (defn loaded-libs
   "Returns a sorted set of symbols naming the currently loaded libs"
@@ -6084,25 +6260,6 @@
   ([m k f x y z & more]
    (assoc m k (apply f (get m k) x y z more))))
 
-(defn empty?
-  "Returns true if coll has no items - same as (not (seq coll)).
-  Please use the idiom (seq x) rather than (not (empty? x))"
-  {:added "0.1.0"
-   :static true}
-  [coll] (not (seq coll)))
-
-(defn coll?
-  "Returns true if x implements IPersistentCollection"
-  {:added "0.1.0"
-   :static true}
-  [x] (instance? clojure.lang.IPersistentCollection x))
-
-(defn list?
-  "Returns true if x implements IPersistentList"
-  {:added "0.1.0"
-   :static true}
-  [x] (instance? clojure.lang.IPersistentList x))
-
 (defn ifn?
   "Returns true if x implements IFn. Note that many data structures
   (e.g. sets and maps) implement IFn"
@@ -6115,12 +6272,6 @@
   {:added "0.1.0"
    :static true}
   [x] (instance? clojure.lang.Fn x))
-
-(defn associative?
-  "Returns true if coll implements Associative"
-  {:added "0.1.0"
-   :static true}
-  [coll] (instance? clojure.lang.Associative coll))
 
 (defn sequential?
   "Returns true if coll implements Sequential"

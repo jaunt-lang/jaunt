@@ -1,9 +1,9 @@
 (ns clojure.test-clojure.repl
-  (:use clojure.test
-        clojure.repl
-        [clojure.test-helper :only [platform-newlines]]
-        clojure.test-clojure.repl.example)
-  (:require [clojure.string :as str]))
+  (:require [clojure.test :refer :all]
+            [clojure.repl :refer :all]
+            [clojure.test-helper :refer [platform-newlines]]
+            [clojure.test-clojure.repl.example :refer :all]
+            [clojure.string :as str]))
 
 (deftest test-doc
   (testing "with namespaces"

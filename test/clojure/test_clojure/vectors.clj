@@ -9,7 +9,7 @@
 ;; Author: Stuart Halloway, Daniel Solano Gómez
 
 (ns clojure.test-clojure.vectors
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (deftest test-reversed-vec
   (let [r (range 6)

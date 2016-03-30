@@ -12,11 +12,12 @@
 ;;
 
 (ns clojure.test-clojure.numbers
-  (:use clojure.test
-        [clojure.test.generative :exclude (is)]
-        clojure.template)
-  (:require [clojure.data.generators :as gen]
-            [clojure.test-helper :as helper]))
+  (:require [clojure.test :refer :all]
+            clojure.test.generative
+            [clojure.data.generators :as gen]
+            [clojure.template :refer :all]
+            [clojure.test-helper :as helper])
+  (:refer clojure.test.generative :exclude [is]))
 
 ;; TODO:
 ;; ==
@@ -24,7 +25,6 @@
 
 
 ;; *** Types ***
-
 
 (deftest Coerced-BigDecimal
   (doseq [v [(bigdec 3) (bigdec (inc (bigint Long/MAX_VALUE)))]]

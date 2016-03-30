@@ -8,13 +8,11 @@
 
 ;; Author: Frantisek Sodomka
 
-
 (ns clojure.test-clojure.java-interop
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 ;; http://clojure.org/java_interop
 ;; http://clojure.org/compilation
-
 
 (deftest test-dot
   ; (.instanceMember instance args*)

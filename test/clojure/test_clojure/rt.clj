@@ -9,8 +9,9 @@
 ;; Author: Stuart Halloway
 
 (ns clojure.test-clojure.rt
-  (:require clojure.set)
-  (:use clojure.test clojure.test-helper))
+  (:require [clojure.set :as set]
+            [clojure.test :refer :all]
+            [clojure.test-helper :refer :all]))
 
 (defn bare-rt-print
   "Return string RT would print prior to print-initialize"
@@ -77,36 +78,32 @@
 
 (deftest last-var-wins-for-core
   (testing "you can replace a core name, with warning"
-    (let [ns (temp-ns)
+    (let [ns          (temp-ns)
           replacement (gensym)]
       (with-err-string-writer (intern ns 'prefers replacement))
       (is (= replacement @('prefers (ns-publics ns))))))
   (testing "you can replace a name you defined before"
     (let [ns (temp-ns)
-          s (gensym)
+          s  (gensym)
           v1 (intern ns 'foo s)
           v2 (intern ns 'bar s)]
       (with-err-string-writer (.refer ns 'flatten v1))
       (.refer ns 'flatten v2)
       (is (= v2 (ns-resolve ns 'flatten)))))
   (testing "you cannot intern over an existing non-core name"
-    (let [ns (temp-ns 'clojure.set)
+    (let [ns          (temp-ns '[clojure.set :as set :refer :all])
           replacement (gensym)]
       (is (thrown? IllegalStateException
                    (intern ns 'subset? replacement)))
       (is (nil? ('subset? (ns-publics ns))))
-      (is (= #'clojure.set/subset? ('subset? (ns-refers ns))))))
+      (is (= #'set/subset? ('subset? (ns-refers ns))))))
   (testing "you cannot refer over an existing non-core name"
-    (let [ns (temp-ns 'clojure.set)
+    (let [ns          (temp-ns '[clojure.set :as set :refer :all])
           replacement (gensym)]
       (is (thrown? IllegalStateException
-                   (.refer ns 'subset? #'clojure.set/intersection)))
+                   (.refer ns 'subset? #'set/intersection)))
       (is (nil? ('subset? (ns-publics ns))))
-      (is (= #'clojure.set/subset? ('subset? (ns-refers ns)))))))
-
-(defmacro silenced [& forms]
-  `(binding [*err* (new java.io.StringWriter)]
-     ~@forms))
+      (is (= #'set/subset? ('subset? (ns-refers ns)))))))
 
 (deftest var-meta-tests
   (testing "Var.resetMeta should clear flags, getters"

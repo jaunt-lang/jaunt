@@ -1,5 +1,8 @@
 (ns clojure.test-clojure.reflect
-  (:use clojure.data [clojure.reflect :as reflect] clojure.test clojure.pprint)
+  (:require [clojure.data :refer :all]
+            [clojure.reflect :as reflect]
+            [clojure.test :refer :all]
+            [clojure.pprint :refer :all])
   (:import [clojure.reflect AsmReflector JavaReflector]
            [reflector IBar$Factory]))
 

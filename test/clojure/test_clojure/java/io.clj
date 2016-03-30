@@ -7,13 +7,13 @@
 ;;    You must not remove this notice, or any other, from this software.
 
 (ns clojure.test-clojure.java.io
-  (:use clojure.test clojure.java.io
-        [clojure.test-helper :only [platform-newlines]])
-  (:import (java.io File BufferedInputStream
-                    FileInputStream InputStreamReader InputStream
-                    FileOutputStream OutputStreamWriter OutputStream
-                    ByteArrayInputStream ByteArrayOutputStream)
-           (java.net URL URI Socket ServerSocket)))
+  (:require [clojure.test :refer :all]
+            [clojure.java.io :refer :all]
+            [clojure.test-helper :refer [platform-newlines]])
+  (:import [java.io File BufferedInputStream FileInputStream InputStreamReader InputStream
+            FileOutputStream OutputStreamWriter OutputStream ByteArrayInputStream
+            ByteArrayOutputStream]
+           [java.net URL URI Socket ServerSocket]))
 
 (defn temp-file
   [prefix suffix]
@@ -112,6 +112,7 @@
        (bytes-should-equal (.getBytes s "UTF-8")
                            (.toByteArray o)
                            (str "combination " test opts))))))
+
 ;; does not work on IBM JDK
 #_(deftest test-copy-encodings
     (doseq [enc ["UTF-8" "UTF-16" "UTF-16BE" "UTF-16LE"]]
@@ -127,38 +128,38 @@
 
 (deftest test-as-file
   (are [result input] (= result (as-file input))
-    (File. "foo") "foo"
-    (File. "bar") (File. "bar")
-    (File. "baz") (URL. "file:baz")
-    (File. "bar+baz") (URL. "file:bar+baz")
-    (File. "bar baz qux") (URL. "file:bar%20baz%20qux")
-    (File. "quux") (URI. "file:quux")
+    (File. "foo")           "foo"
+    (File. "bar")           (File. "bar")
+    (File. "baz")           (URL. "file:baz")
+    (File. "bar+baz")       (URL. "file:bar+baz")
+    (File. "bar baz qux")   (URL. "file:bar%20baz%20qux")
+    (File. "quux")          (URI. "file:quux")
     (File. "abcíd/foo.txt") (URL. "file:abc%c3%add/foo.txt")
-    nil nil))
+    nil                     nil))
 
 (deftest test-resources-with-spaces
   (let [file-with-spaces (temp-file "test resource 2" "txt")
-        url (as-url (.getParentFile file-with-spaces))
-        loader (java.net.URLClassLoader. (into-array [url]))
-        r (resource (.getName file-with-spaces) loader)]
+        url              (as-url (.getParentFile file-with-spaces))
+        loader           (java.net.URLClassLoader. (into-array [url]))
+        r                (resource (.getName file-with-spaces) loader)]
     (is (= r (as-url file-with-spaces)))
     (spit r "foobar")
     (is (= "foobar" (slurp r)))))
 
 (deftest test-file
   (are [result args] (= (File. result) (apply file args))
-    "foo" ["foo"]
-    "foo/bar" ["foo" "bar"]
+    "foo"         ["foo"]
+    "foo/bar"     ["foo" "bar"]
     "foo/bar/baz" ["foo" "bar" "baz"]))
 (deftest test-as-url
   (are [file-part input] (= (URL. (str "file:" file-part)) (as-url input))
-    "foo" "file:foo"
-    "baz" (URL. "file:baz")
+    "foo"  "file:foo"
+    "baz"  (URL. "file:baz")
     "quux" (URI. "file:quux"))
   (is (nil? (as-url nil))))
 
 (deftest test-delete-file
-  (let [file (temp-file "test" "deletion")
+  (let [file     (temp-file "test" "deletion")
         not-file (File. (str (java.util.UUID/randomUUID)))]
     (delete-file (.getAbsolutePath file))
     (is (not (.exists file)))
@@ -182,9 +183,9 @@
     (is (= (seq expected-bytes) (seq actual-bytes)) (str msg " : byte arrays should match"))))
 
 (deftest test-input-stream
-  (let [file (temp-file "test-input-stream" "txt")
+  (let [file    (temp-file "test-input-stream" "txt")
         content (apply str (concat "a" (repeat 500 "\u226a\ud83d\ude03")))
-        bytes (.getBytes content "UTF-8")]
+        bytes   (.getBytes content "UTF-8")]
     (spit file content)
     (doseq [[expr msg]
             [[file File]
@@ -207,8 +208,8 @@
 (deftest test-resource
   (is (nil? (resource "non/existent/resource")))
   (is (instance? URL (resource "clojure/core.clj")))
-  (let [file (temp-file "test-resource" "txt")
-        url (as-url (.getParentFile file))
+  (let [file   (temp-file "test-resource" "txt")
+        url    (as-url (.getParentFile file))
         loader (java.net.URLClassLoader. (into-array [url]))]
     (is (nil? (resource "non/existent/resource" loader)))
     (is (instance? URL (resource (.getName file) loader)))))

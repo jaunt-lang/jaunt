@@ -10,8 +10,8 @@
 
 
 (ns clojure.test-clojure.clojure-set
-  (:use clojure.test)
-  (:require [clojure.set :as set]))
+  (:require [clojure.test :refer :all]
+            [clojure.set :as set]))
 
 (deftest test-union
   (are [x y] (= x y)

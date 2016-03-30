@@ -9,7 +9,7 @@
 ;; Author: Paul M Bauer
 
 (ns clojure.test-clojure.try-catch
-  (:use clojure.test)
+  (:require [clojure.test :refer :all])
   (:import [clojure.test ReflectorTryCatchFixture
             ReflectorTryCatchFixture$Cookies]))
 
