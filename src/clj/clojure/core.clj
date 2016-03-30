@@ -5764,6 +5764,10 @@
         (finally
           (. clojure.lang.Var (popThreadBindings)))))))
 
+(defn- process-reference [[kname & args]]
+  `(~(symbol "clojure.core" (clojure.core/name kname))
+    ~@(map #(list 'quote %) args)))
+
 (defmacro ns
   "Sets *ns* to the namespace named by name (unevaluated), creating it
   if needed.  references can be zero or more of: (:refer-clojure ...)
@@ -5791,38 +5795,48 @@
   {:arglists '([name docstring? attr-map? references*])
    :added    "0.1.0"}
   [name & references]
-  (let [process-reference
-        (fn [[kname & args]]
-          `(~(symbol "clojure.core" (clojure.core/name kname))
-            ~@(map #(list 'quote %) args)))
-        docstring        (when (string? (first references)) (first references))
-        references       (if docstring (next references) references)
+  (let [docstring        (when (string? (first references))
+                           (first references))
+        references       (if docstring
+                           (next references)
+                           references)
         name             (if docstring
                            (vary-meta name assoc :doc docstring)
                            name)
-        metadata         (when (map? (first references)) (first references))
-        references       (if metadata (next references) references)
+        metadata         (when (map? (first references))
+                           (first references))
+        references       (if metadata
+                           (next references)
+                           references)
         name             (if metadata
                            (vary-meta name merge metadata)
                            name)
         gen-class-clause (first (filter #(= :gen-class (first %)) references))
-        gen-class-call
-        (when gen-class-clause
-          (list* `gen-class :name (.replace (str name) \- \_) :impl-ns name :main true (next gen-class-clause)))
+        gen-class-call   (when gen-class-clause
+                           (list* `gen-class
+                                  :name    (.replace (str name) \- \_)
+                                  :impl-ns name
+                                  :main    true
+                                  (next gen-class-clause)))
         references       (remove #(= :gen-class (first %)) references)
-        name-metadata    (meta name)]
-    `(do
-       (clojure.core/in-ns '~name)
-       ~@(when name-metadata
-           `((.resetMeta (clojure.lang.Namespace/find '~name) ~name-metadata)))
-       (with-loading-context
-         ~@(when gen-class-call (list gen-class-call))
-         ~@(when (and (not= name 'clojure.core) (not-any? #(= :refer-clojure (first %)) references))
-             `((clojure.core/refer '~'clojure.core)))
-         ~@(map process-reference references))
-       (if (.equals '~name 'clojure.core)
-         nil
-         (do (dosync (commute @#'*loaded-libs* conj '~name)) nil)))))
+        name-metadata    (meta name)
+        fn-form          `(fn nsfn# []
+                            (with-loading-context
+                              ~@(when gen-class-call (list gen-class-call))
+                              ~@(when (and (not= name 'clojure.core)
+                                           (not-any? #(= :refer-clojure (first %)) references))
+                                  `((clojure.core/refer* *ns* '~'clojure.core)))
+                              ~@(map process-reference references)))
+        res-form         `(let [~'__ns (clojure.core/in-ns '~name)
+                                ~'__fn ~(binding [*ns* (find-ns 'clojure.core)]
+                                          (eval fn-form))]
+                            ~@(when name-metadata
+                                `((.resetMeta ~'__ns ~name-metadata)))
+                            (~'__fn)
+                            ~@(if (not= name 'clojure.core)
+                                `((dosync (commute @#'*loaded-libs* conj '~name))))
+                            nil)]
+    res-form))
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
