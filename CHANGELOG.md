@@ -1,6 +1,9 @@
 # Change Log
 
 ## Upcoming
+- [#116](https://github.com/jaunt-lang/jaunt/pull/116) Deprecate `clojure.core/refer` (@arrdem).
+  - Deprecate `clojure.core/refer`
+  - Refactor `clojure.core/refer` to emit a warning describing how to rewrite refer into require.
 - [#117](https://github.com/jaunt-lang/jaunt/pull/117) Fix typo in arglists (@arrdem).
 - [#112](https://github.com/jaunt-lang/jaunt/pull/112) Self-refactoring use (@arrdem).
   - Add `clojure.core/sift`.

@@ -4205,25 +4205,13 @@
 (defn ^:private errwriter []
   (clojure.lang.RT/errPrintWriter))
 
-(defn refer
-  "refers to all public vars of ns, subject to filters.
-  filters can include at most one each of:
+(declare format interpose)
 
-  :exclude list-of-symbols
-  :only list-of-symbols
-  :rename map-of-fromsymbol-tosymbol
-
-  For each public interned var in the namespace named by the symbol,
-  adds a mapping from the name of the var to the var to the current
-  namespace.  Throws an exception if name is already mapped to
-  something else in the current namespace. Filters can be used to
-  select a subset, via inclusion or exclusion, or to provide a mapping
-  to a symbol different from the var's name, in order to prevent
-  clashes. Use :use in the ns macro in preference to calling this directly."
-  {:added "0.1.0"}
-  [ns-sym & filters]
-  (let [ns        (or (find-ns ns-sym) (throw (new Exception (str "No namespace: " ns-sym))))
+(defn ^:private refer* [^clojure.lang.Namespace a-ns ns-sym & filters]
+  (let [ns        (or (find-ns ns-sym)
+                      (throw (new Exception (str "No namespace: " ns-sym))))
         fs        (apply hash-map filters)
+        filters   (mapcat identity fs)
         nspublics (ns-publics ns)
         all       (keys nspublics)
         rename    (:rename fs {})
@@ -4239,7 +4227,8 @@
                         (= op :only)  only
                         :else         all)
         d-ctx     (deprecated? *ns*)
-        *err*     (errwriter)]
+        *err*     (errwriter)
+        pos       (str " (" *file* ":" *line* ":" *column* ")")]
     (when (and to-do
                (not (instance? clojure.lang.Sequential to-do)))
       (throw (Exception. ":only/:refer value must be a sequential collection of symbols")))
@@ -4247,8 +4236,7 @@
                (not d-ctx)
                (warn-deprecated?)
                (deprecated? ns))
-      (.println *err* (str "Warning: referring vars from deprecated ns: " (name ns)
-                           " (" *file* ":" *line* ":" *column* ")")))
+      (. *err* (println (str "Warning: referring vars from deprecated ns: " (name ns) pos))))
     (doseq [sym to-do]
       (when-not (exclude sym)
         (let [v (nspublics sym)]
@@ -4261,9 +4249,75 @@
                      (not d-ctx)
                      (warn-deprecated?)
                      (not= op :all))
-            (.println *err* (str "Warning: referring deprecated var: " v
-                                 " (" *file* ":" *line* ":" *column* ")")))
-          (. *ns* (refer (or (rename sym) sym) v)))))))
+            (. *err* (println (str "Warning: referring deprecated var: " v pos))))
+          (. a-ns (refer (or (rename sym) sym) v)))))))
+
+(defn ^:private rewrite-refer [ns-sym fs]
+  (let [rename  (:rename fs {})
+        exclude (:exclude fs [])
+        only    (:refer fs (:only fs :all))]
+    `[[~ns-sym
+       ~@[:refer only]
+       ~@(when-not (empty? exclude)
+           [:exclude exclude])
+       ~@(when-not (empty? rename)
+           [:rename rename])]]))
+
+;; FIXME: practically clojure.string/join
+(defn ^:private string-join [sepr coll]
+  (apply str (interpose sepr coll)))
+
+(defn refer
+  "DEPRECATED: Unrestricted referrals are difficult to reason about and should be avoided in favor
+  of qualified imports. Restricted and unrestricted referrals can both be achieved via require, so
+  refer has no special value.
+
+  refers to all public vars of ns, subject to filters.  filters can include at most one each of:
+
+  :exclude list-of-symbols
+  :only list-of-symbols
+  :rename map-of-fromsymbol-tosymbol
+
+  For each public interned var in the namespace named by the symbol, adds a mapping from the name of
+  the var to the var to the current namespace.  Throws an exception if name is already mapped to
+  something else in the current namespace. Filters can be used to select a subset, via inclusion or
+  exclusion, or to provide a mapping to a symbol different from the var's name, in order to prevent
+  clashes. Use :use in the ns macro in preference to calling this directly."
+  {:added      "0.1.0"
+   :deprecated "0.2.0"}
+  [ns-sym & filters]
+  (let [ns        (or (find-ns ns-sym)
+                      (throw (new Exception (str "No namespace: " ns-sym))))
+        fs        (apply hash-map filters)
+        filters   (mapcat identity fs)
+        nspublics (ns-publics ns)
+        all       (keys nspublics)
+        rename    (:rename fs {})
+        exclude   (set (:exclude fs))
+        refer     (:refer fs)
+        only      (:only fs)
+        op        (cond (= :all refer) :all
+                        refer          :refer
+                        only           :only
+                        :else          :all)
+        to-do     (cond (= op :all)   all
+                        (= op :refer) refer
+                        (= op :only)  only
+                        :else         all)
+        d-ctx     (deprecated? *ns*)
+        *err*     (errwriter)
+        pos       (str " (" *file* ":" *line* ":" *column* ")")]
+    (. *err* (println
+              (format (str "Refer is deprecated, require should be preferred%s\n"
+                           "Instead of:\n%s"
+                           "Try:\n%s"
+                           (when-not (empty? rename)
+                             "Note: renaming is a code smell and may be deprecated in the future."))
+                      pos
+                      (str "  (:refer " ns-sym (when-not (empty? filters)
+                                                 (str " " (string-join " " filters))) ")\n")
+                      (str "  (:require " (string-join " " (rewrite-refer ns-sym fs)) ")\n"))))
+    (apply refer* *ns* ns-sym filters)))
 
 (defn ns-refers
   "Returns a map of the refer mappings for the namespace."
@@ -5710,6 +5764,10 @@
         (finally
           (. clojure.lang.Var (popThreadBindings)))))))
 
+(defn- process-reference [[kname & args]]
+  `(~(symbol "clojure.core" (clojure.core/name kname))
+    ~@(map #(list 'quote %) args)))
+
 (defmacro ns
   "Sets *ns* to the namespace named by name (unevaluated), creating it
   if needed.  references can be zero or more of: (:refer-clojure ...)
@@ -5737,44 +5795,54 @@
   {:arglists '([name docstring? attr-map? references*])
    :added    "0.1.0"}
   [name & references]
-  (let [process-reference
-        (fn [[kname & args]]
-          `(~(symbol "clojure.core" (clojure.core/name kname))
-            ~@(map #(list 'quote %) args)))
-        docstring        (when (string? (first references)) (first references))
-        references       (if docstring (next references) references)
+  (let [docstring        (when (string? (first references))
+                           (first references))
+        references       (if docstring
+                           (next references)
+                           references)
         name             (if docstring
                            (vary-meta name assoc :doc docstring)
                            name)
-        metadata         (when (map? (first references)) (first references))
-        references       (if metadata (next references) references)
+        metadata         (when (map? (first references))
+                           (first references))
+        references       (if metadata
+                           (next references)
+                           references)
         name             (if metadata
                            (vary-meta name merge metadata)
                            name)
         gen-class-clause (first (filter #(= :gen-class (first %)) references))
-        gen-class-call
-        (when gen-class-clause
-          (list* `gen-class :name (.replace (str name) \- \_) :impl-ns name :main true (next gen-class-clause)))
+        gen-class-call   (when gen-class-clause
+                           (list* `gen-class
+                                  :name    (.replace (str name) \- \_)
+                                  :impl-ns name
+                                  :main    true
+                                  (next gen-class-clause)))
         references       (remove #(= :gen-class (first %)) references)
-        name-metadata    (meta name)]
-    `(do
-       (clojure.core/in-ns '~name)
-       ~@(when name-metadata
-           `((.resetMeta (clojure.lang.Namespace/find '~name) ~name-metadata)))
-       (with-loading-context
-         ~@(when gen-class-call (list gen-class-call))
-         ~@(when (and (not= name 'clojure.core) (not-any? #(= :refer-clojure (first %)) references))
-             `((clojure.core/refer '~'clojure.core)))
-         ~@(map process-reference references))
-       (if (.equals '~name 'clojure.core)
-         nil
-         (do (dosync (commute @#'*loaded-libs* conj '~name)) nil)))))
+        name-metadata    (meta name)
+        fn-form          `(fn nsfn# []
+                            (with-loading-context
+                              ~@(when gen-class-call (list gen-class-call))
+                              ~@(when (and (not= name 'clojure.core)
+                                           (not-any? #(= :refer-clojure (first %)) references))
+                                  `((clojure.core/refer* *ns* '~'clojure.core)))
+                              ~@(map process-reference references)))
+        res-form         `(let [~'__ns (clojure.core/in-ns '~name)
+                                ~'__fn ~(binding [*ns* (find-ns 'clojure.core)]
+                                          (eval fn-form))]
+                            ~@(when name-metadata
+                                `((.resetMeta ~'__ns ~name-metadata)))
+                            (~'__fn)
+                            ~@(if (not= name 'clojure.core)
+                                `((dosync (commute @#'*loaded-libs* conj '~name))))
+                            nil)]
+    res-form))
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
   {:added "0.1.0"}
   [& filters]
-  `(clojure.core/refer '~'clojure.core ~@filters))
+  `(clojure.core/refer* *ns* '~'clojure.core ~@filters))
 
 (defmacro defonce
   "defs name to have the root value of the expr iff the named var has no root value,
@@ -5922,7 +5990,7 @@
           (doseq [opt filter-opts]
             (printf " %s '%s" (key opt) (print-str (val opt))))
           (printf ")\n"))
-        (apply refer lib (mapcat seq filter-opts))))))
+        (apply refer* *ns* lib (mapcat seq filter-opts))))))
 
 (defn- load-libs
   "Loads libs, interpreting libspecs, prefix lists, and flags for

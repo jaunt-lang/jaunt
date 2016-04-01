@@ -471,13 +471,12 @@ public class RT {
       Symbol USER = Symbol.intern("user");
       Symbol CLOJURE = Symbol.intern("clojure.core");
 
-      Var refer = var("clojure.core", "refer");
+      Var require = var("clojure.core", "require");
       IN_NS_VAR.invoke(USER);
-      refer.invoke(CLOJURE);
+      require.invoke(vector(CLOJURE, Keyword.intern("refer"), Keyword.intern("all")));
       maybeLoadResourceScript("user.clj");
 
       // start socket servers
-      Var require = var("clojure.core", "require");
       Symbol SERVER = Symbol.intern("clojure.core.server");
       require.invoke(SERVER);
       Var start_servers = var("clojure.core.server", "start-servers");

@@ -8,14 +8,12 @@
 
 ;; Author: Frantisek Sodomka
 
-
 (ns clojure.test-clojure.data-structures
   (:require [clojure.test-clojure.generators :as cgen]
             [clojure.data.generators :as gen]
             [clojure.string :as string]
             [clojure.test :refer :all]
-            clojure.test.generative)
-  (:refer clojure.test.generative :exclude (is)))
+            [clojure.test.generative :refer :all :exclude [is]]))
 
 ;; *** Helper functions ***
 
