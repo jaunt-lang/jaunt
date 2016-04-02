@@ -248,7 +248,7 @@ public class RT {
   };
 
   final static IFn bootNamespace = new AFn() {
-    public Object invoke(Object __form, Object __env,Object arg1) {
+    public Object invoke(Object __form, Object __env, Object arg1) {
       Symbol nsname = (Symbol) arg1;
       Namespace ns = Namespace.findOrCreate(nsname);
       CURRENT_NS.set(ns);
@@ -464,9 +464,9 @@ public class RT {
     load("clojure/core");
 
     Var.pushThreadBindings(
-      RT.mapUniqueKeys(CURRENT_NS, CURRENT_NS.deref(),
-                       WARN_ON_REFLECTION, WARN_ON_REFLECTION.deref()
-                       ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()));
+      mapUniqueKeys(CURRENT_NS,           CURRENT_NS.deref()
+                    , WARN_ON_REFLECTION, WARN_ON_REFLECTION.deref()
+                    , UNCHECKED_MATH,     UNCHECKED_MATH.deref()));
     try {
       Symbol USER = Symbol.intern("user");
       Symbol CLOJURE = Symbol.intern("clojure.core");
@@ -474,7 +474,17 @@ public class RT {
       Var require = var("clojure.core", "require");
       IN_NS_VAR.invoke(USER);
       require.invoke(vector(CLOJURE, Keyword.intern("refer"), Keyword.intern("all")));
-      maybeLoadResourceScript("user.clj");
+
+      try {
+        maybeLoadResourceScript("user.clj");
+      } catch (Exception e) {
+        load("clojure/stacktrace");
+        PrintWriter epw = errPrintWriter();
+        Var.pushThreadBindings(mapUniqueKeys(OUT, epw));
+        epw.println("Warning: failed to load user.clj!");
+        var("clojure.stacktrace", "print-cause-trace").invoke(e, null);
+        Var.popThreadBindings();
+      }
 
       // start socket servers
       Symbol SERVER = Symbol.intern("clojure.core.server");
@@ -490,7 +500,7 @@ public class RT {
     return id.getAndIncrement();
   }
 
-// Load a library in the System ClassLoader instead of Clojure's own.
+  // Load a library in the System ClassLoader instead of Clojure's own.
   public static void loadLibrary(String libname) {
     System.loadLibrary(libname);
   }
