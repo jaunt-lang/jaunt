@@ -1,6 +1,7 @@
 # Change Log
 
 ## Upcoming
+- [#122](https://github.com/jaunt-lang/jaunt/pull/122) Catch and print exceptions encountered loading `user.clj` (@arrdem).
 - [#116](https://github.com/jaunt-lang/jaunt/pull/116) Deprecate `clojure.core/refer` (@arrdem).
   - Deprecate `clojure.core/refer`
   - Refactor `clojure.core/refer` to emit a warning describing how to rewrite refer into require.
