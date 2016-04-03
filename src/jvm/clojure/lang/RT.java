@@ -696,6 +696,13 @@ public class RT {
     return coll.cons(x);
   }
 
+  static public IPersistentSet union(IPersistentSet a, Seqable b) {
+    for (Object o : b) {
+      a = (IPersistentSet) a.cons(o);
+    }
+    return a;
+  }
+
   static public ISeq cons(Object x, Object coll) {
     if (coll == null) {
       return new PersistentList(x);
