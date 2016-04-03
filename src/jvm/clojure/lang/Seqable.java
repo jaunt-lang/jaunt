@@ -12,6 +12,12 @@
 
 package clojure.lang;
 
-public interface Seqable {
+import java.util.Iterator;
+
+public interface Seqable extends Iterable {
   ISeq seq();
+
+default Iterator iterator() {
+    return new SeqIterator(seq());
+  }
 }
