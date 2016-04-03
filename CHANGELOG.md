@@ -1,6 +1,10 @@
 # Change Log
 
 ## Upcoming
+- [#123](https://github.com/jaunt-lang/jaunt/pull/123) Add support for `:jnt` in reader conditionals (@arrdem).
+  - Update to Java 1.8
+  - Implement `java.lang.Iterable` over `clojure.lang.Seqable` using a Java 8 interface default method
+  - Add `clojure.lang.RT.union(set, seq):set`
 - [#122](https://github.com/jaunt-lang/jaunt/pull/122) Catch and print exceptions encountered loading `user.clj` (@arrdem).
 - [#116](https://github.com/jaunt-lang/jaunt/pull/116) Deprecate `clojure.core/refer` (@arrdem).
   - Deprecate `clojure.core/refer`
