@@ -68,5 +68,4 @@ public class TaggedLiteral implements ILookup {
     result = 31 * result + Util.hash(form);
     return result;
   }
-
 }
