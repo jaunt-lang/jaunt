@@ -38,8 +38,7 @@
   (is (= 'abc.def/ghi (symbol "abc.def" "ghi")))
   (is (= 'abc/def.ghi (symbol "abc" "def.ghi")))
   (is (= 'abc:def/ghi:jkl.mno (symbol "abc:def" "ghi:jkl.mno")))
-  (is (instance? clojure.lang.Symbol 'alphabet))
-  )
+  (is (instance? clojure.lang.Symbol 'alphabet)))
 
 ;; Literals
 
@@ -47,7 +46,7 @@
   ; 'nil 'false 'true are reserved by Clojure and are not symbols
   (is (= 'nil nil))
   (is (= 'false false))
-  (is (= 'true true)) )
+  (is (= 'true true)))
 
 ;; Strings
 
@@ -663,16 +662,22 @@
            (read-string {:read-cond :allow :features #{:foo :bar}} "[#?(:foo foo-form :bar bar-form)]")))
     (is (= '[]
            (read-string {:read-cond :allow :features #{:baz}} "[#?( :foo foo-form :bar bar-form)]"))))
+
   (testing "environmental features"
+    (is (= "jaunt" #?(:jnt "jaunt" :clj "clojure" :cljs "clojurescript" :default "default")))
+    (is (= "first-wins" #?(:clj "first-wins" :jnt "jaunt" :cljs "clojurescript" :default "default")))
     (is (= "clojure" #?(:clj "clojure" :cljs "clojurescript" :default "default"))))
+
   (testing "default features"
     (is (= "default" #?(:clj-clr "clr" :cljs "cljs" :default "default"))))
+
   (testing "splicing"
     (is (= [] [#?@(:clj [])]))
     (is (= [:a] [#?@(:clj [:a])]))
     (is (= [:a :b] [#?@(:clj [:a :b])]))
     (is (= [:a :b :c] [#?@(:clj [:a :b :c])]))
     (is (= [:a :b :c] [#?@(:clj [:a :b :c])])))
+
   (testing "nested splicing"
     (is (= [:a :b :c :d :e]
            [#?@(:clj [:a #?@(:clj [:b #?@(:clj [:c]) :d]):e])]))
@@ -682,9 +687,11 @@
            '(+ #?@(:clj [(+ #?@(:clj [2 3])) 1]))))
     (is (= [:a [:b [:c] :d] :e]
            [#?@(:clj [:a [#?@(:clj [:b #?@(:clj [[:c]]) :d])] :e])])))
+
   (testing "bypass unknown tagged literals"
     (is (= [1 2 3] #?(:cljs #js [1 2 3] :clj [1 2 3])))
     (is (= :clojure #?(:foo #some.nonexistent.Record {:x 1} :clj :clojure))))
+
   (testing "error cases"
     (is (thrown-with-msg? RuntimeException #"Feature should be a keyword" (read-string {:read-cond :allow} "#?((+ 1 2) :a)")))
     (is (thrown-with-msg? RuntimeException #"even number of forms" (read-string {:read-cond :allow} "#?(:cljs :a :clj)")))
@@ -696,6 +703,7 @@
     (is (thrown-with-msg? RuntimeException #"Reader conditional splicing not allowed at the top level" (read-string {:read-cond :allow} "#?@(:clj [1 2])")))
     (is (thrown-with-msg? RuntimeException #"Reader conditional splicing not allowed at the top level" (read-string {:read-cond :allow} "#?@(:clj [1])")))
     (is (thrown-with-msg? RuntimeException #"Reader conditional splicing not allowed at the top level" (read-string {:read-cond :allow} "#?@(:clj []) 1"))))
+
   (testing "clj-1698-regression"
     (let [opts {:features #{:clj} :read-cond :allow}]
       (is (= 1 (read-string opts "#?(:cljs {'a 1 'b 2} :clj 1)")))
@@ -703,6 +711,7 @@
       (is (= '(def m {}) (read-string opts "(def m #?(:cljs ^{:a :b} {} :clj  ^{:a :b} {}))")))
       (is (= '(def m {}) (read-string opts "(def m #?(:cljs ^{:a :b} {} :clj ^{:a :b} {}))")))
       (is (= 1 (read-string opts "#?(:cljs {:a #_:b :c} :clj 1)")))))
+
   (testing "nil expressions"
     (is (nil? #?(:default nil)))
     (is (nil? #?(:foo :bar :clj nil)))
