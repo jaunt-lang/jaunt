@@ -1,6 +1,7 @@
 # Change Log
 
 ## Upcoming
+- [#126](https://github.com/jaunt-lang/jaunt/pull/126) Add reader support for `Infinity`, `NaN` (@arrdem).
 - [#123](https://github.com/jaunt-lang/jaunt/pull/123) Add support for `:jnt` in reader conditionals (@arrdem).
   - Update to Java 1.8
   - Implement `java.lang.Iterable` over `clojure.lang.Seqable` using a Java 8 interface default method
