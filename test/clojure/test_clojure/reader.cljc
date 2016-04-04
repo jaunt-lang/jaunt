@@ -210,6 +210,11 @@
   (is (instance? Double -1.0))
   (is (instance? Double -1.))
 
+  (is (instance? Double Infinity))
+  (is (instance? Double +Infinity))
+  (is (instance? Double -Infinity))
+  (is (instance? Double NaN))
+
   ; Read BigDecimal
   (is (instance? BigDecimal 9223372036854775808M))
   (is (instance? BigDecimal -9223372036854775809M))

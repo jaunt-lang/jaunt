@@ -349,7 +349,14 @@ public class LispReader {
       return RT.T;
     } else if (s.equals("false")) {
       return RT.F;
+    } else if (s.equals("NaN")) {
+      return Double.NaN;
+    } else if (s.equals("-Infinity")) {
+      return Double.NEGATIVE_INFINITY;
+    } else if (s.equals("Infinity") || s.equals("+Infinity")) {
+      return Double.POSITIVE_INFINITY;
     }
+
     Object ret = null;
 
     ret = matchSymbol(s);
