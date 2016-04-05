@@ -83,32 +83,33 @@ public class Compiler implements Opcodes {
   static final Symbol NS = Symbol.intern("ns");
   static final Symbol IN_NS = Symbol.intern("in-ns");
 
-  static final public IPersistentMap specials = PersistentHashMap.create(
-        DEF, new DefExpr.Parser(),
-        LOOP, new LetExpr.Parser(),
-        RECUR, new RecurExpr.Parser(),
-        IF, new IfExpr.Parser(),
-        CASE, new CaseExpr.Parser(),
-        LET, new LetExpr.Parser(),
-        LETFN, new LetFnExpr.Parser(),
-        DO, new BodyExpr.Parser(),
-        FN, null,
-        QUOTE, new ConstantExpr.Parser(),
-        THE_VAR, new TheVarExpr.Parser(),
-        IMPORT, new ImportExpr.Parser(),
-        DOT, new HostExpr.Parser(),
-        ASSIGN, new AssignExpr.Parser(),
-        DEFTYPE, new NewInstanceExpr.DeftypeParser(),
-        REIFY, new NewInstanceExpr.ReifyParser(),
-        TRY, new TryExpr.Parser(),
-        THROW, new ThrowExpr.Parser(),
-        MONITOR_ENTER, new MonitorEnterExpr.Parser(),
-        MONITOR_EXIT, new MonitorExitExpr.Parser(),
-        CATCH, null,
-        FINALLY, null,
-        NEW, new NewExpr.Parser(),
-        _AMP_, null
-      );
+  static final public IPersistentMap specials =
+    RT.map(
+      DEF, new DefExpr.Parser()
+      ,LOOP, new LetExpr.Parser()
+      ,RECUR, new RecurExpr.Parser()
+      ,IF, new IfExpr.Parser()
+      ,CASE, new CaseExpr.Parser()
+      ,LET, new LetExpr.Parser()
+      ,LETFN, new LetFnExpr.Parser()
+      ,DO, new BodyExpr.Parser()
+      ,FN, null
+      ,QUOTE, new ConstantExpr.Parser()
+      ,THE_VAR, new TheVarExpr.Parser()
+      ,IMPORT, new ImportExpr.Parser()
+      ,DOT, new HostExpr.Parser()
+      ,ASSIGN, new AssignExpr.Parser()
+      ,DEFTYPE, new NewInstanceExpr.DeftypeParser()
+      ,REIFY, new NewInstanceExpr.ReifyParser()
+      ,TRY, new TryExpr.Parser()
+      ,THROW, new ThrowExpr.Parser()
+      ,MONITOR_ENTER, new MonitorEnterExpr.Parser()
+      ,MONITOR_EXIT, new MonitorExitExpr.Parser()
+      ,CATCH, null
+      ,FINALLY,       null
+      ,NEW, new NewExpr.Parser()
+      ,_AMP_, null
+    );
 
   private static final int MAX_POSITIONAL_ARITY = 20;
   private static final Type OBJECT_TYPE;
@@ -2569,31 +2570,30 @@ public class Compiler implements Opcodes {
   }
 
   static final public IPersistentMap CHAR_MAP =
-    PersistentHashMap.create('-', "_",
-//                             '.', "_DOT_",
-                             ':', "_COLON_",
-                             '+', "_PLUS_",
-                             '>', "_GT_",
-                             '<', "_LT_",
-                             '=', "_EQ_",
-                             '~', "_TILDE_",
-                             '!', "_BANG_",
-                             '@', "_CIRCA_",
-                             '#', "_SHARP_",
-                             '\'', "_SINGLEQUOTE_",
-                             '"', "_DOUBLEQUOTE_",
-                             '%', "_PERCENT_",
-                             '^', "_CARET_",
-                             '&', "_AMPERSAND_",
-                             '*', "_STAR_",
-                             '|', "_BAR_",
-                             '{', "_LBRACE_",
-                             '}', "_RBRACE_",
-                             '[', "_LBRACK_",
-                             ']', "_RBRACK_",
-                             '/', "_SLASH_",
-                             '\\', "_BSLASH_",
-                             '?', "_QMARK_");
+    RT.map('-', "_",
+           ':', "_COLON_",
+           '+', "_PLUS_",
+           '>', "_GT_",
+           '<', "_LT_",
+           '=', "_EQ_",
+           '~', "_TILDE_",
+           '!', "_BANG_",
+           '@', "_CIRCA_",
+           '#', "_SHARP_",
+           '\'', "_SINGLEQUOTE_",
+           '"', "_DOUBLEQUOTE_",
+           '%', "_PERCENT_",
+           '^', "_CARET_",
+           '&', "_AMPERSAND_",
+           '*', "_STAR_",
+           '|', "_BAR_",
+           '{', "_LBRACE_",
+           '}', "_RBRACE_",
+           '[', "_LBRACK_",
+           ']', "_RBRACK_",
+           '/', "_SLASH_",
+           '\\', "_BSLASH_",
+           '?', "_QMARK_");
 
   static final public IPersistentMap DEMUNGE_MAP;
   static final public Pattern DEMUNGE_PATTERN;
@@ -3590,15 +3590,16 @@ public class Compiler implements Opcodes {
       ArrayList<String> prims = new ArrayList();
       try {
         Var.pushThreadBindings(
-          RT.mapUniqueKeys(CONSTANTS, PersistentVector.EMPTY,
-                           CONSTANT_IDS, new IdentityHashMap(),
-                           KEYWORDS, PersistentHashMap.EMPTY,
-                           VARS, PersistentHashMap.EMPTY,
-                           KEYWORD_CALLSITES, PersistentVector.EMPTY,
-                           PROTOCOL_CALLSITES, PersistentVector.EMPTY,
-                           VAR_CALLSITES, emptyVarCallSites(),
-                           NO_RECUR, null
-                          ));
+          RT.map(
+            CONSTANTS, PersistentVector.EMPTY
+            ,CONSTANT_IDS, new IdentityHashMap()
+            ,KEYWORDS, PersistentHashMap.EMPTY
+            ,VARS, PersistentHashMap.EMPTY
+            ,KEYWORD_CALLSITES, PersistentVector.EMPTY
+            ,PROTOCOL_CALLSITES, PersistentVector.EMPTY
+            ,VAR_CALLSITES, emptyVarCallSites()
+            ,NO_RECUR, null
+          ));
 
         //arglist might be preceded by symbol naming this fn
         if (nm != null) {
@@ -4729,7 +4730,7 @@ public class Compiler implements Opcodes {
           pnode = new PathNode(PATHTYPE.PATH,null);
         }
         Var.pushThreadBindings(
-          RT.mapUniqueKeys(
+          RT.map(
             METHOD, method,
             LOCAL_ENV, LOCAL_ENV.deref(),
             LOOP_LOCALS, null,
@@ -6706,7 +6707,9 @@ public class Compiler implements Opcodes {
     LispReader.unread(pushbackReader, ch);
   }
 
-  private static final Object OPTS_COND_ALLOWED = RT.mapUniqueKeys(LispReader.OPT_READ_COND, LispReader.COND_ALLOW);
+  private static final Object OPTS_COND_ALLOWED =
+    RT.map(LispReader.OPT_READ_COND, LispReader.COND_ALLOW);
+
   private static Object readerOpts(String sourceName) {
     if (sourceName != null && sourceName.endsWith(".cljc")) {
       return OPTS_COND_ALLOWED;
@@ -6723,23 +6726,24 @@ public class Compiler implements Opcodes {
       new LineNumberingPushbackReader(rdr);
     consumeWhitespaces(pushbackReader);
     Var.pushThreadBindings(
-      RT.mapUniqueKeys(LOADER, RT.makeClassLoader(),
-                       SOURCE_PATH, sourcePath,
-                       SOURCE, sourceName,
-                       METHOD, null,
-                       LOCAL_ENV, null,
-                       LOOP_LOCALS, null,
-                       NEXT_LOCAL_NUM, 0,
-                       RT.READEVAL, RT.T,
-                       RT.CURRENT_NS, RT.CURRENT_NS.deref(),
-                       LINE_BEFORE, pushbackReader.getLineNumber(),
-                       COLUMN_BEFORE, pushbackReader.getColumnNumber(),
-                       LINE_AFTER, pushbackReader.getLineNumber(),
-                       COLUMN_AFTER, pushbackReader.getColumnNumber()
-                       ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()
-                       ,RT.WARN_ON_REFLECTION, RT.WARN_ON_REFLECTION.deref()
-                       ,RT.DATA_READERS, RT.DATA_READERS.deref()
-                      ));
+      RT.map(
+        LOADER, RT.makeClassLoader()
+        ,SOURCE_PATH, sourcePath
+        ,SOURCE, sourceName
+        ,METHOD, null
+        ,LOCAL_ENV, null
+        ,LOOP_LOCALS, null
+        ,NEXT_LOCAL_NUM, 0
+        ,LINE_BEFORE, pushbackReader.getLineNumber()
+        ,COLUMN_BEFORE, pushbackReader.getColumnNumber()
+        ,LINE_AFTER, pushbackReader.getLineNumber()
+        ,COLUMN_AFTER, pushbackReader.getColumnNumber()
+        ,RT.READEVAL, RT.T
+        ,RT.CURRENT_NS, RT.CURRENT_NS.deref()
+        ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()
+        ,RT.WARN_ON_REFLECTION, RT.WARN_ON_REFLECTION.deref()
+        ,RT.DATA_READERS, RT.DATA_READERS.deref()
+      ));
 
     Object readerOpts = readerOpts(sourceName);
     try {
@@ -6790,17 +6794,15 @@ public class Compiler implements Opcodes {
   }
 
   public static void pushNS() {
-    Var.pushThreadBindings(PersistentHashMap.create(Var.intern(Symbol.intern("clojure.core"),
-                           Symbol.intern("*ns*")).setDynamic(), null));
+    Var.pushThreadBindings(RT.map(RT.NS_VAR, null));
   }
 
   public static void pushNSandLoader(ClassLoader loader) {
-    Var.pushThreadBindings(RT.map(Var.intern(Symbol.intern("clojure.core"),
-                                  Symbol.intern("*ns*")).setDynamic(),
-                                  null,
-                                  RT.FN_LOADER_VAR, loader,
-                                  RT.READEVAL, RT.T
-                                 ));
+    Var.pushThreadBindings(
+      RT.map(
+        RT.CURRENT_NS, null
+        ,RT.FN_LOADER_VAR, loader
+        ,RT.READEVAL, RT.T));
   }
 
   public static ILookupThunk getLookupThunk(Object target, Keyword k) {
@@ -6850,27 +6852,27 @@ public class Compiler implements Opcodes {
       (rdr instanceof LineNumberingPushbackReader) ? (LineNumberingPushbackReader) rdr :
       new LineNumberingPushbackReader(rdr);
     Var.pushThreadBindings(
-      RT.mapUniqueKeys(SOURCE_PATH, sourcePath,
-                       SOURCE, sourceName,
-                       METHOD, null,
-                       LOCAL_ENV, null,
-                       LOOP_LOCALS, null,
-                       NEXT_LOCAL_NUM, 0,
-                       RT.READEVAL, RT.T,
-                       RT.CURRENT_NS, RT.CURRENT_NS.deref(),
-                       LINE_BEFORE, pushbackReader.getLineNumber(),
-                       COLUMN_BEFORE, pushbackReader.getColumnNumber(),
-                       LINE_AFTER, pushbackReader.getLineNumber(),
-                       COLUMN_AFTER, pushbackReader.getColumnNumber(),
-                       CONSTANTS, PersistentVector.EMPTY,
-                       CONSTANT_IDS, new IdentityHashMap(),
-                       KEYWORDS, PersistentHashMap.EMPTY,
-                       VARS, PersistentHashMap.EMPTY
-                       ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()
-                       ,RT.WARN_ON_REFLECTION, RT.WARN_ON_REFLECTION.deref()
-                       ,RT.DATA_READERS, RT.DATA_READERS.deref()
-                       //    ,LOADER, RT.makeClassLoader()
-                      ));
+      RT.map(
+        SOURCE_PATH, sourcePath
+        ,SOURCE, sourceName
+        ,METHOD, null
+        ,LOCAL_ENV, null
+        ,LOOP_LOCALS, null
+        ,NEXT_LOCAL_NUM, 0
+        ,LINE_BEFORE, pushbackReader.getLineNumber()
+        ,COLUMN_BEFORE, pushbackReader.getColumnNumber()
+        ,LINE_AFTER, pushbackReader.getLineNumber()
+        ,COLUMN_AFTER, pushbackReader.getColumnNumber()
+        ,CONSTANTS, PersistentVector.EMPTY
+        ,CONSTANT_IDS, new IdentityHashMap()
+        ,KEYWORDS, PersistentHashMap.EMPTY
+        ,VARS, PersistentHashMap.EMPTY
+        ,RT.READEVAL, RT.T
+        ,RT.CURRENT_NS, RT.CURRENT_NS.deref()
+        ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()
+        ,RT.WARN_ON_REFLECTION, RT.WARN_ON_REFLECTION.deref()
+        ,RT.DATA_READERS, RT.DATA_READERS.deref()
+      ));
 
     try {
       //generate loader class
@@ -7114,19 +7116,22 @@ public class Compiler implements Opcodes {
 
       try {
         Var.pushThreadBindings(
-          RT.mapUniqueKeys(CONSTANTS, PersistentVector.EMPTY,
-                           CONSTANT_IDS, new IdentityHashMap(),
-                           KEYWORDS, PersistentHashMap.EMPTY,
-                           VARS, PersistentHashMap.EMPTY,
-                           KEYWORD_CALLSITES, PersistentVector.EMPTY,
-                           PROTOCOL_CALLSITES, PersistentVector.EMPTY,
-                           VAR_CALLSITES, emptyVarCallSites(),
-                           NO_RECUR, null));
+          RT.map(
+            CONSTANTS, PersistentVector.EMPTY
+            ,CONSTANT_IDS, new IdentityHashMap()
+            ,KEYWORDS, PersistentHashMap.EMPTY
+            ,VARS, PersistentHashMap.EMPTY
+            ,KEYWORD_CALLSITES, PersistentVector.EMPTY
+            ,PROTOCOL_CALLSITES, PersistentVector.EMPTY
+            ,VAR_CALLSITES, emptyVarCallSites()
+            ,NO_RECUR, null));
         if (ret.isDeftype()) {
-          Var.pushThreadBindings(RT.mapUniqueKeys(METHOD, null,
-                                                  LOCAL_ENV, ret.fields
-                                                  , COMPILE_STUB_SYM, Symbol.intern(tagName)
-                                                  , COMPILE_STUB_CLASS, stub));
+          Var.pushThreadBindings(
+            RT.map(
+              METHOD, null
+              , LOCAL_ENV, ret.fields
+              , COMPILE_STUB_SYM, Symbol.intern(tagName)
+              , COMPILE_STUB_CLASS, stub));
 
           ret.hintedFields = RT.subvec(fieldSyms, 0, fieldSyms.count() - ret.altCtorDrops);
         }
@@ -7479,11 +7484,11 @@ public class Compiler implements Opcodes {
         //register as the current method and set up a new env frame
         PathNode pnode =  new PathNode(PATHTYPE.PATH, (PathNode) CLEAR_PATH.get());
         Var.pushThreadBindings(
-          RT.mapUniqueKeys(
-            METHOD, method,
-            LOCAL_ENV, LOCAL_ENV.deref(),
-            LOOP_LOCALS, null,
-            NEXT_LOCAL_NUM, 0
+          RT.map(
+            METHOD, method
+            ,LOCAL_ENV, LOCAL_ENV.deref()
+            ,LOOP_LOCALS, null
+            ,NEXT_LOCAL_NUM, 0
             ,CLEAR_PATH, pnode
             ,CLEAR_ROOT, pnode
             ,CLEAR_SITES, PersistentHashMap.EMPTY
