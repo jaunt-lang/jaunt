@@ -3685,8 +3685,8 @@ public class Compiler implements Opcodes {
       }
       fn.hasPrimSigs = prims.size() > 0;
       IPersistentMap fmeta = RT.meta(origForm);
-      if (fmeta != null) {
-        fmeta = fmeta.without(RT.LINE_KEY).without(RT.COLUMN_KEY).without(RT.FILE_KEY).without(retkey);
+      if (fmeta == null) {
+        fmeta = PersistentHashMap.EMPTY;
       }
 
       fn.hasMeta = RT.count(fmeta) > 0;
