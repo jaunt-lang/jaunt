@@ -3558,6 +3558,7 @@ public class Compiler implements Opcodes {
       ISeq origForm = form;
       FnExpr fn = new FnExpr(tagOf(form));
       Object rettag = RT.get(RT.meta(form), retKey);
+      IPersistentMap arities = PersistentHashMap.EMPTY;
       fn.src = form;
       ObjMethod enclosingMethod = (ObjMethod) METHOD.deref();
       fn.hasEnclosingMethod = enclosingMethod != null;
@@ -3618,19 +3619,21 @@ public class Compiler implements Opcodes {
         FnMethod variadicMethod = null;
         boolean usesThis = false;
         for (ISeq s = RT.next(form); s != null; s = RT.next(s)) {
-          FnMethod f = FnMethod.parse(fn, (ISeq) RT.first(s), rettag);
-          if (f.usesThis) {
-//          System.out.println(fn.name + " use this");
-            usesThis = true;
-          }
+          ISeq body = (ISeq) RT.first(s);
+          Object arglist = RT.first(body);
+          FnMethod f = FnMethod.parse(fn, body, rettag);
+          usesThis |= f.usesThis;
+
           if (f.isVariadic()) {
             if (variadicMethod == null) {
               variadicMethod = f;
+              arities = arities.assoc(varArgsKey, arglist);
             } else {
               throw Util.runtimeException("Can't have more than 1 variadic overload");
             }
           } else if (methodArray[f.reqParms.count()] == null) {
             methodArray[f.reqParms.count()] = f;
+            arities = arities.assoc(f.reqParms.count(), arglist);
           } else {
             throw Util.runtimeException("Can't have 2 overloads with same arity");
           }
