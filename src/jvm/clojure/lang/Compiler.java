@@ -5597,7 +5597,11 @@ public class Compiler implements Opcodes {
 
       for (int i = 0; i < bindingInits.count(); i++) {
         BindingInit bi = (BindingInit) bindingInits.nth(i);
-        ObjExpr fe = (ObjExpr) bi.init;
+        Expr e = bi.init;
+        if (e instanceof MetaExpr) {
+          e = ((MetaExpr) e).expr;
+        }
+        ObjExpr fe = (ObjExpr) e;
         gen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ILOAD), bi.binding.idx);
         fe.emitLetFnInits(gen, objx, lbset);
       }
@@ -6305,9 +6309,16 @@ public class Compiler implements Opcodes {
                    (form instanceof IPersistentCollection
                     && !(RT.first(form) instanceof Symbol
                          && ((Symbol) RT.first(form)).name.startsWith("def")))) {
-          ObjExpr fexpr = (ObjExpr) analyze(C.EXPRESSION, RT.list(FN, PersistentVector.EMPTY, form),
-                                            "eval" + RT.nextID());
-          IFn fn = (IFn) fexpr.eval();
+
+          Expr e = analyze(C.EXPRESSION,
+                           RT.list(FN, PersistentVector.EMPTY, form),
+                           "eval" + RT.nextID());
+
+          if (e instanceof MetaExpr) {
+            e = ((MetaExpr) e).expr;
+          }
+
+          IFn fn = (IFn) ((ObjExpr) e).eval();
           return fn.invoke();
         } else {
           Expr expr = analyze(C.EVAL, form);
