@@ -3689,6 +3689,11 @@ public class Compiler implements Opcodes {
         fmeta = PersistentHashMap.EMPTY;
       }
 
+      PersistentHashSet usedVars = PersistentHashSet.EMPTY;
+      for (Object o : ((APersistentMap) fn.vars).keySet()) {
+        usedVars = (PersistentHashSet) usedVars.cons(o);
+      }
+
       fn.hasMeta = RT.count(fmeta) > 0;
 
       try {
