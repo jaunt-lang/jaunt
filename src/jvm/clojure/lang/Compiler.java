@@ -3694,6 +3694,13 @@ public class Compiler implements Opcodes {
         usedVars = (PersistentHashSet) usedVars.cons(o);
       }
 
+      fmeta = fmeta
+              //.without(RT.LINE_KEY)
+              //.without(RT.COLUMN_KEY)
+              //.without(RT.FILE_KEY).without(retkey)
+              .assoc(usedKey, RT.list(QUOTE, usedVars))
+              .assoc(arglistsKey, RT.list(QUOTE, arities));
+
       fn.hasMeta = RT.count(fmeta) > 0;
 
       try {
