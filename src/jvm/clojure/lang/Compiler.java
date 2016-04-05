@@ -2819,8 +2819,8 @@ public class Compiler implements Opcodes {
       boolean valsConstant = true;
       boolean allConstantKeysUnique = true;
       IPersistentSet constantKeys = PersistentHashSet.EMPTY;
-      for (ISeq s = RT.seq(form); s != null; s = s.next()) {
-        IMapEntry e = (IMapEntry) s.first();
+      for (Object o : form) {
+        IMapEntry e = (IMapEntry) o;
         Expr k = analyze(context == C.EVAL ? context : C.EXPRESSION, e.key());
         Expr v = analyze(context == C.EVAL ? context : C.EXPRESSION, e.val());
         keyvals = (IPersistentVector) keyvals.cons(k);
