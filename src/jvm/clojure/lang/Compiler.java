@@ -4275,8 +4275,12 @@ public class Compiler implements Opcodes {
         gen.push(((Keyword) value).sym.ns);
         gen.push(((Keyword) value).sym.name);
         gen.invokeStatic(RT_TYPE, Method.getMethod("clojure.lang.Keyword keyword(String,String)"));
-      }
-      else if (value instanceof Var) {
+      } else if (value instanceof Namespace) {
+        Namespace ns = (Namespace) value;
+        gen.push(ns.getName());
+        gen.invokeStatic(SYMBOL_TYPE, Method.getMethod("clojure.lang.Symbol intern(String)"));
+        gen.invokeStatic(NS_TYPE, Method.getMethod("clojure.lang.Namespace findOrCreate(clojure.lang.Symbol)"));
+      } else if (value instanceof Var) {
         Var var = (Var) value;
         gen.push(var.ns.name.toString());
         gen.push(var.sym.toString());
