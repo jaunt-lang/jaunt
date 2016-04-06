@@ -68,6 +68,7 @@ public class Compiler implements Opcodes {
   static final Keyword retKey = Keyword.intern("rettag");
   static final Keyword formKey = Keyword.intern("form");
   static final Keyword onceKey = Keyword.intern("once");
+  static final Keyword noMetaKey = Keyword.intern("no-meta");
 
   static final Symbol INVOKE_STATIC = Symbol.intern("invokeStatic");
 
@@ -3562,9 +3563,16 @@ public class Compiler implements Opcodes {
       fn.src = form;
       ObjMethod enclosingMethod = (ObjMethod) METHOD.deref();
       fn.hasEnclosingMethod = enclosingMethod != null;
-      if (((IMeta) form.first()).meta() != null) {
-        fn.onceOnly = RT.booleanCast(RT.get(RT.meta(form.first()), onceKey));
+
+      Object _fn = form.first();
+      fn.onceOnly = RT.booleanCast(RT.get(RT.meta(_fn), onceKey, RT.F));
+
+      IPersistentMap fmeta = RT.meta(origForm);
+      if (fmeta == null) {
+        fmeta = PersistentHashMap.EMPTY;
       }
+
+      boolean noMeta = RT.booleanCast(RT.get(RT.meta(_fn), noMetaKey, RT.F));
 
       String basename = (enclosingMethod != null ?
                          enclosingMethod.objx.name
@@ -3684,22 +3692,22 @@ public class Compiler implements Opcodes {
         Var.popThreadBindings();
       }
       fn.hasPrimSigs = prims.size() > 0;
-      IPersistentMap fmeta = RT.meta(origForm);
-      if (fmeta == null) {
-        fmeta = PersistentHashMap.EMPTY;
-      }
 
       PersistentHashSet usedVars = PersistentHashSet.EMPTY;
       for (Object o : ((APersistentMap) fn.vars).keySet()) {
         usedVars = (PersistentHashSet) usedVars.cons(o);
       }
 
-      fmeta = fmeta
-              //.without(RT.LINE_KEY)
-              //.without(RT.COLUMN_KEY)
-              //.without(RT.FILE_KEY).without(retkey)
-              .assoc(usedKey, RT.list(QUOTE, usedVars))
-              .assoc(arglistsKey, RT.list(QUOTE, arities));
+      if(!noMeta) {
+        fmeta = fmeta
+          //.without(RT.LINE_KEY)
+          //.without(RT.COLUMN_KEY)
+          //.without(RT.FILE_KEY).without(retkey)
+          .assoc(usedKey, RT.list(QUOTE, usedVars))
+          .assoc(arglistsKey, RT.list(QUOTE, arities));
+      } else {
+        fmeta = null;
+      }
 
       fn.hasMeta = RT.count(fmeta) > 0;
 
