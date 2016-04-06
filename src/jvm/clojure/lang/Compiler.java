@@ -3698,13 +3698,14 @@ public class Compiler implements Opcodes {
         usedVars = (PersistentHashSet) usedVars.cons(o);
       }
 
-      if(!noMeta) {
+      if (!noMeta) {
         fmeta = fmeta
-          //.without(RT.LINE_KEY)
-          //.without(RT.COLUMN_KEY)
-          //.without(RT.FILE_KEY).without(retkey)
-          .assoc(usedKey, RT.list(QUOTE, usedVars))
-          .assoc(arglistsKey, RT.list(QUOTE, arities));
+                .without(RT.LINE_KEY)
+                .without(RT.COLUMN_KEY)
+                .without(RT.FILE_KEY)
+                .without(retKey)
+                //.assoc(arglistsKey, RT.list(QUOTE, arities))
+                .assoc(usedKey, RT.list(QUOTE, usedVars));
       } else {
         fmeta = null;
       }
