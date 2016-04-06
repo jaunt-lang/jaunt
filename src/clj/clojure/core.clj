@@ -795,7 +795,7 @@
   seq calls. See also - realized?"
   {:added "0.1.0"}
   [& body]
-  (list 'new 'clojure.lang.LazySeq (list* '^{:once true} fn* [] body)))
+  (list 'new 'clojure.lang.LazySeq (list* '^{:once true :no-meta true} fn* [] body)))
 
 (defn ^:static ^clojure.lang.ChunkBuffer chunk-buffer ^clojure.lang.ChunkBuffer [capacity]
   (clojure.lang.ChunkBuffer. capacity))
