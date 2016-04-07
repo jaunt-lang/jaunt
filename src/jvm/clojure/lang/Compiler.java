@@ -3528,7 +3528,7 @@ public class Compiler implements Opcodes {
     }
 
     boolean supportsMeta() {
-      return hasMeta;
+      return true;
     }
 
     public Class getJavaClass() {
@@ -3721,7 +3721,7 @@ public class Compiler implements Opcodes {
       }
       fn.getCompiledClass();
 
-      if (fn.supportsMeta()) {
+      if (fn.hasMeta) {
         return new MetaExpr(fn, MapExpr.parse(context == C.EVAL ? context : C.EXPRESSION, fmeta));
       } else {
         return fn;
