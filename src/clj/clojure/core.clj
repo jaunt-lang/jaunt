@@ -795,7 +795,7 @@
   seq calls. See also - realized?"
   {:added "0.1.0"}
   [& body]
-  (list 'new 'clojure.lang.LazySeq (list* '^{:once true} fn* [] body)))
+  (list 'new 'clojure.lang.LazySeq (list* '^{:once true :no-meta true} fn* [] body)))
 
 (defn ^:static ^clojure.lang.ChunkBuffer chunk-buffer ^clojure.lang.ChunkBuffer [capacity]
   (clojure.lang.ChunkBuffer. capacity))
@@ -6488,11 +6488,18 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; var documentation ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(alter-meta! #'in-ns assoc :added "0.1.0")
-(alter-meta! #'load-file assoc :added "0.1.0")
-
 (defmacro add-doc-and-meta {:private true} [name docstring meta]
   `(alter-meta! (var ~name) merge (assoc ~meta :doc ~docstring)))
+
+(add-doc-and-meta in-ns
+  "Sets *ns* to the namespace named by the symbol, creating it if needed."
+  {:added    "0.1.0"
+   :arglists '([name])})
+
+(add-doc-and-meta load-file
+  "Sequentially read and evaluate the set of forms contained in the file."
+  {:added    "0.1.0"
+   :arglists '([name])})
 
 (add-doc-and-meta *agent*
   "The agent currently running an action on this thread, else nil"

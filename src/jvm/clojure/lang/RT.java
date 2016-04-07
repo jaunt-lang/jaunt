@@ -35,13 +35,14 @@ public class RT {
   static final public Boolean F = Boolean.FALSE;
   static final public String LOADER_SUFFIX = "__init";
 
-  final static Keyword TAG_KEY = Keyword.intern(null, "tag");
-  final static Keyword CONST_KEY = Keyword.intern(null, "const");
-  final static Keyword LINE_KEY = Keyword.intern(null, "line");
-  final static Keyword COLUMN_KEY = Keyword.intern(null, "column");
-  final static Keyword FILE_KEY = Keyword.intern(null, "file");
-  final static Keyword DECLARED_KEY = Keyword.intern(null, "declared");
-  final static Keyword DOC_KEY = Keyword.intern(null, "doc");
+  final static Keyword TAG_KEY = Keyword.intern("tag");
+  final static Keyword CONST_KEY = Keyword.intern("const");
+  final static Keyword LINE_KEY = Keyword.intern("line");
+  final static Keyword COLUMN_KEY = Keyword.intern("column");
+  final static Keyword FILE_KEY = Keyword.intern("file");
+  final static Keyword DECLARED_KEY = Keyword.intern("declared");
+  final static Keyword DOC_KEY = Keyword.intern("doc");
+  final static Keyword UNKNOWN_KEY = Keyword.intern("unknown");
 
   final static Symbol LOAD_FILE = Symbol.intern("load-file");
   final static Symbol IN_NAMESPACE = Symbol.intern("in-ns");
@@ -157,7 +158,7 @@ public class RT {
     } else if (s.equals("false")) {
       return Boolean.FALSE;
     }
-    return Keyword.intern(null, "unknown");
+    return UNKNOWN_KEY;
   }
 
   static public final Namespace CLOJURE_NS =
@@ -267,9 +268,7 @@ public class RT {
     }
   };
 
-  final static Var IN_NS_VAR =
-    Var.intern(CLOJURE_NS, Symbol.intern("in-ns"),
-               inNamespace);
+  final static Var IN_NS_VAR = Var.intern(CLOJURE_NS, IN_NAMESPACE, inNamespace);
 
   final static IFn bootNamespace = new AFn() {
     public Object invoke(Object __form, Object __env, Object arg1) {
@@ -280,9 +279,19 @@ public class RT {
     }
   };
 
-  final static Var NS_VAR =
-    Var.intern(CLOJURE_NS, Symbol.intern("ns"),
-               bootNamespace).setMacro();
+  final static Var NS_VAR = Var.intern(CLOJURE_NS, NAMESPACE, bootNamespace).setMacro();
+
+  final static IFn bootLoadFile = new AFn() {
+    public Object invoke(Object arg1) {
+      try {
+        return Compiler.loadFile((String) arg1);
+      } catch (IOException e) {
+        throw Util.sneakyThrow(e);
+      }
+    }
+  };
+
+  final static Var LOAD_FILE_VAR = Var.intern(CLOJURE_NS, LOAD_FILE, bootLoadFile);
 
   public static List<String> processCommandLine(String[] args) {
     List<String> arglist = Arrays.asList(args);
@@ -339,27 +348,9 @@ public class RT {
   }
 
   static {
-    Keyword arglistskw = Keyword.intern(null, "arglists");
-    Symbol namesym = Symbol.intern("name");
     OUT.setTag(Symbol.intern("java.io.Writer"));
     CURRENT_NS.setTag(Symbol.intern("clojure.lang.Namespace"));
     MATH_CONTEXT.setTag(Symbol.intern("java.math.MathContext"));
-
-    Var v = Var.intern(CLOJURE_NS, IN_NAMESPACE, inNamespace);
-    v.setMeta(map(DOC_KEY, "Sets *ns* to the namespace named by the symbol, creating it if needed.",
-                  arglistskw, list(vector(namesym))));
-    v = Var.intern(CLOJURE_NS, LOAD_FILE,
-    new AFn() {
-      public Object invoke(Object arg1) {
-        try {
-          return Compiler.loadFile((String) arg1);
-        } catch (IOException e) {
-          throw Util.sneakyThrow(e);
-        }
-      }
-    });
-    v.setMeta(map(DOC_KEY, "Sequentially read and evaluate the set of forms contained in the file.",
-                  arglistskw, list(vector(namesym))));
     try {
       doInit();
     } catch (Exception e) {
@@ -372,11 +363,11 @@ public class RT {
   }
 
   static public Var var(String ns, String name) {
-    return Var.intern(Namespace.findOrCreate(Symbol.intern(null, ns)), Symbol.intern(null, name));
+    return Var.intern(Namespace.findOrCreate(Symbol.intern(ns)), Symbol.intern(name));
   }
 
   static public Var var(String ns, String name, Object init) {
-    return Var.intern(Namespace.findOrCreate(Symbol.intern(null, ns)), Symbol.intern(null, name), init);
+    return Var.intern(Namespace.findOrCreate(Symbol.intern(ns)), Symbol.intern(name), init);
   }
 
   public static void loadResourceScript(String name) throws IOException {
