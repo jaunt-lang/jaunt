@@ -8,7 +8,6 @@
 
 ;; Author: Frantisek Sodomka
 
-
 (ns clojure.test-clojure.compilation
   (:import (clojure.lang Compiler Compiler$CompilerException))
   (:require [clojure.test.generative :refer (defspec)]
@@ -21,7 +20,6 @@
 
 ;; compile
 ;; gen-class, gen-interface
-
 
 (deftest test-compiler-metadata
   (let [m (meta #'when)]
