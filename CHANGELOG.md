@@ -1,6 +1,8 @@
 # Change Log
 
 ## Upcoming
+- [#131](https://github.com/jaunt-lang/jaunt/pull/131) Add support for `.jnt` files (@arrdem).
+  - `load-file` now chooses the first file of `.class`, `.jnt`, `.clj`, `.cljc`.
 - [#129](https://github.com/jaunt-lang/jaunt/pull/129) Emit `^:uses` metadata on `Fn` instances (@arrdem).
 - [#126](https://github.com/jaunt-lang/jaunt/pull/126) Add reader support for `Infinity`, `NaN` (@arrdem).
 - [#123](https://github.com/jaunt-lang/jaunt/pull/123) Add support for `:jnt` in reader conditionals (@arrdem).
