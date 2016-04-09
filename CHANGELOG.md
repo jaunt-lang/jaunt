@@ -1,5 +1,7 @@
 # Change Log
 
+## Upcoming
+
 ## Jaunt 0.2.0
 
 This release focuses on fleshing Jaunt out as a separate platform atop Clojure, adding support for
