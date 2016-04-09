@@ -2,6 +2,8 @@
 
 ## Upcoming
 
+## Jaunt 0.2.1
+
 - [#133](https://github.com/jaunt-lang/jaunt/pull/133) Bugfix: demote refer-clojure from macro to fn so it works outside the ns form (@arrdem).
 
 ## Jaunt 0.2.0
