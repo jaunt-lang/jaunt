@@ -8,13 +8,12 @@
 
 ;; Author: Frantisek Sodomka
 
-
 (ns clojure.test-clojure.data-structures
-  (:use clojure.test
-        [clojure.test.generative :exclude (is)])
   (:require [clojure.test-clojure.generators :as cgen]
             [clojure.data.generators :as gen]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.test :refer :all]
+            [clojure.test.generative :refer :all :exclude [is]]))
 
 ;; *** Helper functions ***
 
@@ -1048,7 +1047,7 @@
       {z3a 5}       [z3a 2, z3a 4, z3b 5]
       {z3b 4, x1 5} [z3b 2, z3a 4, x1 5]
       {z3b v4b, x1 5} [z3b v4a, z3a v4b, x1 5]
-      {x1 v4a, w5a v4c, v4a z3b, y2 2} [x1 v4a, w5a v4a, w5b v4b,
+      {x1 v4a, w5a v4c, v4a z3b, y2 2} [x1 v4a, w5a v4a, w5b v4b
                                         v4a z3a, y2 2, v4b z3b, w5c v4c])))
 
 (deftest test-array-map-arity

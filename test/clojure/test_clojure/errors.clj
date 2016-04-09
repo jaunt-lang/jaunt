@@ -9,7 +9,7 @@
 ;; Tests for error handling and messages
 
 (ns clojure.test-clojure.errors
-  (:use clojure.test)
+  (:require [clojure.test :refer :all])
   (:import clojure.lang.ArityException))
 
 (defn f0 [] 0)
@@ -38,10 +38,10 @@
       "ArityException messages should demunge function names"))
 
 (deftest assert-arg-messages
-  ; used to ensure that error messages properly use local names for macros
-  (refer 'clojure.core :rename '{with-open renamed-with-open})
+  ;; used to ensure that error messages properly use local names for macros
+  (require '[clojure.core :refer [with-open] :rename {with-open renamed-with-open}])
 
-  ; would have used `are` here, but :line meta on &form doesn't survive successive macroexpansions
+  ;; would have used `are` here, but :line meta on &form doesn't survive successive macroexpansions
   (doseq [[msg-regex-str form] [["if-let .* in %s:\\d+" '(if-let [a 5
                                                                   b 6]
                                                            true nil)]

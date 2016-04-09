@@ -35,22 +35,22 @@ public class RT {
   static final public Boolean F = Boolean.FALSE;
   static final public String LOADER_SUFFIX = "__init";
 
-//simple-symbol->class
+  final static Keyword TAG_KEY = Keyword.intern("tag");
+  final static Keyword CONST_KEY = Keyword.intern("const");
+  final static Keyword LINE_KEY = Keyword.intern("line");
+  final static Keyword COLUMN_KEY = Keyword.intern("column");
+  final static Keyword FILE_KEY = Keyword.intern("file");
+  final static Keyword DECLARED_KEY = Keyword.intern("declared");
+  final static Keyword DOC_KEY = Keyword.intern("doc");
+  final static Keyword UNKNOWN_KEY = Keyword.intern("unknown");
+
+  final static Symbol LOAD_FILE = Symbol.intern("load-file");
+  final static Symbol IN_NAMESPACE = Symbol.intern("in-ns");
+  final static Symbol NAMESPACE = Symbol.intern("ns");
+  final static Symbol IDENTICAL = Symbol.intern("identical?");
+
+  //simple-symbol->class
   final static IPersistentMap DEFAULT_IMPORTS = map(
-//                          Symbol.intern("RT"), "clojure.lang.RT",
-//                                                  Symbol.intern("Num"), "clojure.lang.Num",
-//                                                  Symbol.intern("Symbol"), "clojure.lang.Symbol",
-//                                                  Symbol.intern("Keyword"), "clojure.lang.Keyword",
-//                                                  Symbol.intern("Var"), "clojure.lang.Var",
-//                                                  Symbol.intern("Ref"), "clojure.lang.Ref",
-//                                                  Symbol.intern("IFn"), "clojure.lang.IFn",
-//                                                  Symbol.intern("IObj"), "clojure.lang.IObj",
-//                                                  Symbol.intern("ISeq"), "clojure.lang.ISeq",
-//                                                  Symbol.intern("IPersistentCollection"),
-//                                                  "clojure.lang.IPersistentCollection",
-//                                                  Symbol.intern("IPersistentMap"), "clojure.lang.IPersistentMap",
-//                                                  Symbol.intern("IPersistentList"), "clojure.lang.IPersistentList",
-//                                                  Symbol.intern("IPersistentVector"), "clojure.lang.IPersistentVector",
         Symbol.intern("Boolean"), Boolean.class,
         Symbol.intern("Byte"), Byte.class,
         Symbol.intern("Character"), Character.class,
@@ -147,26 +147,9 @@ public class RT {
         Symbol.intern("Deprecated"), Deprecated.class,
         Symbol.intern("Override"), Override.class,
         Symbol.intern("SuppressWarnings"), SuppressWarnings.class
-
-//                                                  Symbol.intern("Collection"), "java.util.Collection",
-//                                                  Symbol.intern("Comparator"), "java.util.Comparator",
-//                                                  Symbol.intern("Enumeration"), "java.util.Enumeration",
-//                                                  Symbol.intern("EventListener"), "java.util.EventListener",
-//                                                  Symbol.intern("Formattable"), "java.util.Formattable",
-//                                                  Symbol.intern("Iterator"), "java.util.Iterator",
-//                                                  Symbol.intern("List"), "java.util.List",
-//                                                  Symbol.intern("ListIterator"), "java.util.ListIterator",
-//                                                  Symbol.intern("Map"), "java.util.Map",
-//                                                  Symbol.intern("Map$Entry"), "java.util.Map$Entry",
-//                                                  Symbol.intern("Observer"), "java.util.Observer",
-//                                                  Symbol.intern("Queue"), "java.util.Queue",
-//                                                  Symbol.intern("RandomAccess"), "java.util.RandomAccess",
-//                                                  Symbol.intern("Set"), "java.util.Set",
-//                                                  Symbol.intern("SortedMap"), "java.util.SortedMap",
-//                                                  Symbol.intern("SortedSet"), "java.util.SortedSet"
       );
 
-// single instance of UTF-8 Charset, so as to avoid catching UnsupportedCharsetExceptions everywhere
+  // single instance of UTF-8 Charset, so as to avoid catching UnsupportedCharsetExceptions everywhere
   static public Charset UTF8 = Charset.forName("UTF-8");
 
   static Object readTrueFalseUnknown(String s) {
@@ -175,69 +158,107 @@ public class RT {
     } else if (s.equals("false")) {
       return Boolean.FALSE;
     }
-    return Keyword.intern(null, "unknown");
+    return UNKNOWN_KEY;
   }
 
-  static public final Namespace CLOJURE_NS = Namespace.findOrCreate(Symbol.intern("clojure.core"));
-//static final Namespace USER_NS = Namespace.findOrCreate(Symbol.intern("user"));
+  static public final Namespace CLOJURE_NS =
+    Namespace.findOrCreate(Symbol.intern("clojure.core"));
+
   final static public Var OUT =
     Var.intern(CLOJURE_NS, Symbol.intern("*out*"), new OutputStreamWriter(System.out)).setDynamic();
+
   final static public Var IN =
     Var.intern(CLOJURE_NS, Symbol.intern("*in*"),
                new LineNumberingPushbackReader(new InputStreamReader(System.in))).setDynamic();
+
   final static public Var ERR =
     Var.intern(CLOJURE_NS, Symbol.intern("*err*"),
                new PrintWriter(new OutputStreamWriter(System.err), true)).setDynamic();
-  final static Keyword TAG_KEY = Keyword.intern(null, "tag");
-  final static Keyword CONST_KEY = Keyword.intern(null, "const");
-  final static public Var AGENT = Var.intern(CLOJURE_NS, Symbol.intern("*agent*"), null).setDynamic();
-  static Object readeval = readTrueFalseUnknown(System.getProperty("clojure.read.eval","true"));
-  final static public Var READEVAL = Var.intern(CLOJURE_NS, Symbol.intern("*read-eval*"),  readeval).setDynamic();
-  final static public Var DATA_READERS = Var.intern(CLOJURE_NS, Symbol.intern("*data-readers*"), RT.map()).setDynamic();
-  final static public Var DEFAULT_DATA_READER_FN = Var.intern(CLOJURE_NS, Symbol.intern("*default-data-reader-fn*"), RT.map()).setDynamic();
-  final static public Var DEFAULT_DATA_READERS = Var.intern(CLOJURE_NS, Symbol.intern("default-data-readers"), RT.map());
-  final static public Var SUPPRESS_READ = Var.intern(CLOJURE_NS, Symbol.intern("*suppress-read*"), null).setDynamic();
-  final static public Var ASSERT = Var.intern(CLOJURE_NS, Symbol.intern("*assert*"), T).setDynamic();
-  final static public Var MATH_CONTEXT = Var.intern(CLOJURE_NS, Symbol.intern("*math-context*"), null).setDynamic();
-  static Keyword LINE_KEY = Keyword.intern(null, "line");
-  static Keyword COLUMN_KEY = Keyword.intern(null, "column");
-  static Keyword FILE_KEY = Keyword.intern(null, "file");
-  static Keyword DECLARED_KEY = Keyword.intern(null, "declared");
-  static Keyword DOC_KEY = Keyword.intern(null, "doc");
+
+  final static public Var AGENT =
+    Var.intern(CLOJURE_NS, Symbol.intern("*agent*"),
+               null).setDynamic();
+
+  final static public Var READEVAL =
+    Var.intern(CLOJURE_NS, Symbol.intern("*read-eval*"),
+               readTrueFalseUnknown(System.getProperty("clojure.read.eval","true"))).setDynamic();
+
+  final static public Var DATA_READERS =
+    Var.intern(CLOJURE_NS, Symbol.intern("*data-readers*"),
+               map()).setDynamic();
+
+  final static public Var DEFAULT_DATA_READER_FN =
+    Var.intern(CLOJURE_NS, Symbol.intern("*default-data-reader-fn*"),
+               map()).setDynamic();
+
+  final static public Var DEFAULT_DATA_READERS =
+    Var.intern(CLOJURE_NS, Symbol.intern("default-data-readers"),
+               map());
+
+  final static public Var SUPPRESS_READ =
+    Var.intern(CLOJURE_NS, Symbol.intern("*suppress-read*"),
+               null).setDynamic();
+
+  final static public Var ASSERT =
+    Var.intern(CLOJURE_NS, Symbol.intern("*assert*"),
+               T).setDynamic();
+
+  final static public Var MATH_CONTEXT =
+    Var.intern(CLOJURE_NS, Symbol.intern("*math-context*"),
+               null).setDynamic();
+
   final static public Var USE_CONTEXT_CLASSLOADER =
-    Var.intern(CLOJURE_NS, Symbol.intern("*use-context-classloader*"), T).setDynamic();
-//boolean
-  static final public Var UNCHECKED_MATH = Var.intern(Namespace.findOrCreate(Symbol.intern("clojure.core")),
-      Symbol.intern("*unchecked-math*"), Boolean.FALSE).setDynamic();
+    Var.intern(CLOJURE_NS, Symbol.intern("*use-context-classloader*"),
+               T).setDynamic();
 
-//final static public Var CURRENT_MODULE = Var.intern(Symbol.intern("clojure.core", "current-module"),
-//                                                    Module.findOrCreateModule("clojure/user"));
+  static final public Var UNCHECKED_MATH =
+    Var.intern(CLOJURE_NS, Symbol.intern("*unchecked-math*"),
+               F).setDynamic();
 
-  final static Symbol LOAD_FILE = Symbol.intern("load-file");
-  final static Symbol IN_NAMESPACE = Symbol.intern("in-ns");
-  final static Symbol NAMESPACE = Symbol.intern("ns");
-  static final Symbol IDENTICAL = Symbol.intern("identical?");
-  final static Var CMD_LINE_ARGS = Var.intern(CLOJURE_NS, Symbol.intern("*command-line-args*"), null).setDynamic();
-//symbol
-  final public static Var CURRENT_NS = Var.intern(CLOJURE_NS, Symbol.intern("*ns*"),
-                                       CLOJURE_NS).setDynamic();
+  final static Var CMD_LINE_ARGS =
+    Var.intern(CLOJURE_NS, Symbol.intern("*command-line-args*"),
+               null).setDynamic();
 
-  final static Var FLUSH_ON_NEWLINE = Var.intern(CLOJURE_NS, Symbol.intern("*flush-on-newline*"), T).setDynamic();
-  final static Var PRINT_META = Var.intern(CLOJURE_NS, Symbol.intern("*print-meta*"), F).setDynamic();
-  final static Var PRINT_READABLY = Var.intern(CLOJURE_NS, Symbol.intern("*print-readably*"), T).setDynamic();
-  final static Var PRINT_DUP = Var.intern(CLOJURE_NS, Symbol.intern("*print-dup*"), F).setDynamic();
-  final static Var WARN_ON_REFLECTION = Var.intern(CLOJURE_NS, Symbol.intern("*warn-on-reflection*"), F).setDynamic();
-  final static Var ALLOW_UNRESOLVED_VARS = Var.intern(CLOJURE_NS, Symbol.intern("*allow-unresolved-vars*"), F).setDynamic();
+  final public static Var CURRENT_NS =
+    Var.intern(CLOJURE_NS, Symbol.intern("*ns*"),
+               CLOJURE_NS).setDynamic();
 
-  final static Var IN_NS_VAR = Var.intern(CLOJURE_NS, Symbol.intern("in-ns"), F);
-  final static Var NS_VAR = Var.intern(CLOJURE_NS, Symbol.intern("ns"), F);
-  final static Var FN_LOADER_VAR = Var.intern(CLOJURE_NS, Symbol.intern("*fn-loader*"), null).setDynamic();
+  final static Var FLUSH_ON_NEWLINE =
+    Var.intern(CLOJURE_NS, Symbol.intern("*flush-on-newline*"),
+               T).setDynamic();
+
+  final static Var PRINT_META =
+    Var.intern(CLOJURE_NS, Symbol.intern("*print-meta*"),
+               F).setDynamic();
+
+  final static Var PRINT_READABLY =
+    Var.intern(CLOJURE_NS, Symbol.intern("*print-readably*"),
+               T).setDynamic();
+
+  final static Var PRINT_DUP =
+    Var.intern(CLOJURE_NS, Symbol.intern("*print-dup*"),
+               F).setDynamic();
+
+  final static Var WARN_ON_REFLECTION =
+    Var.intern(CLOJURE_NS, Symbol.intern("*warn-on-reflection*"),
+               F).setDynamic();
+
+  final static Var ALLOW_UNRESOLVED_VARS =
+    Var.intern(CLOJURE_NS, Symbol.intern("*allow-unresolved-vars*"),
+               F).setDynamic();
+
+  final static Var FN_LOADER_VAR =
+    Var.intern(CLOJURE_NS, Symbol.intern("*fn-loader*"),
+               null).setDynamic();
+
   static final Var PRINT_INITIALIZED =
     Var.intern(CLOJURE_NS,
                Symbol.intern("print-initialized"),
                F).setPublic(false).setDynamic();
-  static final Var PR_ON = Var.intern(CLOJURE_NS, Symbol.intern("pr-on"));
-//final static Var IMPORTS = Var.intern(CLOJURE_NS, Symbol.intern("*imports*"), DEFAULT_IMPORTS);
+
+  static final Var PR_ON =
+    Var.intern(CLOJURE_NS, Symbol.intern("pr-on"));
+
   final static IFn inNamespace = new AFn() {
     public Object invoke(Object arg1) {
       Symbol nsname = (Symbol) arg1;
@@ -247,8 +268,10 @@ public class RT {
     }
   };
 
+  final static Var IN_NS_VAR = Var.intern(CLOJURE_NS, IN_NAMESPACE, inNamespace);
+
   final static IFn bootNamespace = new AFn() {
-    public Object invoke(Object __form, Object __env,Object arg1) {
+    public Object invoke(Object __form, Object __env, Object arg1) {
       Symbol nsname = (Symbol) arg1;
       Namespace ns = Namespace.findOrCreate(nsname);
       CURRENT_NS.set(ns);
@@ -256,17 +279,31 @@ public class RT {
     }
   };
 
+  final static Var NS_VAR = Var.intern(CLOJURE_NS, NAMESPACE, bootNamespace).setMacro();
+
+  final static IFn bootLoadFile = new AFn() {
+    public Object invoke(Object arg1) {
+      try {
+        return Compiler.loadFile((String) arg1);
+      } catch (IOException e) {
+        throw Util.sneakyThrow(e);
+      }
+    }
+  };
+
+  final static Var LOAD_FILE_VAR = Var.intern(CLOJURE_NS, LOAD_FILE, bootLoadFile);
+
   public static List<String> processCommandLine(String[] args) {
     List<String> arglist = Arrays.asList(args);
     int split = arglist.indexOf("--");
     if (split >= 0) {
-      CMD_LINE_ARGS.bindRoot(RT.seq(arglist.subList(split + 1, args.length)));
+      CMD_LINE_ARGS.bindRoot(seq(arglist.subList(split + 1, args.length)));
       return arglist.subList(0, split);
     }
     return arglist;
   }
 
-// duck typing stderr plays nice with e.g. swank
+  // duck typing stderr plays nice with e.g. swank
   public static PrintWriter errPrintWriter() {
     Writer w = (Writer) ERR.deref();
     if (w instanceof PrintWriter) {
@@ -311,29 +348,9 @@ public class RT {
   }
 
   static {
-    Keyword arglistskw = Keyword.intern(null, "arglists");
-    Symbol namesym = Symbol.intern("name");
     OUT.setTag(Symbol.intern("java.io.Writer"));
     CURRENT_NS.setTag(Symbol.intern("clojure.lang.Namespace"));
     MATH_CONTEXT.setTag(Symbol.intern("java.math.MathContext"));
-    Var nv = Var.intern(CLOJURE_NS, NAMESPACE, bootNamespace);
-    nv.setMacro();
-    Var v;
-    v = Var.intern(CLOJURE_NS, IN_NAMESPACE, inNamespace);
-    v.setMeta(map(DOC_KEY, "Sets *ns* to the namespace named by the symbol, creating it if needed.",
-                  arglistskw, list(vector(namesym))));
-    v = Var.intern(CLOJURE_NS, LOAD_FILE,
-    new AFn() {
-      public Object invoke(Object arg1) {
-        try {
-          return Compiler.loadFile((String) arg1);
-        } catch (IOException e) {
-          throw Util.sneakyThrow(e);
-        }
-      }
-    });
-    v.setMeta(map(DOC_KEY, "Sequentially read and evaluate the set of forms contained in the file.",
-                  arglistskw, list(vector(namesym))));
     try {
       doInit();
     } catch (Exception e) {
@@ -346,11 +363,11 @@ public class RT {
   }
 
   static public Var var(String ns, String name) {
-    return Var.intern(Namespace.findOrCreate(Symbol.intern(null, ns)), Symbol.intern(null, name));
+    return Var.intern(Namespace.findOrCreate(Symbol.intern(ns)), Symbol.intern(name));
   }
 
   static public Var var(String ns, String name, Object init) {
-    return Var.intern(Namespace.findOrCreate(Symbol.intern(null, ns)), Symbol.intern(null, name), init);
+    return Var.intern(Namespace.findOrCreate(Symbol.intern(ns)), Symbol.intern(name), init);
   }
 
   public static void loadResourceScript(String name) throws IOException {
@@ -385,7 +402,7 @@ public class RT {
   }
 
   static public void init() {
-    RT.errPrintWriter().println("No need to call RT.init() anymore");
+    errPrintWriter().println("No need to call RT.init() anymore");
   }
 
   static public long lastModified(URL url, String libfile) throws IOException {
@@ -425,14 +442,19 @@ public class RT {
 
   static public void load(String scriptbase, boolean failIfNotFound) throws IOException, ClassNotFoundException {
     String classfile = scriptbase + LOADER_SUFFIX + ".class";
-    String cljfile = scriptbase + ".clj";
-    String scriptfile = cljfile;
-    URL classURL = getResource(baseLoader(),classfile);
+    URL classURL = getResource(baseLoader(), classfile);
+
+    String scriptfile = scriptbase + ".jnt";
     URL cljURL = getResource(baseLoader(), scriptfile);
+    if (cljURL == null) {
+      scriptfile = scriptbase + ".clj";
+      cljURL = getResource(baseLoader(), scriptfile);
+    }
     if (cljURL == null) {
       scriptfile = scriptbase + ".cljc";
       cljURL = getResource(baseLoader(), scriptfile);
     }
+
     boolean loaded = false;
 
     if ((classURL != null &&
@@ -441,9 +463,9 @@ public class RT {
         || classURL == null) {
       try {
         Var.pushThreadBindings(
-          RT.mapUniqueKeys(CURRENT_NS, CURRENT_NS.deref(),
-                           WARN_ON_REFLECTION, WARN_ON_REFLECTION.deref()
-                           ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()));
+          mapUniqueKeys(CURRENT_NS,           CURRENT_NS.deref()
+                        , WARN_ON_REFLECTION, WARN_ON_REFLECTION.deref()
+                        , UNCHECKED_MATH,     UNCHECKED_MATH.deref()));
         loaded = (loadClassForName(scriptbase.replace('/', '.') + LOADER_SUFFIX) != null);
       } finally {
         Var.popThreadBindings();
@@ -456,7 +478,7 @@ public class RT {
         loadResourceScript(RT.class, scriptfile);
       }
     } else if (!loaded && failIfNotFound)
-      throw new FileNotFoundException(String.format("Could not locate %s or %s on classpath.%s", classfile, cljfile,
+      throw new FileNotFoundException(String.format("Could not locate %s.{class,jnt,clj,cljc} on classpath.%s", scriptbase,
                                       scriptbase.contains("_") ? " Please check that namespaces with dashes use underscores in the Clojure file name." : ""));
   }
 
@@ -464,20 +486,29 @@ public class RT {
     load("clojure/core");
 
     Var.pushThreadBindings(
-      RT.mapUniqueKeys(CURRENT_NS, CURRENT_NS.deref(),
-                       WARN_ON_REFLECTION, WARN_ON_REFLECTION.deref()
-                       ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()));
+      mapUniqueKeys(CURRENT_NS,           CURRENT_NS.deref()
+                    , WARN_ON_REFLECTION, WARN_ON_REFLECTION.deref()
+                    , UNCHECKED_MATH,     UNCHECKED_MATH.deref()));
     try {
       Symbol USER = Symbol.intern("user");
       Symbol CLOJURE = Symbol.intern("clojure.core");
 
-      Var refer = var("clojure.core", "refer");
+      Var require = var("clojure.core", "require");
       IN_NS_VAR.invoke(USER);
-      refer.invoke(CLOJURE);
-      maybeLoadResourceScript("user.clj");
+      require.invoke(vector(CLOJURE, Keyword.intern("refer"), Keyword.intern("all")));
+
+      try {
+        maybeLoadResourceScript("user.clj");
+      } catch (Exception e) {
+        load("clojure/stacktrace");
+        PrintWriter epw = errPrintWriter();
+        Var.pushThreadBindings(mapUniqueKeys(OUT, epw));
+        epw.println("Warning: failed to load user.clj!");
+        var("clojure.stacktrace", "print-cause-trace").invoke(e, null);
+        Var.popThreadBindings();
+      }
 
       // start socket servers
-      Var require = var("clojure.core", "require");
       Symbol SERVER = Symbol.intern("clojure.core.server");
       require.invoke(SERVER);
       Var start_servers = var("clojure.core.server", "start-servers");
@@ -491,7 +522,7 @@ public class RT {
     return id.getAndIncrement();
   }
 
-// Load a library in the System ClassLoader instead of Clojure's own.
+  // Load a library in the System ClassLoader instead of Clojure's own.
   public static void loadLibrary(String libname) {
     System.loadLibrary(libname);
   }
@@ -661,8 +692,14 @@ public class RT {
     return coll.cons(x);
   }
 
+  static public IPersistentSet union(IPersistentSet a, Seqable b) {
+    for (Object o : b) {
+      a = (IPersistentSet) a.cons(o);
+    }
+    return a;
+  }
+
   static public ISeq cons(Object x, Object coll) {
-    //ISeq y = seq(coll);
     if (coll == null) {
       return new PersistentList(x);
     } else if (coll instanceof ISeq) {
@@ -900,7 +937,7 @@ public class RT {
     }
 
     else if (coll instanceof Sequential) {
-      ISeq seq = RT.seq(coll);
+      ISeq seq = seq(coll);
       coll = null;
       for (int i = 0; i <= n && seq != null; ++i, seq = seq.next()) {
         if (i == n) {
@@ -960,7 +997,7 @@ public class RT {
       }
       return notFound;
     } else if (coll instanceof Sequential) {
-      ISeq seq = RT.seq(coll);
+      ISeq seq = seq(coll);
       coll = null;
       for (int i = 0; i <= n && seq != null; ++i, seq = seq.next()) {
         if (i == n) {
@@ -989,7 +1026,7 @@ public class RT {
   }
 
   static boolean hasTag(Object o, Object tag) {
-    return Util.equals(tag, RT.get(RT.meta(o), TAG_KEY));
+    return Util.equals(tag, get(meta(o), TAG_KEY));
   }
 
   /**
@@ -1697,8 +1734,8 @@ public class RT {
     if (sizeOrSeq instanceof Number) {
       return new Object[((Number) sizeOrSeq).intValue()];
     } else {
-      ISeq s = RT.seq(sizeOrSeq);
-      int size = RT.count(s);
+      ISeq s = seq(sizeOrSeq);
+      int size = count(s);
       Object[] ret = new Object[size];
       for (int i = 0; i < size && s != null; i++, s = s.next()) {
         ret[i] = s.first();
@@ -1904,15 +1941,13 @@ public class RT {
 
   static public void print(Object x, Writer w) throws IOException {
     //call multimethod
-    if (PRINT_INITIALIZED.isBound() && RT.booleanCast(PRINT_INITIALIZED.deref())) {
+    if (PRINT_INITIALIZED.isBound() && booleanCast(PRINT_INITIALIZED.deref())) {
       PR_ON.invoke(x, w);
-    }
-//*
-    else {
+    } else {
       boolean readably = booleanCast(PRINT_READABLY.deref());
       if (x instanceof Obj) {
         Obj o = (Obj) x;
-        if (RT.count(o.meta()) > 0 &&
+        if (count(o.meta()) > 0 &&
             ((readably && booleanCast(PRINT_META.deref()))
              || booleanCast(PRINT_DUP.deref()))) {
           IPersistentMap meta = o.meta();
@@ -2137,15 +2172,15 @@ public class RT {
           if (args == null) {
             throw new IllegalArgumentException("Missing argument");
           }
-          RT.formatAesthetic(w, RT.first(args));
-          args = RT.next(args);
+          formatAesthetic(w, first(args));
+          args = next(args);
           break;
         case 's':
           if (args == null) {
             throw new IllegalArgumentException("Missing argument");
           }
-          RT.formatStandard(w, RT.first(args));
-          args = RT.next(args);
+          formatStandard(w, first(args));
+          args = next(args);
           break;
         case '{':
           int j = s.indexOf("~}", i);    //note - does not nest
@@ -2153,10 +2188,10 @@ public class RT {
             throw new IllegalArgumentException("Missing ~}");
           }
           String subs = s.substring(i, j);
-          for (ISeq sargs = RT.seq(RT.first(args)); sargs != null;) {
+          for (ISeq sargs = seq(first(args)); sargs != null;) {
             sargs = doFormat(w, subs, sargs);
           }
-          args = RT.next(args);
+          args = next(args);
           i = j + 2; //skip ~}
           break;
         case '^':
@@ -2192,8 +2227,7 @@ public class RT {
     return (ClassLoader) AccessController.doPrivileged(new PrivilegedAction() {
       public Object run() {
         try {
-          Var.pushThreadBindings(RT.map(USE_CONTEXT_CLASSLOADER, RT.T));
-//      getRootClassLoader();
+          Var.pushThreadBindings(map(USE_CONTEXT_CLASSLOADER, T));
           return new DynamicClassLoader(baseLoader());
         } finally {
           Var.popThreadBindings();

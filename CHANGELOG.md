@@ -1,7 +1,34 @@
 # Change Log
 
+## Jaunt 0.2.0
+
+This release focuses on fleshing Jaunt out as a separate platform atop Clojure, adding support for
+the `.jnt` file extension and the `:jnt` reader conditional directive. Other changes include the
+deprecation and automatic refactoring hinting of `use` and `refer`, the addition of `^:uses`
+metadata fo `AFn` instances in support of future static analysis work and migration to JDK8 for the
+entire project although few JDK8 features are used at this time.
+
+- [#131](https://github.com/jaunt-lang/jaunt/pull/131) Add support for `.jnt` files (@arrdem).
+  - `load-file` now chooses the first file of `.class`, `.jnt`, `.clj`, `.cljc`.
+- [#129](https://github.com/jaunt-lang/jaunt/pull/129) Emit `^:uses` metadata on `Fn` instances (@arrdem).
+- [#126](https://github.com/jaunt-lang/jaunt/pull/126) Add reader support for `Infinity`, `NaN` (@arrdem).
+- [#123](https://github.com/jaunt-lang/jaunt/pull/123) Add support for `:jnt` in reader conditionals (@arrdem).
+  - Update to Java 1.8
+  - Implement `java.lang.Iterable` over `clojure.lang.Seqable` using a Java 8 interface default method
+  - Add `clojure.lang.RT.union(set, seq):set`
+- [#122](https://github.com/jaunt-lang/jaunt/pull/122) Catch and print exceptions encountered loading `user.clj` (@arrdem).
+- [#116](https://github.com/jaunt-lang/jaunt/pull/116) Deprecate `clojure.core/refer` (@arrdem).
+  - Deprecate `clojure.core/refer`
+  - Refactor `clojure.core/refer` to emit a warning describing how to rewrite refer into require.
+- [#117](https://github.com/jaunt-lang/jaunt/pull/117) Fix typo in arglists (@arrdem).
+- [#112](https://github.com/jaunt-lang/jaunt/pull/112) Self-refactoring use (@arrdem).
+  - Add `clojure.core/sift`.
+  - Refactor `clojure.core/use` to emit a warning describing how to rewrite use into require/refer.
+  - Refactor out uses of `use`.
+- [#111](https://github.com/jaunt-lang/jaunt/pull/111) Add a warning when expanding deprecated macros (@arrdem).
+
 ## Jaunt 0.1.0
-- [#108](https://github.com/jaunt-lang/jaunt/pull/107) Add tests against CIDER (@arrdem).
+- [#108](https://github.com/jaunt-lang/jaunt/pull/108) Add tests against CIDER (@arrdem).
 - [#107](https://github.com/jaunt-lang/jaunt/pull/107) Set version to 0.1.0 (@arrdem).
   - Fix a minor bug in `*jaunt-version*` loading due to the Maven qualifier being empty/`nil`
   - Refactor `ns` forms to prefer explicit full ns macro docstrings, attrs over `^{}`

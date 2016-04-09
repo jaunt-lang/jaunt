@@ -14,7 +14,7 @@
 ;;  Created 29 October 2008
 
 (ns clojure.test-clojure.printer
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (deftest print-length-empty-seq
   (let [coll () val "()"]

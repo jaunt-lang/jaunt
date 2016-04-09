@@ -9,7 +9,7 @@
 ;; Authors: Stuart Halloway, Rich Hickey
 
 (ns clojure.test-clojure.annotations
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (case (System/getProperty "java.specification.version")
   "1.6" (load "annotations/java_6")

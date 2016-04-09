@@ -123,5 +123,4 @@ public class PersistentHashSet extends APersistentSet implements IObj, IEditable
       return new PersistentHashSet(null, impl.persistent());
     }
   }
-
 }

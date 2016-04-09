@@ -7,8 +7,9 @@
 ;;    You must not remove this notice, or any other, from this software.
 
 (ns clojure.test-clojure.def
-  (:use clojure.test clojure.test-helper
-        clojure.test-clojure.protocols))
+  (:require [clojure.test :refer :all]
+            [clojure.test-helper :refer :all]
+            [clojure.test-clojure.protocols :refer :all]))
 
 (deftest defn-error-messages
   (testing "multiarity syntax invalid parameter declaration"

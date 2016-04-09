@@ -144,7 +144,7 @@
     (next (next x))))
 
 (def
-  ^{:arglists '(^clojure.lang.ISeq [coll])
+  ^{:arglists '([^clojure.lang.ISeq coll])
     :doc      "Returns a seq on the collection. If the collection is empty, returns nil.  (seq nil) returns nil. seq also works on Strings, native Java arrays (of reference types) and any objects that implement Iterable. Note that seqs cache values, thus seq should not be used on any Iterable whose iterator repeatedly returns the same mutable object."
     :tag      clojure.lang.ISeq
     :added    "0.1.0"
@@ -155,12 +155,40 @@
     (. clojure.lang.RT (seq coll))))
 
 (def
+  ^{:arglists '([^clojure.lang.ISeq coll])
+    :doc      "Returns true if coll has no items - same as(not (seq coll)). Please use the idiom (seq x) rather than (not (empty? x))"
+    :tag      Boolean
+    :added    "0.1.0"
+    :static   true}
+  empty?
+  (fn ^:static  [coll]
+    (if (seq coll) false true)))
+
+(def
   ^{:arglists '([^Class c x])
     :doc      "Evaluates x and tests if it is an instance of the class c. Returns true or false"
     :added    "0.1.0"}
   instance?
   (fn instance? [^Class c x]
     (. c (isInstance x))))
+
+(def
+  ^{:arglists '([x])
+    :doc      "Returns true if x implements IPersistentCollection"
+    :added    "0.1.0"
+    :static   true}
+  coll?
+  (fn ^:static coll? [x]
+    (instance? clojure.lang.IPersistentCollection x)))
+
+(def
+  ^{:arglists '([x])
+    :doc      "Returns true if x implements IPersistentList"
+    :added    "0.1.0"
+    :static   true}
+  list?
+  (fn ^:static list? [x]
+    (instance? clojure.lang.IPersistentList x)))
 
 (def
   ^{:arglists '([x])
@@ -215,6 +243,15 @@
   var?
   (fn ^:static var? [x]
     (instance? clojure.lang.Var x)))
+
+(def
+  ^{:arglists '([coll])
+    :doc      "Returns true if coll implements Associative"
+    :added    "0.1.0"
+    :static   true}
+  associative?
+  (fn ^:static associative? [coll]
+    (instance? clojure.lang.Associative coll)))
 
 (def
   ^{:arglists '([map key val] [map key val & kvs])
@@ -758,7 +795,7 @@
   seq calls. See also - realized?"
   {:added "0.1.0"}
   [& body]
-  (list 'new 'clojure.lang.LazySeq (list* '^{:once true} fn* [] body)))
+  (list 'new 'clojure.lang.LazySeq (list* '^{:once true :no-meta true} fn* [] body)))
 
 (defn ^:static ^clojure.lang.ChunkBuffer chunk-buffer ^clojure.lang.ChunkBuffer [capacity]
   (clojure.lang.ChunkBuffer. capacity))
@@ -3225,7 +3262,7 @@
                            steppair-chunk (step recform-chunk (nnext exprs))
                            subform-chunk (steppair-chunk 1)]
                        [true
-                        `(loop [~seq- (seq ~v), ~chunk- nil,
+                        `(loop [~seq- (seq ~v), ~chunk- nil
                                 ~count- 0, ~i- 0]
                            (if (< ~i- ~count-)
                              (let [~k (.nth ~chunk- ~i-)]
@@ -4168,25 +4205,13 @@
 (defn ^:private errwriter []
   (clojure.lang.RT/errPrintWriter))
 
-(defn refer
-  "refers to all public vars of ns, subject to filters.
-  filters can include at most one each of:
+(declare format interpose)
 
-  :exclude list-of-symbols
-  :only list-of-symbols
-  :rename map-of-fromsymbol-tosymbol
-
-  For each public interned var in the namespace named by the symbol,
-  adds a mapping from the name of the var to the var to the current
-  namespace.  Throws an exception if name is already mapped to
-  something else in the current namespace. Filters can be used to
-  select a subset, via inclusion or exclusion, or to provide a mapping
-  to a symbol different from the var's name, in order to prevent
-  clashes. Use :use in the ns macro in preference to calling this directly."
-  {:added "0.1.0"}
-  [ns-sym & filters]
-  (let [ns        (or (find-ns ns-sym) (throw (new Exception (str "No namespace: " ns-sym))))
+(defn ^:private refer* [^clojure.lang.Namespace a-ns ns-sym & filters]
+  (let [ns        (or (find-ns ns-sym)
+                      (throw (new Exception (str "No namespace: " ns-sym))))
         fs        (apply hash-map filters)
+        filters   (mapcat identity fs)
         nspublics (ns-publics ns)
         all       (keys nspublics)
         rename    (:rename fs {})
@@ -4202,7 +4227,8 @@
                         (= op :only)  only
                         :else         all)
         d-ctx     (deprecated? *ns*)
-        *err*     (errwriter)]
+        *err*     (errwriter)
+        pos       (str " (" *file* ":" *line* ":" *column* ")")]
     (when (and to-do
                (not (instance? clojure.lang.Sequential to-do)))
       (throw (Exception. ":only/:refer value must be a sequential collection of symbols")))
@@ -4210,8 +4236,7 @@
                (not d-ctx)
                (warn-deprecated?)
                (deprecated? ns))
-      (.println *err* (str "Warning: referring vars from deprecated ns: " (name ns)
-                           " (" *file* ":" *line* ":" *column* ")")))
+      (. *err* (println (str "Warning: referring vars from deprecated ns: " (name ns) pos))))
     (doseq [sym to-do]
       (when-not (exclude sym)
         (let [v (nspublics sym)]
@@ -4224,9 +4249,75 @@
                      (not d-ctx)
                      (warn-deprecated?)
                      (not= op :all))
-            (.println *err* (str "Warning: referring deprecated var: " v
-                                 " (" *file* ":" *line* ":" *column* ")")))
-          (. *ns* (refer (or (rename sym) sym) v)))))))
+            (. *err* (println (str "Warning: referring deprecated var: " v pos))))
+          (. a-ns (refer (or (rename sym) sym) v)))))))
+
+(defn ^:private rewrite-refer [ns-sym fs]
+  (let [rename  (:rename fs {})
+        exclude (:exclude fs [])
+        only    (:refer fs (:only fs :all))]
+    `[[~ns-sym
+       ~@[:refer only]
+       ~@(when-not (empty? exclude)
+           [:exclude exclude])
+       ~@(when-not (empty? rename)
+           [:rename rename])]]))
+
+;; FIXME: practically clojure.string/join
+(defn ^:private string-join [sepr coll]
+  (apply str (interpose sepr coll)))
+
+(defn refer
+  "DEPRECATED: Unrestricted referrals are difficult to reason about and should be avoided in favor
+  of qualified imports. Restricted and unrestricted referrals can both be achieved via require, so
+  refer has no special value.
+
+  refers to all public vars of ns, subject to filters.  filters can include at most one each of:
+
+  :exclude list-of-symbols
+  :only list-of-symbols
+  :rename map-of-fromsymbol-tosymbol
+
+  For each public interned var in the namespace named by the symbol, adds a mapping from the name of
+  the var to the var to the current namespace.  Throws an exception if name is already mapped to
+  something else in the current namespace. Filters can be used to select a subset, via inclusion or
+  exclusion, or to provide a mapping to a symbol different from the var's name, in order to prevent
+  clashes. Use :use in the ns macro in preference to calling this directly."
+  {:added      "0.1.0"
+   :deprecated "0.2.0"}
+  [ns-sym & filters]
+  (let [ns        (or (find-ns ns-sym)
+                      (throw (new Exception (str "No namespace: " ns-sym))))
+        fs        (apply hash-map filters)
+        filters   (mapcat identity fs)
+        nspublics (ns-publics ns)
+        all       (keys nspublics)
+        rename    (:rename fs {})
+        exclude   (set (:exclude fs))
+        refer     (:refer fs)
+        only      (:only fs)
+        op        (cond (= :all refer) :all
+                        refer          :refer
+                        only           :only
+                        :else          :all)
+        to-do     (cond (= op :all)   all
+                        (= op :refer) refer
+                        (= op :only)  only
+                        :else         all)
+        d-ctx     (deprecated? *ns*)
+        *err*     (errwriter)
+        pos       (str " (" *file* ":" *line* ":" *column* ")")]
+    (. *err* (println
+              (format (str "Refer is deprecated, require should be preferred%s\n"
+                           "Instead of:\n%s"
+                           "Try:\n%s"
+                           (when-not (empty? rename)
+                             "Note: renaming is a code smell and may be deprecated in the future."))
+                      pos
+                      (str "  (:refer " ns-sym (when-not (empty? filters)
+                                                 (str " " (string-join " " filters))) ")\n")
+                      (str "  (:require " (string-join " " (rewrite-refer ns-sym fs)) ")\n"))))
+    (apply refer* *ns* ns-sym filters)))
 
 (defn ns-refers
   "Returns a map of the refer mappings for the namespace."
@@ -4414,7 +4505,7 @@
                                               (dissoc bes (key entry))
                                               ((key entry) bes)))
                                    (dissoc b :as :or)
-                                   {:keys #(if (keyword? %) % (keyword (str %))),
+                                   {:keys #(if (keyword? %) % (keyword (str %)))
                                     :strs str, :syms #(list `quote %)})]
                          (if (seq bes)
                            (let [bb (key (first bes))
@@ -4477,7 +4568,7 @@
   name => symbol
 
   Defines a function"
-  {:added "0.1.0", :special-form true,
+  {:added "0.1.0", :special-form true
    :forms '[(fn name? [params*] exprs*) (fn name? ([params*] exprs*) +)]}
   [& sigs]
   (let [name (if (symbol? (first sigs)) (first sigs) nil)
@@ -4556,6 +4647,21 @@
            (loop* ~(vec (interleave gs gs))
                   (let ~(vec (interleave bs gs))
                     ~@body)))))))
+
+(defn sift
+  "Takes a predicate and a seq, returns two seqs being respectively the elements for which pred
+  returned truthy and falsey."
+  {:added  "0.2.0"
+   :static true}
+  [pred coll]
+  (loop [t                    []
+         f                    []
+         [e & coll' :as coll] coll]
+    (if (empty? coll)
+      [t f]
+      (if (pred e)
+        (recur (conj t e) f coll')
+        (recur t (conj f e) coll')))))
 
 (defmacro when-first
   "bindings => x xs
@@ -5658,6 +5764,10 @@
         (finally
           (. clojure.lang.Var (popThreadBindings)))))))
 
+(defn- process-reference [[kname & args]]
+  `(~(symbol "clojure.core" (clojure.core/name kname))
+    ~@(map #(list 'quote %) args)))
+
 (defmacro ns
   "Sets *ns* to the namespace named by name (unevaluated), creating it
   if needed.  references can be zero or more of: (:refer-clojure ...)
@@ -5685,44 +5795,54 @@
   {:arglists '([name docstring? attr-map? references*])
    :added    "0.1.0"}
   [name & references]
-  (let [process-reference
-        (fn [[kname & args]]
-          `(~(symbol "clojure.core" (clojure.core/name kname))
-            ~@(map #(list 'quote %) args)))
-        docstring        (when (string? (first references)) (first references))
-        references       (if docstring (next references) references)
+  (let [docstring        (when (string? (first references))
+                           (first references))
+        references       (if docstring
+                           (next references)
+                           references)
         name             (if docstring
                            (vary-meta name assoc :doc docstring)
                            name)
-        metadata         (when (map? (first references)) (first references))
-        references       (if metadata (next references) references)
+        metadata         (when (map? (first references))
+                           (first references))
+        references       (if metadata
+                           (next references)
+                           references)
         name             (if metadata
                            (vary-meta name merge metadata)
                            name)
         gen-class-clause (first (filter #(= :gen-class (first %)) references))
-        gen-class-call
-        (when gen-class-clause
-          (list* `gen-class :name (.replace (str name) \- \_) :impl-ns name :main true (next gen-class-clause)))
+        gen-class-call   (when gen-class-clause
+                           (list* `gen-class
+                                  :name    (.replace (str name) \- \_)
+                                  :impl-ns name
+                                  :main    true
+                                  (next gen-class-clause)))
         references       (remove #(= :gen-class (first %)) references)
-        name-metadata    (meta name)]
-    `(do
-       (clojure.core/in-ns '~name)
-       ~@(when name-metadata
-           `((.resetMeta (clojure.lang.Namespace/find '~name) ~name-metadata)))
-       (with-loading-context
-         ~@(when gen-class-call (list gen-class-call))
-         ~@(when (and (not= name 'clojure.core) (not-any? #(= :refer-clojure (first %)) references))
-             `((clojure.core/refer '~'clojure.core)))
-         ~@(map process-reference references))
-       (if (.equals '~name 'clojure.core)
-         nil
-         (do (dosync (commute @#'*loaded-libs* conj '~name)) nil)))))
+        name-metadata    (meta name)
+        fn-form          `(fn nsfn# []
+                            (with-loading-context
+                              ~@(when gen-class-call (list gen-class-call))
+                              ~@(when (and (not= name 'clojure.core)
+                                           (not-any? #(= :refer-clojure (first %)) references))
+                                  `((clojure.core/refer* *ns* '~'clojure.core)))
+                              ~@(map process-reference references)))
+        res-form         `(let [~'__ns (clojure.core/in-ns '~name)
+                                ~'__fn ~(binding [*ns* (find-ns 'clojure.core)]
+                                          (eval fn-form))]
+                            ~@(when name-metadata
+                                `((.resetMeta ~'__ns ~name-metadata)))
+                            (~'__fn)
+                            ~@(if (not= name 'clojure.core)
+                                `((dosync (commute @#'*loaded-libs* conj '~name))))
+                            nil)]
+    res-form))
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
   {:added "0.1.0"}
   [& filters]
-  `(clojure.core/refer '~'clojure.core ~@filters))
+  `(clojure.core/refer* *ns* '~'clojure.core ~@filters))
 
 (defmacro defonce
   "defs name to have the root value of the expr iff the named var has no root value,
@@ -5870,7 +5990,7 @@
           (doseq [opt filter-opts]
             (printf " %s '%s" (key opt) (print-str (val opt))))
           (printf ")\n"))
-        (apply refer lib (mapcat seq filter-opts))))))
+        (apply refer* *ns* lib (mapcat seq filter-opts))))))
 
 (defn- load-libs
   "Loads libs, interpreting libspecs, prefix lists, and flags for
@@ -5974,16 +6094,140 @@
   [& args]
   (apply load-libs :require args))
 
-(defn use
-  "Like 'require, but also refers to each lib's namespace using
-  clojure.core/refer. Use :use in the ns macro in preference to calling
-  this directly.
+;; (use 'sym)
+;; (use '[sym])
+;; (use '[sym c1 c2 c3])
+;; (use '[sym.c1 :as c])
+;; (use '[clojure.core.match :only [match]])
+;; (use '[clojure.core.logic :exclude [is] :as l])
+;; (use '[clojure.string :only (split) :rename {split spl}])
 
-  'use accepts additional options in libspecs: :exclude, :only, :rename.
-  The arguments and semantics for :exclude, :only, and :rename are the same
-  as those documented for clojure.core/refer."
-  {:added "0.1.0"}
-  [& args] (apply load-libs :require :use args))
+(defn- collect-nss [spec]
+  (if (symbol? spec)
+    [spec]
+    (let [[prefix & nss] (take-while symbol? spec)]
+      (if-not (empty? nss)
+        (map #(symbol (str (name prefix) "." (name %))) nss)
+        [prefix]))))
+
+(defn- collect-kwopt [kw spec]
+  (when-not (symbol? spec)
+    (when-let [tail (->> spec
+                         (drop-while symbol?)
+                         (drop-while #(not= % kw)))]
+      (let [[_ opt & tail] tail]
+        (when (some #{kw} tail)
+          (. (errwriter)
+             (println (format "Warning: multiple %s clauses parsing use (%s), first one wins" opt spec))))
+        opt))))
+
+(defn- collect-alias [spec]
+  (when-let [alias (collect-kwopt :as spec)]
+    (assert (symbol? alias)
+            (format "Parsing use, :as requires a symbol! %s" spec))
+    alias))
+
+(defn- collect-exclude [spec]
+  (when-let [excluded (collect-kwopt :exclude spec)]
+    (assert (every? symbol? excluded)
+            (format "Parsing use, :exclude only accepts symbols! %s" spec))
+    excluded))
+
+(defn- collect-only [spec]
+  (when-let [refers (collect-kwopt :only spec)]
+    (assert (every? symbol? refers)
+            (format "Parsing use, :only only accepts symbols! %s" spec))
+    refers))
+
+(defn- collect-rename [spec]
+  (when-let [remapping (collect-kwopt :rename spec)]
+    (assert (every? symbol? (concat (keys remapping) (vals remapping)))
+            (format "Parsing use, :rename only accepts symbols! %s" spec))
+    remapping))
+
+(declare update update-in)
+
+(defn merge-refers [l r]
+  (if (or (= l :all) (= r :all))
+    :all
+    (apply sorted-set (concat l r))))
+
+(defn- build-refers [state spec]
+  (let [name     (if (symbol? spec) spec (first spec))
+        alias    (collect-alias spec)
+        excludes (collect-exclude spec)
+        refers   (or (collect-only spec) :all)
+        rename   (collect-rename spec)
+        prior    (get state name {})]
+    (try
+      (assoc state name
+             {:as      (or (:as prior) alias)
+              :exclude (apply sorted-set (concat excludes (seq (:exclude prior))))
+              :refer   (merge-refers refers (:refer prior))
+              :rename  (merge rename (:rename prior))})
+      (catch Exception e
+        (throw (ex-info "Failed to build refers!"
+                        {:state       state
+                         :spec        spec
+                         :spec/name   name
+                         :spec/alias  alias
+                         :spec/refers refers
+                         :spec/rename rename
+                         :spec/prior  prior}))))))
+
+(defn- make-require [[ns opts]]
+  (let [{:keys [as exclude
+                refer rename]} opts
+        final-refers           (if (and (not= :all refer) exclude)
+                                 (vec (apply sorted-set (remove exclude refer)))
+                                 (if (not= :all refer)
+                                   (vec refer)
+                                   refer))]
+    `[~ns
+      ~@(when as [:as as])
+      :refer ~final-refers
+      ~@(when (seq exclude) [:exclude (vec exclude)])
+      ~@(when rename [:rename rename])]))
+
+(defn- rewrite-use [specs]
+  (let [imports (apply sorted-set (mapcat collect-nss specs))
+        specs   (reduce1 build-refers {} specs)
+        blob    (apply merge-with #(or %1 %2) (vals specs))
+        rename? (:rename blob)]
+    [rename? (map make-require (reverse specs))]))
+
+(defn- format-prefix-list [prefix bodies]
+  (let [prefix  (format "  (%s " prefix)
+        padding (apply str \newline (repeat (count prefix) \space))]
+    (str prefix (apply str (interpose padding bodies)) ")\n")))
+
+(defn use
+  "DEPRECATED: Unrestricted referrals are difficult to reason about and should be avoided in favor
+  of qualified imports. Restricted and unrestricted referrals can both be achieved via require, so
+  use has no special value.
+
+  Like 'require, but also refers to each lib's namespace using clojure.core/refer. Use :use in the
+  ns macro in preference to calling this directly.
+
+  'use accepts additional options in libspecs: :exclude, :only, :rename.  The arguments and
+  semantics for :exclude, :only, and :rename are the same as those documented for
+  clojure.core/refer."
+  {:added      "0.1.0"
+   :deprecated "0.2.0"}
+  [& args]
+  (let [[rename? requires] (rewrite-use args)]
+    (. (errwriter)
+       (println
+        (format
+         (str "Use is deprecated, require should be preferred. %s\n"
+              "Instead of:\n%s"
+              "Try:\n%s\n"
+              (when rename?
+                "Note: renaming is a code smell and may be deprecated in the future."))
+         (str "(" *file* ":" *line* ":" *column* ")")
+         (format-prefix-list :use args)
+         (format-prefix-list :require requires)))))
+  (apply load-libs :require :use args))
 
 (defn loaded-libs
   "Returns a sorted set of symbols naming the currently loaded libs"
@@ -6084,25 +6328,6 @@
   ([m k f x y z & more]
    (assoc m k (apply f (get m k) x y z more))))
 
-(defn empty?
-  "Returns true if coll has no items - same as (not (seq coll)).
-  Please use the idiom (seq x) rather than (not (empty? x))"
-  {:added "0.1.0"
-   :static true}
-  [coll] (not (seq coll)))
-
-(defn coll?
-  "Returns true if x implements IPersistentCollection"
-  {:added "0.1.0"
-   :static true}
-  [x] (instance? clojure.lang.IPersistentCollection x))
-
-(defn list?
-  "Returns true if x implements IPersistentList"
-  {:added "0.1.0"
-   :static true}
-  [x] (instance? clojure.lang.IPersistentList x))
-
 (defn ifn?
   "Returns true if x implements IFn. Note that many data structures
   (e.g. sets and maps) implement IFn"
@@ -6115,12 +6340,6 @@
   {:added "0.1.0"
    :static true}
   [x] (instance? clojure.lang.Fn x))
-
-(defn associative?
-  "Returns true if coll implements Associative"
-  {:added "0.1.0"
-   :static true}
-  [coll] (instance? clojure.lang.Associative coll))
 
 (defn sequential?
   "Returns true if coll implements Sequential"
@@ -6269,11 +6488,18 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; var documentation ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(alter-meta! #'in-ns assoc :added "0.1.0")
-(alter-meta! #'load-file assoc :added "0.1.0")
-
 (defmacro add-doc-and-meta {:private true} [name docstring meta]
   `(alter-meta! (var ~name) merge (assoc ~meta :doc ~docstring)))
+
+(add-doc-and-meta in-ns
+  "Sets *ns* to the namespace named by the symbol, creating it if needed."
+  {:added    "0.1.0"
+   :arglists '([name])})
+
+(add-doc-and-meta load-file
+  "Sequentially read and evaluate the set of forms contained in the file."
+  {:added    "0.1.0"
+   :arglists '([name])})
 
 (add-doc-and-meta *agent*
   "The agent currently running an action on this thread, else nil"
@@ -6437,7 +6663,7 @@
   Takes a vector of function specs and a body, and generates a set of
   bindings of functions to their names. All of the names are available
   in all of the definitions of the functions, as well as the body."
-  {:added "0.1.0", :forms '[(letfn [fnspecs*] exprs*)],
+  {:added "0.1.0", :forms '[(letfn [fnspecs*] exprs*)]
    :special-form true, :url nil}
   [fnspecs & body]
   `(letfn* ~(vec (interleave (map first fnspecs)

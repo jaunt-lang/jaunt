@@ -9,8 +9,9 @@
 ;; Author: Stuart Halloway
 
 (ns clojure.test-clojure.protocols
-  (:use clojure.test clojure.test-clojure.protocols.examples)
-  (:require [clojure.test-clojure.protocols.more-examples :as other]
+  (:require [clojure.test :refer :all]
+            [clojure.test-clojure.protocols.examples :refer :all]
+            [clojure.test-clojure.protocols.more-examples :as other]
             [clojure.set :as set]
             clojure.test-helper)
   (:import [clojure.test_clojure.protocols.examples ExampleInterface]))

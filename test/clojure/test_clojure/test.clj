@@ -14,10 +14,9 @@
 ;; Thanks to Chas Emerick, Allen Rohner, and Stuart Halloway for
 ;; contributions and suggestions.
 
-
 (ns clojure.test-clojure.test
-  (:use clojure.test)
-  (:require [clojure.stacktrace :as stack]))
+  (:require [clojure.test :refer :all]
+            [clojure.stacktrace :as stack]))
 
 (deftest can-test-symbol
   (let [x true]
@@ -110,7 +109,7 @@
                  (= event :error) (= msg "Should error")
                  :else true)]
     (if passed
-      (original-report {:type :pass, :message msg,
+      (original-report {:type :pass, :message msg
                         :expected expected, :actual actual})
       (original-report {:type :fail, :message (str msg " but got " event)
                         :expected expected, :actual actual}))))

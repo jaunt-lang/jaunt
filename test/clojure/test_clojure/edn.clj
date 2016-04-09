@@ -8,7 +8,6 @@
 
 ;; Author: Stuart Halloway
 
-
 (ns clojure.test-clojure.edn
   (:require [clojure.test.generative :refer (defspec)]
             [clojure.test-clojure.generators :as cgen]

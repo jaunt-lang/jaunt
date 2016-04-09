@@ -9,10 +9,10 @@
 
 ### Build Status
 
-Branch | Status | Version
+Branch | Status | Artifact
 ----------|--------|--------
 `master` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/master.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/master) | `[org.jaunt-lang/jaunt "0.1.0"]`
-`develop` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop) | [![Snapshot Version](https://img.shields.io/clojars/v/org.jaunt-lang/jaunt.svg)](https://clojars.org/org.jaunt-lang/jaunt)
+`develop` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop) | `[org.jaunt-lang/jaunt "0.2.0-SNAPSHOT"]`
 
 ## What
 
@@ -37,7 +37,7 @@ or later), and [Cursive](https://cursive-ide.com/).
 
 ### With Leiningen
 
-All that's required in order to use Jaunt in a leiningen project is to provide a profile wherein
+All that's required in order to use Jaunt in a leiningen project is to provide a profile where
 Jaunt is listed as a dependency, and Clojure is listed as an exclusion. A minimal `project.clj`
 which uses only Jaunt would be as such:
 
@@ -142,15 +142,16 @@ This program uses the ASM bytecode engineering library which is distributed unde
 An extensive changelog is available [here](CHANGELOG.md).
 
 ## FAQ
+
 > Will you support $LIBRARY/$PRODUCT?
 
 No. They may work just fine, and you're welcome to offer changes continuing or preserving support as
-well as to assist in preventing breakages but no degree of compatibility with Clojure, Cognitect
-product or surrounding ecosystem is guaranteed or represented.
+well as to assist in preventing breakages. However no degree of compatibility with Clojure, Cognitect
+products or the surrounding ecosystem is guaranteed or represented.
 
 > Will you add $FEATURE/$PATCH from Clojure?
 
-No. Under the EPL you may port changes from Clojure to Jaunt. However I make no promises of
+Maybe. Under the EPL you may port changes from Clojure to Jaunt. However I make no promises of
 merging or porting upstream changes.
 
 > Will you add $FEATURE to the language?

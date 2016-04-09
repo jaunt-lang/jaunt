@@ -38,57 +38,62 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LispReader {
-
   static final Symbol QUOTE = Symbol.intern("quote");
   static final Symbol THE_VAR = Symbol.intern("var");
-//static Symbol SYNTAX_QUOTE = Symbol.intern(null, "syntax-quote");
-  static Symbol UNQUOTE = Symbol.intern("clojure.core", "unquote");
-  static Symbol UNQUOTE_SPLICING = Symbol.intern("clojure.core", "unquote-splicing");
-  static Symbol CONCAT = Symbol.intern("clojure.core", "concat");
-  static Symbol SEQ = Symbol.intern("clojure.core", "seq");
-  static Symbol LIST = Symbol.intern("clojure.core", "list");
-  static Symbol APPLY = Symbol.intern("clojure.core", "apply");
-  static Symbol HASHMAP = Symbol.intern("clojure.core", "hash-map");
-  static Symbol HASHSET = Symbol.intern("clojure.core", "hash-set");
-  static Symbol VECTOR = Symbol.intern("clojure.core", "vector");
-  static Symbol WITH_META = Symbol.intern("clojure.core", "with-meta");
-  static Symbol META = Symbol.intern("clojure.core", "meta");
-  static Symbol DEREF = Symbol.intern("clojure.core", "deref");
-  static Symbol READ_COND = Symbol.intern("clojure.core", "read-cond");
-  static Symbol READ_COND_SPLICING = Symbol.intern("clojure.core", "read-cond-splicing");
-  static Keyword UNKNOWN = Keyword.intern(null, "unknown");
-//static Symbol DEREF_BANG = Symbol.intern("clojure.core", "deref!");
+  static final Symbol UNQUOTE = Symbol.intern("clojure.core", "unquote");
+  static final Symbol UNQUOTE_SPLICING = Symbol.intern("clojure.core", "unquote-splicing");
+  static final Symbol CONCAT = Symbol.intern("clojure.core", "concat");
+  static final Symbol SEQ = Symbol.intern("clojure.core", "seq");
+  static final Symbol LIST = Symbol.intern("clojure.core", "list");
+  static final Symbol APPLY = Symbol.intern("clojure.core", "apply");
+  static final Symbol HASHMAP = Symbol.intern("clojure.core", "hash-map");
+  static final Symbol HASHSET = Symbol.intern("clojure.core", "hash-set");
+  static final Symbol VECTOR = Symbol.intern("clojure.core", "vector");
+  static final Symbol WITH_META = Symbol.intern("clojure.core", "with-meta");
+  static final Symbol META = Symbol.intern("clojure.core", "meta");
+  static final Symbol DEREF = Symbol.intern("clojure.core", "deref");
+
+  static final Keyword UNKNOWN = Keyword.intern(null, "unknown");
+  static final Keyword DEFAULT_FEATURE = Keyword.intern(null, "default");
+  static final Keyword OPT_EOF = Keyword.intern(null,"eof");
+  static final Keyword OPT_FEATURES = Keyword.intern(null, "features");
+  static final Keyword OPT_READ_COND = Keyword.intern(null, "read-cond");
+  static final Keyword EOFTHROW = Keyword.intern(null, "eofthrow");
+  static final Keyword COND_ALLOW = Keyword.intern(null, "allow");
+  static final Keyword COND_PRESERVE = Keyword.intern(null, "preserve");
+
+  // Platform features - always installed
+  static final IPersistentSet PLATFORM_FEATURES =
+    RT.set(Keyword.intern("clj"),
+           Keyword.intern("jnt"));
+
+  final static public IPersistentSet RESERVED_FEATURES =
+    RT.set(Keyword.intern(null, "else"),
+           Keyword.intern(null, "none"));
 
   static IFn[] macros = new IFn[256];
   static IFn[] dispatchMacros = new IFn[256];
-//static Pattern symbolPat = Pattern.compile("[:]?([\\D&&[^:/]][^:/]*/)?[\\D&&[^:/]][^:/]*");
   static Pattern symbolPat = Pattern.compile("[:]?([\\D&&[^/]].*/)?(/|[\\D&&[^/]][^/]*)");
-//static Pattern varPat = Pattern.compile("([\\D&&[^:\\.]][^:\\.]*):([\\D&&[^:\\.]][^:\\.]*)");
-//static Pattern intPat = Pattern.compile("[-+]?[0-9]+\\.?");
   static Pattern intPat =
-    Pattern.compile(
-      "([-+]?)(?:(0)|([1-9][0-9]*)|0[xX]([0-9A-Fa-f]+)|0([0-7]+)|([1-9][0-9]?)[rR]([0-9A-Za-z]+)|0[0-9]+)(N)?");
+    Pattern.compile( "([-+]?)(?:(0)|([1-9][0-9]*)|0[xX]([0-9A-Fa-f]+)|0([0-7]+)|([1-9][0-9]?)[rR]([0-9A-Za-z]+)|0[0-9]+)(N)?");
   static Pattern ratioPat = Pattern.compile("([-+]?[0-9]+)/([0-9]+)");
   static Pattern floatPat = Pattern.compile("([-+]?[0-9]+(\\.[0-9]*)?([eE][-+]?[0-9]+)?)(M)?");
-//static Pattern accessorPat = Pattern.compile("\\.[a-zA-Z_]\\w*");
-//static Pattern instanceMemberPat = Pattern.compile("\\.([a-zA-Z_][\\w\\.]*)\\.([a-zA-Z_]\\w*)");
-//static Pattern staticMemberPat = Pattern.compile("([a-zA-Z_][\\w\\.]*)\\.([a-zA-Z_]\\w*)");
-//static Pattern classNamePat = Pattern.compile("([a-zA-Z_][\\w\\.]*)\\.");
 
-//symbol->gensymbol
+  //symbol->gensymbol
   static Var GENSYM_ENV = Var.create(null).setDynamic();
-//sorted-map num->gensymbol
+
+  //sorted-map num->gensymbol
   static Var ARG_ENV = Var.create(null).setDynamic();
   static IFn ctorReader = new CtorReader();
 
-// Dynamic var set to true in a read-cond context
+  // Dynamic var set to true in a read-cond context
   static Var READ_COND_ENV = Var.create(null).setDynamic();
 
   static {
     macros['"'] = new StringReader();
     macros[';'] = new CommentReader();
     macros['\''] = new WrappingReader(QUOTE);
-    macros['@'] = new WrappingReader(DEREF);//new DerefReader();
+    macros['@'] = new WrappingReader(DEREF);
     macros['^'] = new MetaReader();
     macros['`'] = new SyntaxQuoteReader();
     macros['~'] = new UnquoteReader();
@@ -98,11 +103,9 @@ public class LispReader {
     macros[']'] = new UnmatchedDelimiterReader();
     macros['{'] = new MapReader();
     macros['}'] = new UnmatchedDelimiterReader();
-//  macros['|'] = new ArgVectorReader();
     macros['\\'] = new CharacterReader();
     macros['%'] = new ArgReader();
     macros['#'] = new DispatchReader();
-
 
     dispatchMacros['^'] = new MetaReader();
     dispatchMacros['\''] = new VarReader();
@@ -148,22 +151,6 @@ public class LispReader {
     }
   }
 
-// Reader opts
-  static public final Keyword OPT_EOF = Keyword.intern(null,"eof");
-  static public final Keyword OPT_FEATURES = Keyword.intern(null,"features");
-  static public final Keyword OPT_READ_COND = Keyword.intern(null, "read-cond");
-
-// EOF special value to throw on eof
-  static public final Keyword EOFTHROW = Keyword.intern(null,"eofthrow");
-
-// Platform features - always installed
-  static private final Keyword PLATFORM_KEY = Keyword.intern(null, "clj");
-  static private final Object PLATFORM_FEATURES = PersistentHashSet.create(PLATFORM_KEY);
-
-// Reader conditional options - use with :read-cond
-  static public final Keyword COND_ALLOW = Keyword.intern(null, "allow");
-  static public final Keyword COND_PRESERVE = Keyword.intern(null, "preserve");
-
   static public Object read(PushbackReader r, Object opts) {
     boolean eofIsError = true;
     Object eofValue = null;
@@ -207,7 +194,7 @@ public class LispReader {
       if (features == null) {
         return mopts.assoc(LispReader.OPT_FEATURES, PLATFORM_FEATURES);
       } else {
-        return mopts.assoc(LispReader.OPT_FEATURES, RT.conj((IPersistentSet) features, PLATFORM_KEY));
+        return mopts.assoc(LispReader.OPT_FEATURES, RT.union((IPersistentSet) features, PLATFORM_FEATURES));
       }
     }
   }
@@ -277,7 +264,6 @@ public class LispReader {
         throw Util.sneakyThrow(e);
       }
       LineNumberingPushbackReader rdr = (LineNumberingPushbackReader) r;
-      //throw Util.runtimeException(String.format("ReaderError:(%d,1) %s", rdr.getLineNumber(), e.getMessage()), e);
       throw new ReaderException(rdr.getLineNumber(), rdr.getColumnNumber(), e);
     }
   }
@@ -363,7 +349,14 @@ public class LispReader {
       return RT.T;
     } else if (s.equals("false")) {
       return RT.F;
+    } else if (s.equals("NaN")) {
+      return Double.NaN;
+    } else if (s.equals("-Infinity")) {
+      return Double.NEGATIVE_INFINITY;
+    } else if (s.equals("Infinity") || s.equals("+Infinity")) {
+      return Double.POSITIVE_INFINITY;
     }
+
     Object ret = null;
 
     ret = matchSymbol(s);
@@ -373,7 +366,6 @@ public class LispReader {
 
     throw Util.runtimeException("Invalid token: " + s);
   }
-
 
   private static Object matchSymbol(String s) {
     Matcher m = symbolPat.matcher(s);
@@ -410,7 +402,6 @@ public class LispReader {
     }
     return null;
   }
-
 
   private static Object matchNumber(String s) {
     Matcher m = intPat.matcher(s);
@@ -483,8 +474,6 @@ public class LispReader {
   }
 
   public static class RegexReader extends AFn {
-    static StringReader stringrdr = new StringReader();
-
     public Object invoke(Object reader, Object doublequote, Object opts, Object pendingForms) {
       StringBuilder sb = new StringBuilder();
       Reader r = (Reader) reader;
@@ -574,7 +563,6 @@ public class LispReader {
       } while (ch != -1 && ch != '\n' && ch != '\r');
       return r;
     }
-
   }
 
   public static class DiscardReader extends AFn {
@@ -597,7 +585,6 @@ public class LispReader {
       Object o = read(r, true, null, true, opts, ensurePending(pendingForms));
       return RT.list(sym, o);
     }
-
   }
 
   public static class DeprecatedWrappingReader extends AFn {
@@ -617,46 +604,15 @@ public class LispReader {
       Object o = read(r, true, null, true, opts, ensurePending(pendingForms));
       return RT.list(sym, o);
     }
-
   }
 
   public static class VarReader extends AFn {
     public Object invoke(Object reader, Object quote, Object opts, Object pendingForms) {
       PushbackReader r = (PushbackReader) reader;
       Object o = read(r, true, null, true, opts, ensurePending(pendingForms));
-//    if(o instanceof Symbol)
-//      {
-//      Object v = Compiler.maybeResolveIn(Compiler.currentNS(), (Symbol) o);
-//      if(v instanceof Var)
-//        return v;
-//      }
       return RT.list(THE_VAR, o);
     }
   }
-
-  /*
-  static class DerefReader extends AFn{
-
-    public Object invoke(Object reader, Object quote) {
-      PushbackReader r = (PushbackReader) reader;
-      int ch = read1(r);
-      if(ch == -1)
-        throw Util.runtimeException("EOF while reading character");
-      if(ch == '!')
-        {
-        Object o = read(r, true, null, true);
-        return RT.list(DEREF_BANG, o);
-        }
-      else
-        {
-        r.unread(ch);
-        Object o = read(r, true, null, true);
-        return RT.list(DEREF, o);
-        }
-    }
-
-  }
-  */
 
   public static class DispatchReader extends AFn {
     public Object invoke(Object reader, Object hash, Object opts, Object pendingForms) {
@@ -799,7 +755,6 @@ public class LispReader {
         throw new IllegalArgumentException("Metadata can only be applied to IMetas");
       }
     }
-
   }
 
   public static class SyntaxQuoteReader extends AFn {
@@ -846,8 +801,7 @@ public class LispReader {
                            Symbol.intern(null, sym.ns));
           if (maybeClass instanceof Class) {
             // Classname/foo -> package.qualified.Classname/foo
-            sym = Symbol.intern(
-                    ((Class)maybeClass).getName(), sym.name);
+            sym = Symbol.intern(((Class)maybeClass).getName(), sym.name);
           } else {
             sym = Compiler.resolveSymbol(sym);
           }
@@ -915,12 +869,11 @@ public class LispReader {
       IPersistentVector keyvals = PersistentVector.EMPTY;
       for (ISeq s = RT.seq(form); s != null; s = s.next()) {
         IMapEntry e = (IMapEntry) s.first();
-        keyvals = (IPersistentVector) keyvals.cons(e.key());
-        keyvals = (IPersistentVector) keyvals.cons(e.val());
+        keyvals = keyvals.cons(e.key());
+        keyvals = keyvals.cons(e.val());
       }
       return keyvals;
     }
-
   }
 
   static boolean isUnquoteSplicing(Object form) {
@@ -948,7 +901,6 @@ public class LispReader {
         return RT.list(UNQUOTE, o);
       }
     }
-
   }
 
   public static class CharacterReader extends AFn {
@@ -992,7 +944,6 @@ public class LispReader {
       }
       throw Util.runtimeException("Unsupported character: \\" + token);
     }
-
   }
 
   public static class ListReader extends AFn {
@@ -1009,47 +960,13 @@ public class LispReader {
         return PersistentList.EMPTY;
       }
       IObj s = (IObj) PersistentList.create(list);
-//    IObj s = (IObj) RT.seq(list);
       if (line != -1) {
         return s.withMeta(RT.map(RT.LINE_KEY, line, RT.COLUMN_KEY, column));
       } else {
         return s;
       }
     }
-
   }
-
-  /*
-  static class CtorReader extends AFn{
-    static final Symbol cls = Symbol.intern("class");
-
-    public Object invoke(Object reader, Object leftangle) {
-      PushbackReader r = (PushbackReader) reader;
-      // #<class classname>
-      // #<classname args*>
-      // #<classname/staticMethod args*>
-      List list = readDelimitedList('>', r, true);
-      if(list.isEmpty())
-        throw Util.runtimeException("Must supply 'class', classname or classname/staticMethod");
-      Symbol s = (Symbol) list.get(0);
-      Object[] args = list.subList(1, list.size()).toArray();
-      if(s.equals(cls))
-        {
-        return RT.classForName(args[0].toString());
-        }
-      else if(s.ns != null) //static method
-        {
-        String classname = s.ns;
-        String method = s.name;
-        return Reflector.invokeStaticMethod(classname, method, args);
-        }
-      else
-        {
-        return Reflector.invokeConstructor(RT.classForName(s.name), args);
-        }
-    }
-  }
-  */
 
   public static class EvalReader extends AFn {
     public Object invoke(Object reader, Object eq, Object opts, Object pendingForms) {
@@ -1065,7 +982,7 @@ public class LispReader {
         Symbol fs = (Symbol) RT.first(o);
         if (fs.equals(THE_VAR)) {
           Symbol vs = (Symbol) RT.second(o);
-          return RT.var(vs.ns, vs.name);  //Compiler.resolve((Symbol) RT.second(o),true);
+          return RT.var(vs.ns, vs.name);
         }
         if (fs.name.endsWith(".")) {
           Object[] args = RT.toArray(RT.next(o));
@@ -1086,20 +1003,11 @@ public class LispReader {
     }
   }
 
-//static class ArgVectorReader extends AFn{
-//  public Object invoke(Object reader, Object leftparen) {
-//    PushbackReader r = (PushbackReader) reader;
-//    return ArgVector.create(readDelimitedList('|', r, true));
-//  }
-//
-//}
-
   public static class VectorReader extends AFn {
     public Object invoke(Object reader, Object leftparen, Object opts, Object pendingForms) {
       PushbackReader r = (PushbackReader) reader;
       return LazilyPersistentVector.create(readDelimitedList(']', r, true, opts, ensurePending(pendingForms)));
     }
-
   }
 
   public static class MapReader extends AFn {
@@ -1111,7 +1019,6 @@ public class LispReader {
       }
       return RT.map(a);
     }
-
   }
 
   public static class SetReader extends AFn {
@@ -1119,7 +1026,6 @@ public class LispReader {
       PushbackReader r = (PushbackReader) reader;
       return PersistentHashSet.createWithCheck(readDelimitedList('}', r, true, opts, ensurePending(pendingForms)));
     }
-
   }
 
   public static class UnmatchedDelimiterReader extends AFn {
@@ -1135,7 +1041,7 @@ public class LispReader {
     }
   }
 
-// Sentinel values for reading lists
+  // Sentinel values for reading lists
   private static final Object READ_EOF = new Object();
   private static final Object READ_FINISHED = new Object();
 
@@ -1177,16 +1083,17 @@ public class LispReader {
 
       if (isPreserveReadCond(opts) || RT.suppressRead()) {
         return TaggedLiteral.create(sym, form);
+      } else if (sym.getName().contains(".")) {
+        return readRecord(form, sym, opts, pendingForms);
       } else {
-        return sym.getName().contains(".") ? readRecord(form, sym, opts, pendingForms) : readTagged(form, sym, opts, pendingForms);
+        return readTagged(form, sym, opts, pendingForms);
       }
-
     }
 
     private Object readTagged(Object o, Symbol tag, Object opts, Object pendingForms) {
+      ILookup data_readers = (ILookup) RT.DATA_READERS.deref();
+      IFn data_reader = (IFn) RT.get(data_readers, tag);
 
-      ILookup data_readers = (ILookup)RT.DATA_READERS.deref();
-      IFn data_reader = (IFn)RT.get(data_readers, tag);
       if (data_reader == null) {
         data_readers = (ILookup)RT.DEFAULT_DATA_READERS.deref();
         data_reader = (IFn)RT.get(data_readers, tag);
@@ -1211,8 +1118,6 @@ public class LispReader {
       }
 
       Class recordClass = RT.classForNameNonLoading(recordName.toString());
-
-
       boolean shortForm = true;
 
       if (form instanceof IPersistentMap) {
@@ -1224,7 +1129,7 @@ public class LispReader {
       }
 
       Object ret = null;
-      Constructor[] allctors = ((Class)recordClass).getConstructors();
+      Constructor[] allctors = recordClass.getConstructors();
 
       if (shortForm) {
         IPersistentVector recordEntries = (IPersistentVector)form;
@@ -1264,11 +1169,7 @@ public class LispReader {
   }
 
   public static class ConditionalReader extends AFn {
-
     final static private Object READ_STARTED = new Object();
-    final static public Keyword DEFAULT_FEATURE = Keyword.intern(null, "default");
-    final static public IPersistentSet RESERVED_FEATURES =
-      RT.set(Keyword.intern(null, "else"), Keyword.intern(null, "none"));
 
     public static boolean hasFeature(Object feature, Object opts) {
       if (! (feature instanceof Keyword)) {
@@ -1313,8 +1214,8 @@ public class LispReader {
           }
 
           if (hasFeature(form, opts)) {
-
-            //Read the form corresponding to the feature, and assign it to result if everything is kosher
+            // Read the form corresponding to the feature, and assign it to result if everything is
+            // kosher
 
             form = read(r, false, READ_EOF, ')', READ_FINISHED, true, opts, pendingForms);
 
@@ -1336,7 +1237,8 @@ public class LispReader {
           }
         }
 
-        // When we already have a result, or when the feature didn't match, discard the next form in the reader
+        // When we already have a result, or when the feature didn't match, discard the next form in
+        // the reader
         try {
           Var.pushThreadBindings(RT.map(RT.SUPPRESS_READ, RT.T));
           form = read(r, false, READ_EOF, ')', READ_FINISHED, true, opts, pendingForms);
@@ -1375,12 +1277,13 @@ public class LispReader {
       } else {
         return result;
       }
-    };
+    }
 
     private static void checkConditionalAllowed(Object opts) {
       IPersistentMap mopts = (IPersistentMap)opts;
-      if (! (opts != null && (COND_ALLOW.equals(mopts.valAt(OPT_READ_COND)) ||
-                              COND_PRESERVE.equals(mopts.valAt(OPT_READ_COND))))) {
+      if (! (opts != null
+             && (COND_ALLOW.equals(mopts.valAt(OPT_READ_COND)) ||
+                 COND_PRESERVE.equals(mopts.valAt(OPT_READ_COND))))) {
         throw Util.runtimeException("Conditional read not allowed");
       }
     }
@@ -1429,37 +1332,4 @@ public class LispReader {
       }
     }
   }
-
-  /*
-  public static void main(String[] args) throws Exception{
-    //RT.init();
-    PushbackReader rdr = new PushbackReader( new java.io.StringReader( "(+ 21 21)" ) );
-    Object input = LispReader.read(rdr, false, new Object(), false );
-    System.out.println(Compiler.eval(input));
-  }
-
-  public static void main(String[] args){
-    LineNumberingPushbackReader r = new LineNumberingPushbackReader(new InputStreamReader(System.in));
-    OutputStreamWriter w = new OutputStreamWriter(System.out);
-    Object ret = null;
-    try
-      {
-      for(; ;)
-        {
-        ret = LispReader.read(r, true, null, false);
-        RT.print(ret, w);
-        w.write('\n');
-        if(ret != null)
-          w.write(ret.getClass().toString());
-        w.write('\n');
-        w.flush();
-        }
-      }
-    catch(Exception e)
-      {
-      e.printStackTrace();
-      }
-  }
-   */
-
 }

@@ -88,7 +88,7 @@
               rfld (first (filter #(= f (.getName ^java.lang.reflect.Field %)) dflds))]
           (or rfld (recur (.getSuperclass c))))))))
 
-                                        ;(distinct (map first(keys (mapcat non-private-methods [Object IPersistentMap]))))
+;;(distinct (map first (keys (mapcat non-private-methods [Object IPersistentMap]))))
 
 (def ^{:private true} prim->class
   {'int Integer/TYPE

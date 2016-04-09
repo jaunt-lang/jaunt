@@ -53,7 +53,7 @@ http://www.cs.cmu.edu/afs/cs.cmu.edu/project/ai-repository/ai/html/cltl/clm/node
 and in the Common Lisp HyperSpec at
 http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm
 "
-  {:added "0.1.0",
+  {:added "0.1.0"
    :see-also [["http://www.cs.cmu.edu/afs/cs.cmu.edu/project/ai-repository/ai/html/cltl/clm/node200.html#SECTION002633000000000000000"
                "Common Lisp the Language"]
               ["http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
@@ -801,8 +801,8 @@ string, or one character longer."
         d (if d d (max (count mantissa) (min n 7)))
         dd (- d n)]
     (if (<= 0 dd d)
-      (let [navigator (fixed-float {:w ww, :d dd, :k 0,
-                                    :overflowchar (:overflowchar params),
+      (let [navigator (fixed-float {:w ww, :d dd, :k 0
+                                    :overflowchar (:overflowchar params)
                                     :padchar (:padchar params), :at (:at params)}
                                    navigator offsets)]
         (print (apply str (repeat ee \space)))
@@ -1312,11 +1312,11 @@ not a pretty writer (which keeps track of columns), this function always outputs
 
 ;; We start with a couple of helpers
 (defn- process-directive-table-element [[char params flags bracket-info & generator-fn]]
-  [char,
-   {:directive char,
-    :params `(array-map ~@params),
-    :flags flags,
-    :bracket-info bracket-info,
+  [char
+   {:directive char
+    :params `(array-map ~@params)
+    :flags flags
+    :bracket-info bracket-info
     :generator-fn (concat '(fn [params offset]) generator-fn)}])
 
 (defmacro ^{:private true}

@@ -12,7 +12,7 @@
 ;;  Created Dec 2008
 
 (ns clojure.test-clojure.for
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (deftest Docstring-Example
   (is (= (take 100 (for [x (range 100000000)

@@ -9,7 +9,7 @@
 ;;Author: Alex Miller
 
 (ns clojure.test-clojure.volatiles
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 (deftest volatile-basics
   (let [vol (volatile! "abc")]

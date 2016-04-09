@@ -7,7 +7,7 @@
   <artifactId>jaunt</artifactId>
   <name>jaunt</name>
   <packaging>jar</packaging>
-  <version>0.1.0</version>
+  <version>0.2.0-SNAPSHOT</version>
 
   <url>https://github.com/jaunt-lang/jaunt</url>
   <description>arrdem flavored Clojure</description>
@@ -98,8 +98,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.3.2</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <encoding>${project.build.sourceEncoding}</encoding>
         </configuration>
       </plugin>

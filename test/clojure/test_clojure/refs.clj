@@ -8,9 +8,8 @@
 
 ;; Author: Frantisek Sodomka
 
-
 (ns clojure.test-clojure.refs
-  (:use clojure.test))
+  (:require [clojure.test :refer :all]))
 
 ;; http://clojure.org/refs
 

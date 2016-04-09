@@ -11,8 +11,8 @@
 (ns clojure.test-clojure.reducers
   (:require [clojure.core.reducers :as r]
             [clojure.test.generative :refer (defspec)]
-            [clojure.data.generators :as gen])
-  (:use clojure.test))
+            [clojure.data.generators :as gen]
+            [clojure.test :refer :all]))
 
 (defmacro defequivtest
   ;; f is the core fn, r is the reducers equivalent, rt is the reducible ->

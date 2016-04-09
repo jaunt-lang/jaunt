@@ -13,8 +13,8 @@
 ;;
 
 (ns clojure.test-clojure.control
-  (:use clojure.test
-        clojure.test-helper))
+  (:require [clojure.test :refer :all]
+            [clojure.test-helper :refer :all]))
 
 ;; *** Helper functions ***
 
