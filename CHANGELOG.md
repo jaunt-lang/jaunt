@@ -1,6 +1,13 @@
 # Change Log
 
-## Upcoming
+## Jaunt 0.2.0
+
+This release focuses on fleshing Jaunt out as a separate platform atop Clojure, adding support for
+the `.jnt` file extension and the `:jnt` reader conditional directive. Other changes include the
+deprecation and automatic refactoring hinting of `use` and `refer`, the addition of `^:uses`
+metadata fo `AFn` instances in support of future static analysis work and migration to JDK8 for the
+entire project although few JDK8 features are used at this time.
+
 - [#131](https://github.com/jaunt-lang/jaunt/pull/131) Add support for `.jnt` files (@arrdem).
   - `load-file` now chooses the first file of `.class`, `.jnt`, `.clj`, `.cljc`.
 - [#129](https://github.com/jaunt-lang/jaunt/pull/129) Emit `^:uses` metadata on `Fn` instances (@arrdem).
