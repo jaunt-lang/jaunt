@@ -11,7 +11,7 @@
 
 Branch | Status | Artifact
 ----------|--------|--------
-`master` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/master.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/master) | `[org.jaunt-lang/jaunt "0.2.0"]`
+`master` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/master.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/master) | `[org.jaunt-lang/jaunt "0.2.1"]`
 `develop` | [![Circle CI](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop.svg?style=svg)](https://circleci.com/gh/jaunt-lang/jaunt/tree/develop) | `[org.jaunt-lang/jaunt "0.3.0-SNAPSHOT"]`
 
 ## What
@@ -44,7 +44,7 @@ which uses only Jaunt would be as such:
 ```clojure
 (defproject some-jaunt-project "0.1.0-SNAPSHOT"
   :exclusions [org.clojure/clojure]
-  :dependencies [[org.jaunt-lang/jaunt "0.2.0"]])
+  :dependencies [[org.jaunt-lang/jaunt "0.2.1"]])
 ```
 
 Simply jacking in with CIDER or via `lein repl` or starting a Cursive repl will drop you straight
@@ -55,7 +55,7 @@ into a Jaunt environment.
 All you need is a `jaunt.clj` like this
 
 ```clojure
-'{:dependencies [[org.jaunt-lang/jaunt "0.2.0"]
+'{:dependencies [[org.jaunt-lang/jaunt "0.2.1"]
                  [reply "0.3.7"
                   :exclusions [net.cgrand/parsley
                                org.clojure/clojure]]
