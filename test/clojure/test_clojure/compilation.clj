@@ -8,7 +8,6 @@
 
 ;; Author: Frantisek Sodomka
 
-
 (ns clojure.test-clojure.compilation
   (:import (clojure.lang Compiler Compiler$CompilerException))
   (:require [clojure.test.generative :refer (defspec)]
@@ -21,7 +20,6 @@
 
 ;; compile
 ;; gen-class, gen-interface
-
 
 (deftest test-compiler-metadata
   (let [m (meta #'when)]
@@ -391,3 +389,8 @@
       ;; eventually call `load` and reset called?.
       (require 'clojure.repl :reload))
     (is @called?)))
+
+(deftest load-preference
+  (is (= :jnt (do (load "clojure/test_clojure/compilation/jnt_first") *1)))
+  (is (= :clj (do (load "clojure/test_clojure/compilation/clj_over_cljc") *1)))
+  (is (= :cljc (do (load "clojure/test_clojure/compilation/just_cljc") *1))))

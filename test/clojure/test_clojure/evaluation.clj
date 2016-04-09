@@ -6,7 +6,6 @@
 ;;    the terms of this license.
 ;;    You must not remove this notice, or any other, from this software.
 
-
 ;;  Tests for the Clojure functions documented at the URL:
 ;;
 ;;    http://clojure.org/Evaluation
@@ -15,10 +14,9 @@
 ;;  Created 22 October 2008
 
 (ns clojure.test-clojure.evaluation
-  (:require [clojure.test :refer :all]))
-
-(import '(java.lang Boolean)
-        '(clojure.lang Compiler Compiler$CompilerException))
+  (:require [clojure.test :refer :all])
+  (:import java.lang.Boolean
+           [clojure.lang Compiler Compiler$CompilerException]))
 
 (defmacro test-that
   "Provides a useful way for specifying the purpose of tests. If the first-level
@@ -184,7 +182,6 @@
 (defstruct struct-with-symbols (with-meta 'k {:a "A"}))
 
 (deftest Metadata
-
   (test-that
    "find returns key symbols and their metadata"
    (let [s (struct struct-with-symbols 1)]

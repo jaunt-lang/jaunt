@@ -442,14 +442,19 @@ public class RT {
 
   static public void load(String scriptbase, boolean failIfNotFound) throws IOException, ClassNotFoundException {
     String classfile = scriptbase + LOADER_SUFFIX + ".class";
-    String cljfile = scriptbase + ".clj";
-    String scriptfile = cljfile;
-    URL classURL = getResource(baseLoader(),classfile);
+    URL classURL = getResource(baseLoader(), classfile);
+
+    String scriptfile = scriptbase + ".jnt";
     URL cljURL = getResource(baseLoader(), scriptfile);
+    if (cljURL == null) {
+      scriptfile = scriptbase + ".clj";
+      cljURL = getResource(baseLoader(), scriptfile);
+    }
     if (cljURL == null) {
       scriptfile = scriptbase + ".cljc";
       cljURL = getResource(baseLoader(), scriptfile);
     }
+
     boolean loaded = false;
 
     if ((classURL != null &&
@@ -473,7 +478,7 @@ public class RT {
         loadResourceScript(RT.class, scriptfile);
       }
     } else if (!loaded && failIfNotFound)
-      throw new FileNotFoundException(String.format("Could not locate %s or %s on classpath.%s", classfile, cljfile,
+      throw new FileNotFoundException(String.format("Could not locate %s.{class,jnt,clj,cljc} on classpath.%s", scriptbase,
                                       scriptbase.contains("_") ? " Please check that namespaces with dashes use underscores in the Clojure file name." : ""));
   }
 
