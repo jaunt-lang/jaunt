@@ -809,7 +809,7 @@ public class RT {
       return null;
     }
 
-    return null;
+    throw new IllegalArgumentException("get not supported on type: " + coll.getClass().getName());
   }
 
   static public Object get(Object coll, Object key, Object notFound) {
