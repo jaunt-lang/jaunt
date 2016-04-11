@@ -532,7 +532,8 @@
 
 (defn- protocol?
   [maybe-p]
-  (boolean (:on-interface maybe-p)))
+  (try (boolean (:on-interface maybe-p))
+       (catch Exception _ false)))
 
 (defn- implements? [protocol atype]
   (and atype (.isAssignableFrom ^Class (:on-interface protocol) atype)))
