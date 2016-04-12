@@ -209,8 +209,7 @@ public class RT {
                new OutputStreamWriter(System.out)).setOnce().setDynamic();
 
   final static public Var IN =
-    Var.intern(CLOJURE_NS,
-               Symbol.intern("*in*"),
+    Var.intern(CLOJURE_NS, Symbol.intern("*in*"),
                new LineNumberingPushbackReader(new InputStreamReader(System.in))).setOnce().setDynamic();
 
   final static public Var ERR =
@@ -352,7 +351,10 @@ public class RT {
     }
   };
 
-  final static Var NS_VAR = Var.intern(CLOJURE_NS, NAMESPACE, bootNamespace).setMacro();
+  final static Var NS_VAR =
+    Var.intern(CLOJURE_NS,
+               NAMESPACE,
+               bootNamespace).setMacro();
 
   final static IFn bootLoadFile = new AFn() {
     public Object invoke(Object arg1) {

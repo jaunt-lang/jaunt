@@ -388,13 +388,13 @@ public class Compiler implements Opcodes {
   static public IPersistentSet getUsedVars(Var v) {
     IPersistentSet uses = PersistentHashSet.EMPTY;
 
-    if(v.isBound()) {
+    if (v.isBound()) {
       Object o = v.get();
-      if(o instanceof AFn) {
+      if (o instanceof AFn) {
         IPersistentMap meta = RT.meta(o);
         uses = (IPersistentSet) RT.get(meta, RT.USES_KEY);
       }
-      if(uses == null) {
+      if (uses == null) {
         uses = (IPersistentSet) RT.get(RT.meta(v), RT.USES_KEY, PersistentHashSet.EMPTY);
       }
     }
@@ -406,19 +406,19 @@ public class Compiler implements Opcodes {
     IPersistentSet acc = getUsedVars(v);
     PersistentQueue worklist = PersistentQueue.EMPTY;
 
-    for(Object o : acc) {
+    for (Object o : acc) {
       worklist = worklist.cons(o);
     }
 
     acc = (IPersistentSet) acc.cons(v);
 
     Object o;
-    while((o = worklist.peek()) != null) {
+    while ((o = worklist.peek()) != null) {
       worklist = worklist.pop();
       IPersistentSet newbies = getUsedVars((Var) o);
 
-      for(Object n : newbies) {
-        if(!acc.contains(n)) {
+      for (Object n : newbies) {
+        if (!acc.contains(n)) {
           acc = (IPersistentSet) acc.cons(n);
           worklist = worklist.cons(n);
         }
@@ -3642,7 +3642,7 @@ public class Compiler implements Opcodes {
             ,CONSTANT_IDS, new IdentityHashMap()
             ,KEYWORDS, PersistentHashMap.EMPTY
             ,VARS, PersistentHashMap.EMPTY
-	    ,USE_SET, PersistentHashSet.EMPTY
+            ,USE_SET, PersistentHashSet.EMPTY
             ,KEYWORD_CALLSITES, PersistentVector.EMPTY
             ,PROTOCOL_CALLSITES, PersistentVector.EMPTY
             ,VAR_CALLSITES, emptyVarCallSites()
@@ -6898,8 +6898,8 @@ public class Compiler implements Opcodes {
     Var.pushThreadBindings(
       RT.map(
         RT.CURRENT_NS, null
-	,RT.FN_LOADER_VAR, loader
-	,RT.READEVAL, RT.T
+        ,RT.FN_LOADER_VAR, loader
+        ,RT.READEVAL, RT.T
       ));
   }
 
