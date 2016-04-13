@@ -3191,13 +3191,27 @@ public class Compiler implements Opcodes {
     }
 
     public static Expr parse(Var v, ISeq args, Object tag) {
-      if (!v.isBound() || v.get() == null || !(v.get() instanceof AFn)) {
+      if (!v.isBound() || v.get() == null || !(v.get() instanceof IFn)) {
         return null;
+      }
+
+      ISeq arglists = (ISeq) RT.get(RT.meta(v), arglistsKey);
+      if (arglists == null) {
+        arglists = (ISeq) RT.get(RT.meta(v.get()), arglistsKey);
       }
 
       Class c = v.get().getClass();
       String cname = c.getName();
       java.lang.reflect.Method[] allmethods = c.getMethods();
+
+      IPersistentVector theargs = null;
+      if(arglists != null) {
+        for (Object o : RT.seq(arglists)) {
+          if (FnMethod.arglistMatches(RT.seq(o), args)) {
+            theargs = (IPersistentVector) o;
+          }
+        }
+      }
 
       boolean variadic = false;
       int argcount = RT.count(args);
@@ -3220,6 +3234,11 @@ public class Compiler implements Opcodes {
       }
       if (method == null) {
         return null;
+      }
+
+      if (RT.booleanCast(RT.get(RT.meta(theargs), deprecatedKey))
+          && warnOnDeprecated()) {
+        RT.errPrintWriter().println("Warning: invoking deprecated arity " + v + " " + theargs + " " + RT.getPos());
       }
 
       Class retClass = method.getReturnType();
@@ -3466,14 +3485,12 @@ public class Compiler implements Opcodes {
         Var v = ((VarExpr)fexpr).var;
         Object meta = RT.meta(v);
         Object arglists = RT.get(meta, arglistsKey);
-        int arity = RT.count(form.next());
-        IPersistentVector thelist = null;
-
-        if(arglists == null && v.isBound()) {
+        if (arglists == null && v.isBound()) {
           arglists = RT.get(RT.meta(v.get()), arglistsKey);
         }
 
-        if(arglists != null) {
+        IPersistentVector thelist = null;
+        if (arglists != null) {
           for (Object o : RT.seq(arglists)) {
             IPersistentVector args = (IPersistentVector) o;
 
@@ -3483,17 +3500,19 @@ public class Compiler implements Opcodes {
               String primc = FnMethod.primInterface(args);
               if (primc != null)
                 return analyze(context,
-                  ((IObj) RT.listStar(Symbol.intern(".invokePrim"),
-                    ((Symbol) form.first()).withMeta(RT.map(RT.TAG_KEY, Symbol.intern(primc))),
-                    form.next())).withMeta((IPersistentMap) RT.conj(RT.meta(v), RT.meta(form))));
+                               ((IObj) RT.listStar(Symbol.intern(".invokePrim"),
+                                                   ((Symbol) form.first()).withMeta(RT.map(RT.TAG_KEY, Symbol.intern(primc))),
+                                                   form.next())).withMeta((IPersistentMap) RT.conj(RT.meta(v), RT.meta(form))));
+
+              break;
             }
           }
         }
 
-      if (thelist != null
-          && RT.booleanCast(RT.get(RT.meta(thelist), deprecatedKey))
-          && warnOnDeprecated()) {
-          RT.errPrintWriter().println("Warning: invoking deprecated arity " + thelist + " at" + RT.getPos());
+        if (thelist != null
+            && RT.booleanCast(RT.get(RT.meta(thelist), deprecatedKey))
+            && warnOnDeprecated()) {
+          RT.errPrintWriter().println("Warning: invoking deprecated arity " + v + " " + thelist + " " + RT.getPos());
         }
       }
 
@@ -4760,15 +4779,15 @@ public class Compiler implements Opcodes {
 
     static public boolean arglistMatches(ISeq arglist, ISeq args) {
       // RT.errPrintWriter().println("  Trying to match " + arglist + " to " + args);
-      while(true) {
+      while (true) {
         Object binding = RT.first(arglist);
         Object expr = RT.first(args);
 
-        if(Util.equals(binding, _AMP_)) {
+        if (Util.equals(binding, _AMP_)) {
           return true;
-        } else if(args == null && arglist == null) {
+        } else if (args == null && arglist == null) {
           return true;
-        } else if(binding != null && args != null) {
+        } else if (binding != null && args != null) {
           arglist = RT.next(arglist);
           args = RT.next(args);
           continue;
