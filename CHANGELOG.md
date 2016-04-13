@@ -1,7 +1,6 @@
 # Change Log
 
 ## Upcoming
-- [#135](https://github.com/jaunt-lang/jaunt/pull/134) Make `get` throw on non-associative arguments (@arrdem).
 
 ## Jaunt 0.2.1
 
