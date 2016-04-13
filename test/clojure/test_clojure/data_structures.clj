@@ -649,34 +649,33 @@
 (deftest test-get
   (let [m {:a 1, :b 2, :c {:d 3, :e 4}, :f nil, :g false, nil {:h 5}}]
     (is (thrown? IllegalArgumentException (get-in {:a 1} 5)))
-    (is (thrown? IllegalArgumentException (get 5 :a)))
     (are [x y] (= x y)
-      (get m :a)                1
-      (get m :e)                nil
-      (get m :e 0)              0
-      (get m nil)               {:h 5}
-      (get m :b 0)              2
-      (get m :f 0)              nil
+      (get m :a) 1
+      (get m :e) nil
+      (get m :e 0) 0
+      (get m nil) {:h 5}
+      (get m :b 0) 2
+      (get m :f 0) nil
 
-      (get-in m [:c :e])        4
-      (get-in m '(:c :e))       4
-      (get-in m [:c :x])        nil
-      (get-in m [:f])           nil
-      (get-in m [:g])           false
-      (get-in m [:h])           nil
-      (get-in m [])             m
-      (get-in m nil)            m
+      (get-in m [:c :e]) 4
+      (get-in m '(:c :e)) 4
+      (get-in m [:c :x]) nil
+      (get-in m [:f]) nil
+      (get-in m [:g]) false
+      (get-in m [:h]) nil
+      (get-in m []) m
+      (get-in m nil) m
 
-      (get-in m [:c :e] 0)      4
-      (get-in m '(:c :e) 0)     4
-      (get-in m [:c :x] 0)      0
-      (get-in m [:b] 0)         2
-      (get-in m [:f] 0)         nil
-      (get-in m [:g] 0)         false
-      (get-in m [:h] 0)         0
+      (get-in m [:c :e] 0) 4
+      (get-in m '(:c :e) 0) 4
+      (get-in m [:c :x] 0) 0
+      (get-in m [:b] 0) 2
+      (get-in m [:f] 0) nil
+      (get-in m [:g] 0) false
+      (get-in m [:h] 0) 0
       (get-in m [:x :y] {:y 1}) {:y 1}
-      (get-in m [] 0)           m
-      (get-in m nil 0)          m)))
+      (get-in m [] 0) m
+      (get-in m nil 0) m)))
 
 (deftest test-nested-map-destructuring
   (let [sample-map {:a 1 :b {:a 2}}
