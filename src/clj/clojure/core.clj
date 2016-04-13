@@ -5827,9 +5827,11 @@
                                            (not-any? #(= :refer-clojure (first %)) references))
                                   `((clojure.core/refer* *ns* '~'clojure.core)))
                               ~@(map process-reference references)))
-        res-form         `(let [~'__ns (clojure.core/in-ns '~name)
+        res-form         `(let [~'^clojure.lang.Namespace __ns (clojure.core/in-ns '~name)
                                 ~'__fn ~(binding [*ns* (find-ns 'clojure.core)]
                                           (eval fn-form))]
+                            (if (.isModule ~'__ns)
+                              (.reset ~'__ns))
                             ~@(when name-metadata
                                 `((.resetMeta ~'__ns ~name-metadata)))
                             (~'__fn)
@@ -6565,6 +6567,7 @@
   :warn-on-deprecated - on by default. Switches warnings for using ^:deprecated vars.
   :warn-on-access-violation - on by default. Switches warnings for using ^:private vars from other namespaces.
   :warn-on-earmuffs - on by default. Switches warnings for non-dynamic earmuffed vars.
+  :warn-on-stale - on by default. Switches warnings for referencing stale vars.
   :pedantic - off by default. Enables all warning switches.
 
   Alpha, subject to change."
@@ -7818,13 +7821,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; data readers ;;;;;;;;;;;;;;;;;;
 
-(def ^{:added "0.1.0"} default-data-readers
+(def
+  ^{:added "0.1.0"}
+  default-data-readers
   "Default map of data reader functions provided by Clojure. May be
   overridden by binding *data-readers*."
   {'inst #'clojure.instant/read-instant-date
    'uuid #'clojure.uuid/default-uuid-reader})
 
-(def ^{:added "0.1.0" :dynamic true} *data-readers*
+(add-doc-and-meta *data-readers*
   "Map from reader tag symbols to data reader Vars.
 
   When Clojure starts, it searches for files named 'data_readers.clj'
@@ -7851,14 +7856,16 @@
   Clojure. Default reader tags are defined in
   clojure.core/default-data-readers but may be overridden in
   data_readers.clj or by rebinding this Var."
-  {})
+  {:added   "0.1.0"
+   :dynamic true
+   :once    true})
 
-(def ^{:added "0.1.0" :dynamic true} *default-data-reader-fn*
+(add-doc-and-meta *default-data-reader-fn*
   "When no data reader is found for a tag and *default-data-reader-fn*
   is non-nil, it will be called with two arguments,
   the tag and the value.  If *default-data-reader-fn* is nil (the
   default), an exception will be thrown for the unknown tag."
-  nil)
+  {:added "0.1.0"})
 
 (defn- data-reader-urls []
   (let [cl (.. Thread currentThread getContextClassLoader)]

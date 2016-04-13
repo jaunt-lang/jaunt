@@ -63,7 +63,6 @@ public class Compiler implements Opcodes {
   static final Keyword methodMapKey = Keyword.intern("method-map");
   static final Keyword deprecatedKey = Keyword.intern("deprecated");
   static final Keyword privateKey = Keyword.intern("private");
-  static final Keyword usedKey = Keyword.intern("uses");
   static final Keyword varArgsKey = Keyword.intern("&");
   static final Keyword retKey = Keyword.intern("rettag");
   static final Keyword formKey = Keyword.intern("form");
@@ -193,6 +192,11 @@ public class Compiler implements Opcodes {
   //var->constid
   static final public Var VARS = Var.create().setDynamic();
 
+  // set<Var>, if bound.
+  // bound at the def level
+  // added as Var metadata
+  static final public Var USE_SET = Var.create().setDynamic();
+
   //FnFrame
   static final public Var METHOD = Var.create(null).setDynamic();
 
@@ -207,31 +211,8 @@ public class Compiler implements Opcodes {
   // boolean flag
   static final public Var IN_DEPRECATED = Var.create(RT.F).setDynamic();
 
-  //String
-  static final public Var SOURCE =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("*source-path*"),
-               "NO_SOURCE_FILE").setDynamic();
-
-  //String
-  static final public Var SOURCE_PATH =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("*file*"),
-               "NO_SOURCE_PATH").setDynamic();
-
-  //String
-  static final public Var COMPILE_PATH =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("*compile-path*"),
-               null).setDynamic();
-
-  //boolean
-  static final public Var COMPILE_FILES =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("*compile-files*"),
-               Boolean.FALSE).setDynamic();
-
-  static final public Var INSTANCE =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("instance?"));
-
-  static final public Var ADD_ANNOTATIONS =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("add-annotations"));
+  // Var
+  static final public Var DEFINING_VAR = Var.create(null).setDynamic();
 
   static final public Keyword disableLocalsClearingKey = Keyword.intern("disable-locals-clearing");
   static final public Keyword directLinkingKey = Keyword.intern("direct-linking");
@@ -240,6 +221,7 @@ public class Compiler implements Opcodes {
   static final public Keyword warnOnDeprecatedKey = Keyword.intern("warn-on-deprecated");
   static final public Keyword warnOnEarmuffsKey = Keyword.intern("warn-on-earmuffs");
   static final public Keyword warnOnAccessKey = Keyword.intern("warn-on-access-violation");
+  static final public Keyword warnOnStaleKey = Keyword.intern("warn-on-stale");
   static final public Keyword pedanticKey = Keyword.intern("pedantic");
 
   static final public Var COMPILER_OPTIONS;
@@ -252,7 +234,8 @@ public class Compiler implements Opcodes {
     Object compilerOptions =
       RT.assoc(null, warnOnEarmuffsKey, RT.T)
       .assoc(warnOnDeprecatedKey, RT.T)
-      .assoc(warnOnAccessKey, RT.T);
+      .assoc(warnOnAccessKey, RT.T)
+      .assoc(warnOnStaleKey, RT.T);
 
     for (Map.Entry e : System.getProperties().entrySet()) {
       String name = (String) e.getKey();
@@ -264,8 +247,10 @@ public class Compiler implements Opcodes {
       }
     }
 
-    COMPILER_OPTIONS = Var.intern(RT.CLOJURE_NS,
-                                  Symbol.intern("*compiler-options*"), compilerOptions).setDynamic();
+    COMPILER_OPTIONS =
+      Var.intern(RT.CLOJURE_NS,
+                 Symbol.intern("*compiler-options*"),
+                 compilerOptions).setOnce().setDynamic();
   }
 
   static Object elideMeta(Object m) {
@@ -280,20 +265,12 @@ public class Compiler implements Opcodes {
     return m;
   }
 
-  //Integer
-  static final public Var LINE =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("*line*"), 0).setDynamic();
-
-  //Integer
-  static final public Var COLUMN =
-    Var.intern(RT.CLOJURE_NS, Symbol.intern("*column*"), 0).setDynamic();
-
   static int lineDeref() {
-    return ((Number)LINE.deref()).intValue();
+    return ((Number) RT.LINE.deref()).intValue();
   }
 
   static int columnDeref() {
-    return ((Number)COLUMN.deref()).intValue();
+    return ((Number) RT.COLUMN.deref()).intValue();
   }
 
   //Integer
@@ -371,6 +348,10 @@ public class Compiler implements Opcodes {
     return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnAccessKey));
   }
 
+  static boolean warnOnStale() {
+    return warnOnPedantic() || RT.booleanCast(getCompilerOption(warnOnStaleKey));
+  }
+
   static boolean isDeprecated(Var v) {
     return (RT.booleanCast(RT.get(v.meta(), deprecatedKey, false))
             || isDeprecated(v.ns));
@@ -404,6 +385,62 @@ public class Compiler implements Opcodes {
     return null;
   }
 
+  static public IPersistentSet getUsedVars(Var v) {
+    IPersistentSet uses = PersistentHashSet.EMPTY;
+
+    if (v.isBound()) {
+      Object o = v.get();
+      if (o instanceof AFn) {
+        IPersistentMap meta = RT.meta(o);
+        uses = (IPersistentSet) RT.get(meta, RT.USES_KEY);
+      }
+      if (uses == null) {
+        uses = (IPersistentSet) RT.get(RT.meta(v), RT.USES_KEY, PersistentHashSet.EMPTY);
+      }
+    }
+
+    return uses;
+  }
+
+  static public IPersistentSet getReachedVars(Var v) {
+    IPersistentSet acc = getUsedVars(v);
+    PersistentQueue worklist = PersistentQueue.EMPTY;
+
+    for (Object o : acc) {
+      worklist = worklist.cons(o);
+    }
+
+    acc = (IPersistentSet) acc.cons(v);
+
+    Object o;
+    while ((o = worklist.peek()) != null) {
+      worklist = worklist.pop();
+      IPersistentSet newbies = getUsedVars((Var) o);
+
+      for (Object n : newbies) {
+        if (!acc.contains(n)) {
+          acc = (IPersistentSet) acc.cons(n);
+          worklist = worklist.cons(n);
+        }
+      }
+    }
+
+    return acc;
+  }
+
+  static IPersistentSet reachesStaleVars(Var v) {
+    PersistentHashSet acc = PersistentHashSet.EMPTY;
+
+    for (Object o : getReachedVars(v)) {
+      Var rv = (Var) o;
+      if (rv.isStale()) {
+        acc = (PersistentHashSet) acc.cons(rv);
+      }
+    }
+
+    return (PersistentHashSet) acc.disjoin(v);
+  }
+
   static class DefExpr implements Expr {
     public final Var var;
     public final Expr init;
@@ -415,6 +452,7 @@ public class Compiler implements Opcodes {
     public final int line;
     public final int column;
     final static Method bindRootMethod = Method.getMethod("void bindRoot(Object)");
+    final static Method resetRevMethod = Method.getMethod("void resetRev()");
     final static Method setTagMethod = Method.getMethod("void setTag(clojure.lang.Symbol)");
     final static Method setMetaMethod = Method.getMethod("void setMeta(clojure.lang.IPersistentMap)");
     final static Method setDynamicMethod = Method.getMethod("clojure.lang.Var setDynamic(boolean)");
@@ -451,6 +489,8 @@ public class Compiler implements Opcodes {
       try {
         if (initProvided) {
           var.bindRoot(init.eval());
+        } else {
+          var.resetRev();
         }
         if (meta != null) {
           IPersistentMap metaMap = (IPersistentMap) meta.eval();
@@ -500,6 +540,9 @@ public class Compiler implements Opcodes {
           init.emit(C.EXPRESSION, objx, gen);
         }
         gen.invokeVirtual(VAR_TYPE, bindRootMethod);
+      } else {
+        gen.dup();
+        gen.invokeVirtual(VAR_TYPE, resetRevMethod);
       }
 
       if (context == C.STATEMENT) {
@@ -531,6 +574,7 @@ public class Compiler implements Opcodes {
           throw Util.runtimeException("First argument to def must be a Symbol");
         }
         Symbol sym = (Symbol) RT.second(form);
+        boolean initProvided = RT.count(form) == 3;
         Var v = lookupVar(sym, true);
         if (v == null) {
           throw Util.runtimeException("Can't refer to qualified var that doesn't exist");
@@ -556,8 +600,9 @@ public class Compiler implements Opcodes {
             && warnOnEarmuffs()) {
           RT.errPrintWriter().format("Warning: %1$s not declared dynamic and thus is not dynamically rebindable, "
                                      +"but its name suggests otherwise. Please either indicate ^:dynamic %1$s or change the name. (%2$s:%3$d)\n",
-                                     sym, SOURCE_PATH.get(), LINE.get());
+                                     sym, RT.SOURCE_PATH.get(), RT.LINE.get());
         }
+        boolean isPrivate = RT.booleanCast(RT.get(mm, privateKey));
         if (RT.booleanCast(RT.get(mm, arglistsKey))) {
           IPersistentMap vm = v.meta();
           //vm = (IPersistentMap) RT.assoc(vm,staticKey,RT.T);
@@ -565,28 +610,21 @@ public class Compiler implements Opcodes {
           vm = (IPersistentMap) RT.assoc(vm,arglistsKey,RT.second(mm.valAt(arglistsKey)));
           v.setMeta(vm);
         }
-        Object source_path = SOURCE_PATH.get();
+        Object source_path = RT.SOURCE_PATH.get();
         source_path = source_path == null ? "NO_SOURCE_FILE" : source_path;
-        mm = (IPersistentMap) RT.assoc(mm, RT.LINE_KEY, LINE.get()).assoc(RT.COLUMN_KEY, COLUMN.get()).assoc(RT.FILE_KEY, source_path);
+        mm = (IPersistentMap) RT.assoc(mm, RT.LINE_KEY, RT.LINE.get()).assoc(RT.COLUMN_KEY, RT.COLUMN.get()).assoc(RT.FILE_KEY, source_path);
         if (docstring != null) {
           mm = (IPersistentMap) RT.assoc(mm, RT.DOC_KEY, docstring);
         }
-//      mm = mm.without(RT.DOC_KEY)
-//          .without(Keyword.intern("arglists"))
-//          .without(RT.FILE_KEY)
-//          .without(RT.LINE_KEY)
-//          .without(RT.COLUMN_KEY)
-//          .without(Keyword.intern("ns"))
-//          .without(Keyword.intern("name"))
-//          .without(Keyword.intern("added"))
-//          .without(Keyword.intern("static"));
         mm = (IPersistentMap) elideMeta(mm);
-        Expr meta = mm.count()==0 ? null:analyze(context == C.EVAL ? context : C.EXPRESSION, mm);
         try {
-          Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey))));
-          return new DefExpr((String) SOURCE.deref(), lineDeref(), columnDeref(),
-                             v, analyze(context == C.EVAL ? context : C.EXPRESSION, RT.third(form), v.sym.name),
-                             meta, RT.count(form) == 3, isDynamic, shadowsCoreMapping);
+          Var.pushThreadBindings(RT.map(IN_DEPRECATED, RT.booleanCast(RT.get(mm, deprecatedKey)),
+                                        DEFINING_VAR, v));
+          C ctx = context == C.EVAL ? context : C.EXPRESSION;
+          Expr initExpr = analyze(ctx, RT.third(form), v.sym.name);
+          Expr meta = mm.count() == 0 ? null : analyze(ctx, mm);
+          return new DefExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(),
+                             v, initExpr, meta, initProvided, isDynamic, shadowsCoreMapping);
         } finally {
           Var.popThreadBindings();
         }
@@ -938,7 +976,7 @@ public class Compiler implements Opcodes {
         //static target must be symbol, either fully.qualified.Classname or Classname that has been imported
         int line = lineDeref();
         int column = columnDeref();
-        String source = (String) SOURCE.deref();
+        String source = (String) RT.SOURCE.deref();
         Class c = maybeClass(RT.second(form), false);
         //at this point c will be non-null if static
         Expr instance = null;
@@ -1094,11 +1132,11 @@ public class Compiler implements Opcodes {
         if (targetClass == null) {
           RT.errPrintWriter()
           .format("Reflection warning, %s:%d:%d - reference to field %s can't be resolved.\n",
-                  SOURCE_PATH.deref(), line, column, fieldName);
+                  RT.SOURCE_PATH.deref(), line, column, fieldName);
         } else {
           RT.errPrintWriter()
           .format("Reflection warning, %s:%d:%d - reference to field %s on %s can't be resolved.\n",
-                  SOURCE_PATH.deref(), line, column, fieldName, targetClass.getName());
+                  RT.SOURCE_PATH.deref(), line, column, fieldName, targetClass.getName());
         }
       }
     }
@@ -1364,7 +1402,7 @@ public class Compiler implements Opcodes {
           if (RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
             RT.errPrintWriter()
             .format("Reflection warning, %s:%d:%d - call to method %s on %s can't be resolved (no such method).\n",
-                    SOURCE_PATH.deref(), line, column, methodName, target.getJavaClass().getName());
+                    RT.SOURCE_PATH.deref(), line, column, methodName, target.getJavaClass().getName());
           }
         } else {
           int methodidx = 0;
@@ -1388,7 +1426,7 @@ public class Compiler implements Opcodes {
           if (method == null && RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
             RT.errPrintWriter()
             .format("Reflection warning, %s:%d:%d - call to method %s on %s can't be resolved (argument types: %s).\n",
-                    SOURCE_PATH.deref(), line, column, methodName, target.getJavaClass().getName(), getTypeStringForArgs(args));
+                    RT.SOURCE_PATH.deref(), line, column, methodName, target.getJavaClass().getName(), getTypeStringForArgs(args));
           }
         }
       } else {
@@ -1396,7 +1434,7 @@ public class Compiler implements Opcodes {
         if (RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
           RT.errPrintWriter()
           .format("Reflection warning, %s:%d:%d - call to method %s can't be resolved (target class is unknown).\n",
-                  SOURCE_PATH.deref(), line, column, methodName);
+                  RT.SOURCE_PATH.deref(), line, column, methodName);
         }
       }
     }
@@ -1535,12 +1573,12 @@ public class Compiler implements Opcodes {
       if (method == null && RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
         RT.errPrintWriter()
         .format("Reflection warning, %s:%d:%d - call to static method %s on %s can't be resolved (argument types: %s).\n",
-                SOURCE_PATH.deref(), line, column, methodName, c.getName(), getTypeStringForArgs(args));
+                RT.SOURCE_PATH.deref(), line, column, methodName, c.getName(), getTypeStringForArgs(args));
       }
       if (method != null && warnOnBoxedKeyword.equals(RT.UNCHECKED_MATH.deref()) && isBoxedMath(method)) {
         RT.errPrintWriter()
         .format("Boxed math warning, %s:%d:%d - call: %s.\n",
-                SOURCE_PATH.deref(), line, column, method.toString());
+                RT.SOURCE_PATH.deref(), line, column, method.toString());
       }
     }
 
@@ -2323,7 +2361,7 @@ public class Compiler implements Opcodes {
       if (ctor == null && RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
         RT.errPrintWriter()
         .format("Reflection warning, %s:%d:%d - call to %s ctor can't be resolved.\n",
-                SOURCE_PATH.deref(), line, column, c.getName());
+                RT.SOURCE_PATH.deref(), line, column, c.getName());
       }
     }
 
@@ -3433,7 +3471,7 @@ public class Compiler implements Opcodes {
         context = C.EXPRESSION;
       }
       Expr fexpr = analyze(context, form.first());
-      if (fexpr instanceof VarExpr && ((VarExpr)fexpr).var.equals(INSTANCE) && RT.count(form) == 3) {
+      if (fexpr instanceof VarExpr && ((VarExpr)fexpr).var.equals(RT.INSTANCE) && RT.count(form) == 3) {
         Expr sexpr = analyze(C.EXPRESSION, RT.second(form));
         if (sexpr instanceof ConstantExpr) {
           Object val = ((ConstantExpr) sexpr).val();
@@ -3485,7 +3523,7 @@ public class Compiler implements Opcodes {
 
       if (fexpr instanceof KeywordExpr && RT.count(form) == 2 && KEYWORD_CALLSITES.isBound()) {
         Expr target = analyze(context, RT.second(form));
-        return new KeywordInvokeExpr((String) SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form),
+        return new KeywordInvokeExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form),
                                      (KeywordExpr) fexpr, target);
       }
       PersistentVector args = PersistentVector.EMPTY;
@@ -3493,7 +3531,7 @@ public class Compiler implements Opcodes {
         args = args.cons(analyze(context, s.first()));
       }
 
-      return new InvokeExpr((String) SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form), fexpr, args);
+      return new InvokeExpr((String) RT.SOURCE.deref(), lineDeref(), columnDeref(), tagOf(form), fexpr, args);
     }
   }
 
@@ -3517,7 +3555,7 @@ public class Compiler implements Opcodes {
     private boolean hasPrimSigs;
     private boolean hasMeta;
     private boolean hasEnclosingMethod;
-    //  String superName = null;
+    private PersistentHashSet uses;
 
     public FnExpr(Object tag) {
       super(tag);
@@ -3604,6 +3642,7 @@ public class Compiler implements Opcodes {
             ,CONSTANT_IDS, new IdentityHashMap()
             ,KEYWORDS, PersistentHashMap.EMPTY
             ,VARS, PersistentHashMap.EMPTY
+            ,USE_SET, PersistentHashSet.EMPTY
             ,KEYWORD_CALLSITES, PersistentVector.EMPTY
             ,PROTOCOL_CALLSITES, PersistentVector.EMPTY
             ,VAR_CALLSITES, emptyVarCallSites()
@@ -3687,16 +3726,19 @@ public class Compiler implements Opcodes {
         fn.keywordCallsites = (IPersistentVector) KEYWORD_CALLSITES.deref();
         fn.protocolCallsites = (IPersistentVector) PROTOCOL_CALLSITES.deref();
         fn.varCallsites = (IPersistentSet) VAR_CALLSITES.deref();
+        fn.uses = (PersistentHashSet) USE_SET.deref();
+
         fn.constantsID = RT.nextID();
       } finally {
         Var.popThreadBindings();
       }
-      fn.hasPrimSigs = prims.size() > 0;
 
-      PersistentHashSet usedVars = PersistentHashSet.EMPTY;
-      for (Object o : ((APersistentMap) fn.vars).keySet()) {
-        usedVars = (PersistentHashSet) usedVars.cons(o);
+      // propagate var use info up
+      if (USE_SET.isBound()) {
+        USE_SET.set(RT.union(fn.uses, (Seqable) USE_SET.get()));
       }
+
+      fn.hasPrimSigs = prims.size() > 0;
 
       if (!noMeta) {
         fmeta = fmeta
@@ -3705,7 +3747,7 @@ public class Compiler implements Opcodes {
                 .without(RT.FILE_KEY)
                 .without(retKey)
                 //.assoc(arglistsKey, RT.list(QUOTE, arities))
-                .assoc(usedKey, RT.list(QUOTE, usedVars));
+                .assoc(RT.USES_KEY, RT.list(QUOTE, fn.uses));
       } else {
         fmeta = null;
       }
@@ -3895,13 +3937,13 @@ public class Compiler implements Opcodes {
       ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
       ClassVisitor cv = cw;
       cv.visit(V1_5, ACC_PUBLIC + ACC_SUPER + ACC_FINAL, internalName, null,superName,interfaceNames);
-      String source = (String) SOURCE.deref();
+      String source = (String) RT.SOURCE.deref();
       int lineBefore = (Integer) LINE_BEFORE.deref();
       int lineAfter = (Integer) LINE_AFTER.deref() + 1;
       int columnBefore = (Integer) COLUMN_BEFORE.deref();
       int columnAfter = (Integer) COLUMN_AFTER.deref() + 1;
 
-      if (source != null && SOURCE_PATH.deref() != null) {
+      if (source != null && RT.SOURCE_PATH.deref() != null) {
         String smap = "SMAP\n" +
                       ((source.lastIndexOf('.') > 0) ?
                        source.substring(0, source.lastIndexOf('.'))
@@ -3912,7 +3954,7 @@ public class Compiler implements Opcodes {
                       "*S Clojure\n" +
                       "*F\n" +
                       "+ 1 " + source + "\n" +
-                      (String) SOURCE_PATH.deref() + "\n" +
+                      (String) RT.SOURCE_PATH.deref() + "\n" +
                       "*L\n" +
                       String.format("%d#1,%d:%d\n", lineBefore, lineAfter - lineBefore, lineBefore) +
                       "*E";
@@ -4183,7 +4225,7 @@ public class Compiler implements Opcodes {
       cv.visitEnd();
 
       bytecode = cw.toByteArray();
-      if (RT.booleanCast(COMPILE_FILES.deref())) {
+      if (RT.booleanCast(RT.COMPILE_FILES.deref())) {
         writeClassFile(internalName, bytecode);
       }
 //    else
@@ -5626,9 +5668,7 @@ public class Compiler implements Opcodes {
       for (int i = 0; i < bindingInits.count(); i++) {
         BindingInit bi = (BindingInit) bindingInits.nth(i);
         Expr e = bi.init;
-        if (e instanceof MetaExpr) {
-          e = ((MetaExpr) e).expr;
-        }
+        e = e instanceof MetaExpr ? ((MetaExpr)e).expr : e;
         ObjExpr fe = (ObjExpr) e;
         gen.visitVarInsn(OBJECT_TYPE.getOpcode(Opcodes.ILOAD), bi.binding.idx);
         fe.emitLetFnInits(gen, objx, lbset);
@@ -5972,7 +6012,7 @@ public class Compiler implements Opcodes {
       public Expr parse(C context, Object frm) {
         int line = lineDeref();
         int column = columnDeref();
-        String source = (String) SOURCE.deref();
+        String source = (String) RT.SOURCE.deref();
 
         ISeq form = (ISeq) frm;
         IPersistentVector loopLocals = (IPersistentVector) LOOP_LOCALS.deref();
@@ -6115,7 +6155,7 @@ public class Compiler implements Opcodes {
       return new ConstantExpr(form);
     } catch (Throwable e) {
       if (!(e instanceof CompilerException)) {
-        throw new CompilerException((String) SOURCE_PATH.deref(), lineDeref(), columnDeref(), e);
+        throw new CompilerException((String) RT.SOURCE_PATH.deref(), lineDeref(), columnDeref(), e);
       } else {
         throw (CompilerException) e;
       }
@@ -6205,7 +6245,7 @@ public class Compiler implements Opcodes {
             warnOnDeprecated()) {
           RT.errPrintWriter().println(
             String.format("Warning: expanding deprecated macro: %s (%s:%d:%d)",
-                          v.toString(), SOURCE_PATH.get(), lineDeref(), columnDeref()));
+                          v.toString(), RT.SOURCE_PATH.get(), lineDeref(), columnDeref()));
         }
         try {
           return v.applyTo(RT.cons(form,RT.cons(LOCAL_ENV.get(),form.next())));
@@ -6267,7 +6307,7 @@ public class Compiler implements Opcodes {
       column = RT.meta(form).valAt(RT.COLUMN_KEY);
     }
     Var.pushThreadBindings(
-      RT.map(LINE, line, COLUMN, column));
+      RT.map(RT.LINE, line, RT.COLUMN, column));
     try {
       Object me = macroexpand1(form);
       if (me != form) {
@@ -6292,7 +6332,7 @@ public class Compiler implements Opcodes {
       }
     } catch (Throwable e) {
       if (!(e instanceof CompilerException)) {
-        throw new CompilerException((String) SOURCE_PATH.deref(), lineDeref(), columnDeref(), e);
+        throw new CompilerException((String) RT.SOURCE_PATH.deref(), lineDeref(), columnDeref(), e);
       } else {
         throw (CompilerException) e;
       }
@@ -6324,7 +6364,7 @@ public class Compiler implements Opcodes {
       if (RT.meta(form) != null && RT.meta(form).containsKey(RT.COLUMN_KEY)) {
         column = RT.meta(form).valAt(RT.COLUMN_KEY);
       }
-      Var.pushThreadBindings(RT.map(LINE, line, COLUMN, column));
+      Var.pushThreadBindings(RT.map(RT.LINE, line, RT.COLUMN, column));
       try {
         form = macroexpand(form);
         if (form instanceof ISeq && Util.equals(RT.first(form), DO)) {
@@ -6449,14 +6489,14 @@ public class Compiler implements Opcodes {
   }
 
   static void addAnnotation(Object visitor, IPersistentMap meta) {
-    if (meta != null && ADD_ANNOTATIONS.isBound()) {
-      ADD_ANNOTATIONS.invoke(visitor, meta);
+    if (meta != null && RT.ADD_ANNOTATIONS.isBound()) {
+      RT.ADD_ANNOTATIONS.invoke(visitor, meta);
     }
   }
 
   static void addParameterAnnotation(Object visitor, IPersistentMap meta, int i) {
-    if (meta != null && ADD_ANNOTATIONS.isBound()) {
-      ADD_ANNOTATIONS.invoke(visitor, meta, i);
+    if (meta != null && RT.ADD_ANNOTATIONS.isBound()) {
+      RT.ADD_ANNOTATIONS.invoke(visitor, meta, i);
     }
   }
 
@@ -6490,7 +6530,7 @@ public class Compiler implements Opcodes {
         return analyze(C.EXPRESSION, RT.list(QUOTE, v.get()));
       }
 
-      String loc = String.format(" (%s:%d:%d)", SOURCE_PATH.get(), lineDeref(), columnDeref());
+      String loc = String.format(" (%s:%d:%d)", RT.SOURCE_PATH.get(), lineDeref(), columnDeref());
       Object meta = RT.meta(v);
       Namespace nsc = (Namespace) RT.CURRENT_NS.get();
 
@@ -6509,6 +6549,21 @@ public class Compiler implements Opcodes {
           && !Util.equals(nsc, v.ns)
           && warnOnAccessViolation()) {
         RT.errPrintWriter().println("Warning: using private var in other ns: " + v.toString() + loc);
+      }
+
+      if (warnOnStale()) {
+        if (v.isStale()
+            && !Util.equals(v, DEFINING_VAR.get())) {
+          RT.errPrintWriter().println("Warning: using stale var: " + v.toString()
+                                      + String.format(" (var rev: %d, ns rev: %d)", v.getRev(), v.ns.getRev()) + loc);
+        }
+
+        IPersistentSet stales = reachesStaleVars(v);
+        if (RT.seq(stales) != null) {
+          RT.errPrintWriter().println(
+            String.format("Warning: var: %s reaches stale vars: %s %s",
+                          v.toString(), stales.toString(), loc));
+        }
       }
 
       registerVar(v);
@@ -6672,6 +6727,9 @@ public class Compiler implements Opcodes {
     if (!VARS.isBound()) {
       return;
     }
+    if (USE_SET.isBound()) {
+      USE_SET.set(((APersistentSet)USE_SET.get()).cons(var));
+    }
     IPersistentMap varsMap = (IPersistentMap) VARS.deref();
     Object id = RT.get(varsMap, var);
     if (id == null) {
@@ -6767,8 +6825,6 @@ public class Compiler implements Opcodes {
     Var.pushThreadBindings(
       RT.map(
         LOADER, RT.makeClassLoader()
-        ,SOURCE_PATH, sourcePath
-        ,SOURCE, sourceName
         ,METHOD, null
         ,LOCAL_ENV, null
         ,LOOP_LOCALS, null
@@ -6777,6 +6833,8 @@ public class Compiler implements Opcodes {
         ,COLUMN_BEFORE, pushbackReader.getColumnNumber()
         ,LINE_AFTER, pushbackReader.getLineNumber()
         ,COLUMN_AFTER, pushbackReader.getColumnNumber()
+        ,RT.SOURCE_PATH, sourcePath
+        ,RT.SOURCE, sourceName
         ,RT.READEVAL, RT.T
         ,RT.CURRENT_NS, RT.CURRENT_NS.deref()
         ,RT.UNCHECKED_MATH, RT.UNCHECKED_MATH.deref()
@@ -6810,7 +6868,7 @@ public class Compiler implements Opcodes {
   }
 
   static public void writeClassFile(String internalName, byte[] bytecode) throws IOException {
-    String genPath = (String) COMPILE_PATH.deref();
+    String genPath = (String) RT.COMPILE_PATH.deref();
     if (genPath == null) {
       throw Util.runtimeException("*compile-path* not set");
     }
@@ -6833,7 +6891,7 @@ public class Compiler implements Opcodes {
   }
 
   public static void pushNS() {
-    Var.pushThreadBindings(RT.map(RT.NS_VAR, null));
+    Var.pushThreadBindings(PersistentHashMap.create(RT.CURRENT_NS, null));
   }
 
   public static void pushNSandLoader(ClassLoader loader) {
@@ -6841,7 +6899,8 @@ public class Compiler implements Opcodes {
       RT.map(
         RT.CURRENT_NS, null
         ,RT.FN_LOADER_VAR, loader
-        ,RT.READEVAL, RT.T));
+        ,RT.READEVAL, RT.T
+      ));
   }
 
   public static ILookupThunk getLookupThunk(Object target, Keyword k) {
@@ -6858,7 +6917,7 @@ public class Compiler implements Opcodes {
       column = RT.meta(form).valAt(RT.COLUMN_KEY);
     }
     Var.pushThreadBindings(
-      RT.map(LINE, line, COLUMN, column
+      RT.map(RT.LINE, line, RT.COLUMN, column
              ,LOADER, RT.makeClassLoader()
             ));
     try {
@@ -6881,7 +6940,7 @@ public class Compiler implements Opcodes {
   }
 
   public static Object compile(Reader rdr, String sourcePath, String sourceName) throws IOException {
-    if (COMPILE_PATH.deref() == null) {
+    if (RT.COMPILE_PATH.deref() == null) {
       throw Util.runtimeException("*compile-path* not set");
     }
 
@@ -6892,8 +6951,8 @@ public class Compiler implements Opcodes {
       new LineNumberingPushbackReader(rdr);
     Var.pushThreadBindings(
       RT.map(
-        SOURCE_PATH, sourcePath
-        ,SOURCE, sourceName
+        RT.SOURCE_PATH, sourcePath
+        ,RT.SOURCE, sourceName
         ,METHOD, null
         ,LOCAL_ENV, null
         ,LOOP_LOCALS, null
@@ -7503,13 +7562,12 @@ public class Compiler implements Opcodes {
       return RT.vector(name,RT.seq(paramTypes));
     }
 
-    static NewInstanceMethod parse(ObjExpr objx, ISeq form, Symbol thistag,
-                                   Map overrideables) {
+    static NewInstanceMethod parse(ObjExpr objx, ISeq form, Symbol thistag, Map overrideables) {
       //(methodname [this-name args*] body...)
       //this-name might be nil
       NewInstanceMethod method = new NewInstanceMethod(objx, (ObjMethod) METHOD.deref());
       Symbol dotname = (Symbol)RT.first(form);
-      Symbol name = (Symbol) Symbol.intern(null,munge(dotname.name)).withMeta(RT.meta(dotname));
+      Symbol name = (Symbol) Symbol.intern(null, munge(dotname.name)).withMeta(RT.meta(dotname));
       IPersistentVector parms = (IPersistentVector) RT.second(form);
       if (parms.count() == 0) {
         throw new IllegalArgumentException("Must supply at least one argument for 'this' in: " + dotname);
@@ -7535,7 +7593,7 @@ public class Compiler implements Opcodes {
 
         //register 'this' as local 0
         if (thisName != null) {
-          registerLocal((thisName == null) ? dummyThis:thisName,thistag, null,false);
+          registerLocal((thisName == null) ? dummyThis : thisName,thistag, null, false);
         } else {
           getAndIncLocalNum();
         }
@@ -7881,7 +7939,7 @@ public class Compiler implements Opcodes {
       if (RT.count(skipCheck) > 0 && RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
         RT.errPrintWriter()
         .format("Performance warning, %s:%d:%d - hash collision of some case test constants; if selected, those entries will be tested sequentially.\n",
-                SOURCE_PATH.deref(), line, column);
+                RT.SOURCE_PATH.deref(), line, column);
       }
     }
 
@@ -7980,7 +8038,7 @@ public class Compiler implements Opcodes {
         if (RT.booleanCast(RT.WARN_ON_REFLECTION.deref())) {
           RT.errPrintWriter()
           .format("Performance warning, %s:%d:%d - case has int tests, but tested expression is not primitive.\n",
-                  SOURCE_PATH.deref(), line, column);
+                  RT.SOURCE_PATH.deref(), line, column);
         }
         expr.emit(C.EXPRESSION, objx, gen);
         gen.instanceOf(NUMBER_TYPE);
@@ -8118,8 +8176,8 @@ public class Compiler implements Opcodes {
           Var.popThreadBindings();
         }
 
-        int line = ((Number)LINE.deref()).intValue();
-        int column = ((Number)COLUMN.deref()).intValue();
+        int line = ((Number) RT.LINE.deref()).intValue();
+        int column = ((Number) RT.COLUMN.deref()).intValue();
         return new CaseExpr(line, column, testexpr, shift, mask, low, high,
                             defaultExpr, tests, thens, switchType, testType, skipCheck);
       }

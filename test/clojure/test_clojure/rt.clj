@@ -67,14 +67,30 @@
   (testing "reflection cannot resolve constructor"
     (should-print-err-message
      #"Reflection warning, .*:\d+:\d+ - call to java\.lang\.String ctor can't be resolved\.\r?\n"
-     (defn foo [] (String. 1 2 3)))))
+     (defn foo [] (String. 1 2 3))))
+  (testing "stale var warnings"
+    (should-print-err-message
+     #"Warning: using stale var: #'foo/b.*\n"
+     (do (ns foo)
+         (def b 2)
+         (ns foo)
+         b))
+    (binding [*compiler-options* (assoc *compiler-options* :warn-on-stale false)]
+      (eval '(do (ns foo)
+                 (def b 2)
+                 (ns foo)
+                 (ns baz)
+                 (defn b [] foo/b))))
+    (should-print-err-message
+     #"Warning: var: #'baz/b reaches stale vars: #\{#'foo/b\}.*\n"
+     (baz/b))))
 
 (def example-var)
 (deftest binding-root-clears-macro-metadata
   (alter-meta! #'example-var assoc :macro true)
   (is (contains? (meta #'example-var) :macro))
   (.bindRoot #'example-var 0)
-  (is (not (contains? (meta #'example-var) :macro))))
+  (is (not (get (meta #'example-var) :macro))))
 
 (deftest last-var-wins-for-core
   (testing "you can replace a core name, with warning"

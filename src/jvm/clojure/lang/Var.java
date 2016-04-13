@@ -72,8 +72,6 @@ public final class Var
     }
   };
 
-  static public volatile int rev = 0;
-
   static Keyword privateKey = Keyword.intern(null, "private");
   static Keyword dynamicKey = Keyword.intern(null, "dynamic");
   static Keyword onceKey = Keyword.intern(null, "once");
@@ -90,6 +88,8 @@ public final class Var
   volatile boolean _once = false;
   volatile boolean _macro = false;
   transient final AtomicBoolean threadBound;
+  private volatile long rev = 0;
+  private volatile long valrev = 0;
   public final Symbol sym;
   public final Namespace ns;
 
@@ -217,6 +217,7 @@ public final class Var
     this.sym = sym;
     this.threadBound = new AtomicBoolean(false);
     this.root = new Unbound(this);
+    this.rev = nsRev();
     setMeta(PersistentHashMap.EMPTY);
   }
 
@@ -235,6 +236,23 @@ public final class Var
       return root;
     }
     return deref();
+  }
+
+  private long nsRev() {
+    long v = ns == null ? -1 : ns.getRev();
+    return v;
+  }
+
+  public synchronized long getRev() {
+    return rev;
+  }
+
+  public synchronized void resetRev() {
+    rev = nsRev();
+  }
+
+  public boolean isStale() {
+    return !isOnce() && rev < nsRev();
   }
 
   final public Object deref() {
@@ -356,8 +374,9 @@ public final class Var
     validate(getValidator(), root);
     Object oldroot = this.root;
     this.root = root;
-    ++rev;
-    alterMeta(dissoc, RT.list(macroKey));
+    ++valrev;
+    resetRev();
+    setMacro(false);
     notifyWatches(oldroot,this.root);
   }
 
@@ -365,13 +384,15 @@ public final class Var
     validate(getValidator(), root);
     Object oldroot = this.root;
     this.root = root;
-    ++rev;
+    ++valrev;
+    resetRev();
     notifyWatches(oldroot,root);
   }
 
   synchronized public void unbindRoot() {
     this.root = new Unbound(this);
-    ++rev;
+    ++valrev;
+    rev = -1;
   }
 
   synchronized public void commuteRoot(IFn fn) {
@@ -379,8 +400,9 @@ public final class Var
     validate(getValidator(), newRoot);
     Object oldroot = root;
     this.root = newRoot;
-    ++rev;
-    notifyWatches(oldroot, newRoot);
+    ++valrev;
+    resetRev();
+    notifyWatches(oldroot,newRoot);
   }
 
   synchronized public Object alterRoot(IFn fn, ISeq args) {
@@ -388,8 +410,9 @@ public final class Var
     validate(getValidator(), newRoot);
     Object oldroot = root;
     this.root = newRoot;
-    ++rev;
-    notifyWatches(oldroot, newRoot);
+    ++valrev;
+    resetRev();
+    notifyWatches(oldroot,newRoot);
     return newRoot;
   }
 
