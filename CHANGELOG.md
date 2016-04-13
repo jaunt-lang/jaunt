@@ -1,6 +1,7 @@
 # Change Log
 
 ## Upcoming
+- [#136](https://github.com/jaunt-lang/jaunt/pull/136) Support `^:deprecated` annotations on single fn arities (@arrdem).
 - [#135](https://github.com/jaunt-lang/jaunt/pull/134) Make `get` throw on non-associative arguments (@arrdem).
 
 ## Jaunt 0.2.1
