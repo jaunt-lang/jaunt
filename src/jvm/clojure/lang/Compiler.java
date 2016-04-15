@@ -3205,7 +3205,7 @@ public class Compiler implements Opcodes {
       java.lang.reflect.Method[] allmethods = c.getMethods();
 
       IPersistentVector theargs = null;
-      if(arglists != null) {
+      if (arglists != null) {
         for (Object o : RT.seq(arglists)) {
           if (FnMethod.arglistMatches(RT.seq(o), args)) {
             theargs = (IPersistentVector) o;
