@@ -7142,8 +7142,7 @@
   "DEPRECATED: replaced by jaunt-version
 
   Returns clojure version as a printable string."
-  {:added      "0.1.0"
-   :deprecated "0.1.0"}
+  {:added "0.1.0"}
   []
   "1.8.0")
 
