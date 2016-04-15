@@ -7128,14 +7128,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; clojure version number ;;;;;;;;;;;;;;;;;;;;;;
 
 (def
-  ^{:dynamic    true
-    :deprecated "0.1.0"
-    :added      "0.1.0"}
+  ^{:dynamic true
+    :added   "0.1.0"}
   *clojure-version*
-  "DEPRECATED: replaced by *jaunt-version*
-
-  The version of Clojure from which this Jaunt build is derived. Version information is encoded as a
-  map containing :major :minor :incremental and :qualifier keys."
+  "The version of Clojure from which this Jaunt build is derived. Version information is encoded as
+  a map containing :major :minor :incremental and :qualifier keys."
   {:major       1
    :minor       8
    :incremental 0
@@ -7145,8 +7142,7 @@
   "DEPRECATED: replaced by jaunt-version
 
   Returns clojure version as a printable string."
-  {:added      "0.1.0"
-   :deprecated "0.1.0"}
+  {:added "0.1.0"}
   []
   "1.8.0")
 
