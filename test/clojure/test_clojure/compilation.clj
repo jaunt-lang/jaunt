@@ -394,3 +394,21 @@
   (is (= :jnt (do (load "clojure/test_clojure/compilation/jnt_first") *1)))
   (is (= :clj (do (load "clojure/test_clojure/compilation/clj_over_cljc") *1)))
   (is (= :cljc (do (load "clojure/test_clojure/compilation/just_cljc") *1))))
+
+(deftest deprecated-arities-test
+  (is (let [err (with-out-str
+                  (binding [*err* *out*
+                            *ns*  *ns*]
+                    (eval '(do (defn g
+                                 (^:deprecated [x] (+ x 1))
+                                 ([x y] (+ x y 1)))
+                               (g 1)))))]
+        (re-find #"Warning: invoking deprecated arity" err)))
+  (is (not (let [err (with-out-str
+                       (binding [*err* *out*
+                                 *ns*  *ns*]
+                         (eval '(do (defn g
+                                      (^:deprecated [x] (+ x 1))
+                                      ([x y] (+ x y 1)))
+                                    (g 1 1)))))]
+             (re-find #"Warning: invoking deprecated arity" err)))))
