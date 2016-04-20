@@ -20,7 +20,7 @@
   Returns the use set of a Fn, or of a Var bound to a Fn. The use set of other values is defined to
   the empty set."
   [o]
-  (cond (fn? o)  (:uses (meta o) #{})
+  (cond (fn? o)  (::uses (meta o) #{})
         (var? o) (recur (deref o))
         :else    #{}))
 
@@ -37,3 +37,30 @@
         (recur (into acc' (uses o))
                (into worklist' (remove acc' (uses o)))))
       acc)))
+
+(defn used-by
+  "EXPERIMENTAL
+
+  Returns the set of Vars whose bound values reference the given Var
+
+  O(N) on the number of Vars in the system."
+  [o]
+  (->> (for [ns    (all-ns)
+             [_ v] (ns-publics ns)
+             :let  [uses (uses v)]
+             :when (contains? uses o)]
+         v)
+       (into #{})))
+
+(defn reached-by
+  "EXPERIMENTAL
+
+  Returns the set of Vars whose bound values reach the given Var
+
+  O(N²) on the number of Vars in the system."
+  [o]
+  (->> (for [ns    (all-ns)
+             [_ v] (ns-publics ns) 
+             :when (contains? (reaches v) o)]
+         v)
+       (into #{})))
