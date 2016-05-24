@@ -64,7 +64,7 @@
           description="Compile Java sources.">
     <javac srcdir="${jsrc}" destdir="${build}" includeJavaRuntime="yes"
            includeAntRuntime="false"
-           debug="true" source="1.6" target="1.6"/>
+           debug="true" source="1.8" target="1.8"/>
     <touch file="${compile-java-flag}"/>
   </target>
   
@@ -149,7 +149,7 @@
           unless="compile-tests.uptodate">
     <mkdir dir="${test-classes}"/>
     <javac srcdir="${jtestsrc}" destdir="${test-classes}" includeJavaRuntime="yes"
-           debug="true" source="1.6" target="1.6" includeantruntime="no"/>
+           debug="true" source="1.8" target="1.8" includeantruntime="no"/>
     <echo>Direct linking = ${directlinking}</echo>
     <java classname="clojure.lang.Compile"
           classpath="${test-classes}:${test}:${build}:${cljsrc}"
