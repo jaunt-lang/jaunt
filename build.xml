@@ -48,6 +48,9 @@
     <mkdir dir="${build}"/>
     <mkdir dir="${build}/clojure"/>
     <echo file="${version.properties}">version=${clojure.version.label}</echo>
+    <exec executable="mvn">
+      <arg value="pl.project13.maven:git-commit-id-plugin:2.2.0:revision"/>
+    </exec>
   </target>
 
   <target name="compile-java.check">
