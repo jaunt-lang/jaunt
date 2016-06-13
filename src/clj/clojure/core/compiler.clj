@@ -12,6 +12,7 @@
   Compiler and runtime introspection utilities."
   {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]
    :added   "0.2.0"}
+  (:require [clojure.core.compiler.kahn :refer [kahn-sort]])
   (:import [clojure.lang Compiler Namespace Var PersistentQueue]))
 
 (defn all-vars []
@@ -92,3 +93,30 @@
     (if (var? o)
       (:macro (meta o) false)
       false)))
+
+(defn topsort
+  "EXPERIMENTAL
+
+  Returns a topological sort of the dependencies of the binding of the arguemnt Var, if one
+  exists. If the dependencies of the var include a cycle, nil is returned.
+
+  Note that the kwarg parameter :macros controlls whether macros are considered to be uses/reaches
+  dependencies or not. Arguably they are, because they are critical to the definition of fns as
+  understood by the programmer, and arguably they are not because only their results occur in the
+  resulting call graph.
+
+  If :macros is true (and it is by default), macros are counted as dependencies. If :macros is
+  false, macros will not be considered data dependencies. As most things depend on destructuring
+  let, you'll usually want to turn macros off in order to get anything meaningful as a result."
+
+  [v & {macros :macros
+        :or    {macros true}}]
+  (->> (all-ns)
+       (mapcat (comp vals ns-publics))
+       (filter #(and (var? %)
+                     (if macros true
+                         (not (macro? %)))))
+       (map (juxt identity uses))
+       (into {})
+       (#(select-keys % (cons v (reaches v))))
+       kahn-sort))
