@@ -72,3 +72,18 @@
                :when (contains? (reaches v) o)]
            v)
          (into #{}))))
+
+(defn macro?
+  "EXPERIMENTAL
+
+  Attempts to report whether the arguent Object is a macro or not. Unfortunately this determination
+  is only possible for Vars. If a Symbol is provided, an attempt will be made to resolve it to a
+  Var. If a Var is provided or resolved, the ^:macro flag will be checked and the result
+  returned. Any other input will yield false."
+
+  [o]
+  (if (symbol? o)
+    (recur (resolve o))
+    (if (var? o)
+      (:macro (meta o) false)
+      false)))
