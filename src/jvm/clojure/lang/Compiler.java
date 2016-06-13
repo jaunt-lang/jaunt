@@ -6296,6 +6296,11 @@ public class Compiler implements Opcodes {
             String.format("Warning: expanding deprecated macro: %s (%s:%d:%d)",
                           v.toString(), RT.SOURCE_PATH.get(), lineDeref(), columnDeref()));
         }
+
+        // Include macros in the use set of the resulting form(s)
+        if (USE_SET.isBound())
+          USE_SET.set(((APersistentSet)USE_SET.get()).cons(v));
+        
         try {
           return v.applyTo(RT.cons(form,RT.cons(LOCAL_ENV.get(),form.next())));
         } catch (ArityException e) {
