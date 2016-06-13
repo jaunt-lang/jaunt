@@ -14,6 +14,11 @@
    :added   "0.2.0"}
   (:import [clojure.lang Compiler Namespace Var PersistentQueue]))
 
+(defn all-vars []
+  (->> (all-ns)
+       (mapcat (comp vals ns-publics))
+       (keep var?)))
+
 (defn uses
   "EXPERIMENTAL
 
