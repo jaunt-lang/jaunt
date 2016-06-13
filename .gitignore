@@ -6,7 +6,6 @@ nbproject/private/
 maven-classpath
 maven-classpath.properties
 .idea/
-src/resources/
 user.clj
 *.html
 .lein-env
