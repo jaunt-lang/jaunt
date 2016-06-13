@@ -184,7 +184,7 @@
         <configuration>
           <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
-          <generateGitPropertiesFilename>target/jaunt/git.properties</generateGitPropertiesFilename>
+          <generateGitPropertiesFilename>target/resources/jaunt/git.properties</generateGitPropertiesFilename>
         </configuration>
       </plugin>
       <plugin>

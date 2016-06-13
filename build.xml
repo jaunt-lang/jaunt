@@ -20,16 +20,20 @@
   <property name="compile-script" location="${cljscript}/bootstrap_compile.clj"/>
   <property name="target" location="target"/>
   <property name="build" location="${target}/classes"/>
+  <property name="resources" location="${target}/resources/"/>
   <property name="test-classes" location="${target}/test-classes"/>
   <property file="maven-classpath.properties"/>
     <condition property="dist" value="${env.CIRCLE_ARTIFACTS}" else="dist">
     <isset property="env.CIRCLE_ARTIFACTS"/>
   </condition>
 
+  <property name="classpath" value="${maven.compile.classpath}:${build}:${cljsrc}:${resources}"/>
+
   <!-- Get the version string out of the POM -->
   <xmlproperty file="pom.xml" prefix="pom"/>
   <property name="clojure.version.label" value="${pom.project.version}"/>
-  <property name="version.properties" value="${build}/jaunt/version.properties"/>
+  <property name="version.properties" value="${resources}/jaunt/version.properties"/>
+  <property name="git.properties" value="${resources}/jaunt/git.properties"/>
 
   <property name="clojure_jar" location="${dist}/jaunt-${clojure.version.label}.jar"/>
   <property name="clojure_noversion_jar" location="${dist}/jaunt.jar"/>
@@ -48,9 +52,12 @@
     <mkdir dir="${build}"/>
     <mkdir dir="${build}/clojure"/>
     <echo file="${version.properties}">version=${clojure.version.label}</echo>
+    <echo>Created version file ${version.properties}</echo>
     <exec executable="mvn">
       <arg value="pl.project13.maven:git-commit-id-plugin:2.2.0:revision"/>
     </exec>
+    <echo>Created version file ${git.properties}</echo>
+    <echo>Classpath is: ${classpath}</echo>
   </target>
 
   <target name="compile-java.check">
@@ -92,7 +99,7 @@
           unless="compile-clojure.uptodate"
           description="Compile Clojure sources.">
     <java classname="clojure.lang.Compile"
-          classpath="${maven.compile.classpath}:${build}:${cljsrc}"
+          classpath="${classpath}"
           failonerror="true"
           fork="true">
       <sysproperty key="clojure.compile.path" value="${build}"/>
@@ -155,7 +162,7 @@
            debug="true" source="1.8" target="1.8" includeantruntime="no"/>
     <echo>Direct linking = ${directlinking}</echo>
     <java classname="clojure.lang.Compile"
-          classpath="${test-classes}:${test}:${build}:${cljsrc}"
+          classpath="${classpath}:${test}"
           failonerror="true"
           fork="true">
       <sysproperty key="clojure.compile.path" value="${test-classes}"/>
@@ -208,6 +215,7 @@
         <path location="${test}"/>
         <path location="${build}"/>
         <path location="${cljsrc}"/>
+        <path location="${resources}"/>
       </classpath>
       <arg value="${test-script}"/>
     </java>
@@ -250,6 +258,7 @@
         <path location="${test}"/>
         <path location="${build}"/>
         <path location="${cljsrc}"/>
+        <path location="${resources}"/>
       </classpath>
       <arg value="${test-generative-script}"/>
     </java>
@@ -288,9 +297,13 @@
           depends="build,jar.check"
           unless="jar.uptodate"
           description="Create clojure jar file.">
-    <jar jarfile="${clojure_jar}" basedir="${build}">
+    <jar jarfile="${clojure_jar}"
+         basedir="${build}">
       <fileset dir="${cljsrc}">
         <include name="**/*.clj"/>
+      </fileset>
+      <fileset dir="${resources}">
+        <include name="**/*"/>
       </fileset>
       <manifest>
         <attribute name="Main-Class" value="clojure.main"/>
