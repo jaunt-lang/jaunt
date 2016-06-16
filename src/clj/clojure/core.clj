@@ -3216,9 +3216,18 @@
 
 (defn eval
   "Evaluates the form data structure (not text!) and returns the result."
-  {:added "0.1.0"
+  {:added  "0.1.0"
    :static true}
-  [form] (. clojure.lang.Compiler (eval form)))
+  [form]
+  (. clojure.lang.Compiler (eval form)))
+
+(defn eval-in-ns
+  "Evaluates the form data structure (not text!) in a given namespace and returns the result."
+  {:added  "0.1.0"
+   :static true}
+  [ns form]
+  (binding [*ns* ns]
+    (. clojure.lang.Compiler (eval form))))
 
 (defmacro doseq
   "Repeatedly executes body (presumably for side-effects) with
@@ -4267,7 +4276,7 @@
 (defn ^:private string-join [sepr coll]
   (apply str (interpose sepr coll)))
 
-(defn refer
+(defmacro refer
   "DEPRECATED: Unrestricted referrals are difficult to reason about and should be avoided in favor
   of qualified imports. Restricted and unrestricted referrals can both be achieved via require, so
   refer has no special value.
@@ -4286,27 +4295,17 @@
   {:added      "0.1.0"
    :deprecated "0.2.0"}
   [ns-sym & filters]
-  (let [ns        (or (find-ns ns-sym)
-                      (throw (new Exception (str "No namespace: " ns-sym))))
-        fs        (apply hash-map filters)
-        filters   (mapcat identity fs)
-        nspublics (ns-publics ns)
-        all       (keys nspublics)
-        rename    (:rename fs {})
-        exclude   (set (:exclude fs))
-        refer     (:refer fs)
-        only      (:only fs)
-        op        (cond (= :all refer) :all
-                        refer          :refer
-                        only           :only
-                        :else          :all)
-        to-do     (cond (= op :all)   all
-                        (= op :refer) refer
-                        (= op :only)  only
-                        :else         all)
-        d-ctx     (deprecated? *ns*)
-        *err*     (errwriter)
-        pos       (str " (" *file* ":" *line* ":" *column* ")")]
+  (let [fs       (apply hash-map filters)
+        rename   (:rename fs {})
+        d-ctx    (deprecated? *ns*)
+        *err*    (errwriter)
+        pos      (str " (" *file* ":" *line* ":" *column* ")")
+        refer*   (fn [ns filters]
+                   (apply refer* *ns* ns filters))
+        unquote* (fn [o]
+                   (if (and (instance? clojure.lang.ISeq o)
+                            (= 'quote (first o)))
+                     (second o) o))]
     (. *err* (println
               (format (str "Refer is deprecated, require should be preferred%s\n"
                            "Instead of:\n%s"
@@ -4317,7 +4316,7 @@
                       (str "  (:refer " ns-sym (when-not (empty? filters)
                                                  (str " " (string-join " " filters))) ")\n")
                       (str "  (:require " (string-join " " (rewrite-refer ns-sym fs)) ")\n"))))
-    (apply refer* *ns* ns-sym filters)))
+    `(~refer* ~ns-sym '~(map unquote* filters))))
 
 (defn ns-refers
   "Returns a map of the refer mappings for the namespace."

@@ -1,6 +1,7 @@
 # Change Log
 
 ## Upcoming
+- [#142](https://github.com/jaunt-lang/jaunt/pull/142) Improve replacement messages from refer (@arrdem).
 - [#136](https://github.com/jaunt-lang/jaunt/pull/136) Support `^:deprecated` annotations on single fn arities (@arrdem).
 - [#138](https://github.com/jaunt-lang/jaunt/pull/138) Roll back deprecation of `clojure-version`, `*clojure-version*` (@arrdem).
 - [#135](https://github.com/jaunt-lang/jaunt/pull/134) Make `get` throw on non-associative arguments (@arrdem).
