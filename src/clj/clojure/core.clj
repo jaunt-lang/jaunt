@@ -4266,9 +4266,9 @@
         exclude (:exclude fs [])
         only    (:refer fs (:only fs :all))]
     `[[~ns-sym
-       ~@[:refer only]
+       ~@[:refer (vec only)]
        ~@(when-not (empty? exclude)
-           [:exclude exclude])
+           [:exclude (vec exclude)])
        ~@(when-not (empty? rename)
            [:rename rename])]]))
 
@@ -4295,17 +4295,20 @@
   {:added      "0.1.0"
    :deprecated "0.2.0"}
   [ns-sym & filters]
-  (let [fs       (apply hash-map filters)
+  (let [unquote* (fn unquote* [o]
+                   (if (and (instance? clojure.lang.ISeq o)
+                            (= 'quote (first o)))
+                     (second o)
+                     (if (instance? clojure.lang.APersistentVector o)
+                       (vec (map unquote* o))
+                       o)))
+        filters  (doall (map unquote* filters))
+        fs       (apply hash-map filters)
         rename   (:rename fs {})
-        d-ctx    (deprecated? *ns*)
         *err*    (errwriter)
         pos      (str " (" *file* ":" *line* ":" *column* ")")
         refer*   (fn [ns filters]
-                   (apply refer* *ns* ns filters))
-        unquote* (fn [o]
-                   (if (and (instance? clojure.lang.ISeq o)
-                            (= 'quote (first o)))
-                     (second o) o))]
+                   (apply refer* *ns* ns filters))]
     (. *err* (println
               (format (str "Refer is deprecated, require should be preferred%s\n"
                            "Instead of:\n%s"
@@ -4315,8 +4318,8 @@
                       pos
                       (str "  (:refer " ns-sym (when-not (empty? filters)
                                                  (str " " (string-join " " filters))) ")\n")
-                      (str "  (:require " (string-join " " (rewrite-refer ns-sym fs)) ")\n"))))
-    `(~refer* ~ns-sym '~(map unquote* filters))))
+                      (str "  (:require " (string-join " " (rewrite-refer (unquote* ns-sym) fs)) ")\n"))))
+    `(~refer* ~ns-sym '~(vec filters))))
 
 (defn ns-refers
   "Returns a map of the refer mappings for the namespace."
