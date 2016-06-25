@@ -61,38 +61,46 @@
   (testing "don't recur to function from inside try"
     (is (thrown? Compiler$CompilerException
                  (eval '(fn [x] (try (recur 1)))))))
+
   (testing "don't recur to loop from inside try"
     (is (thrown? Compiler$CompilerException
                  (eval '(loop [x 5]
                           (try (recur 1)))))))
+
   (testing "don't recur to loop from inside of catch inside of try"
     (is (thrown? Compiler$CompilerException
                  (eval '(loop [x 5]
                           (try
                             (catch Exception e
                               (recur 1))))))))
+
   (testing "don't recur to loop from inside of finally inside of try"
     (is (thrown? Compiler$CompilerException
                  (eval '(loop [x 5]
                           (try
                             (finally
                               (recur 1))))))))
+
   (testing "don't get confused about what the recur is targeting"
     (is (thrown? Compiler$CompilerException
                  (eval '(loop [x 5]
                           (try (fn [x]) (recur 1)))))))
+
   (testing "don't allow recur across binding"
     (is (thrown? Compiler$CompilerException
                  (eval '(fn [x] (binding [+ *] (recur 1)))))))
+
   (testing "allow loop/recur inside try"
     (is (= 0 (eval '(try (loop [x 3]
                            (if (zero? x) x (recur (dec x)))))))))
+
   (testing "allow loop/recur fully inside catch"
     (is (= 3 (eval '(try
                       (throw (Exception.))
                       (catch Exception e
                         (loop [x 0]
                           (if (< x 3) (recur (inc x)) x))))))))
+
   (testing "allow loop/recur fully inside finally"
     (is (= "012" (eval '(with-out-str
                           (try
@@ -101,6 +109,7 @@
                                        (when (< x 3)
                                          (print x)
                                          (recur (inc x)))))))))))
+
   (testing "allow fn/recur inside try"
     (is (= 0 (eval '(try
                       ((fn [x]
@@ -225,10 +234,10 @@
   (letfn [(compile [s]
             (spit "test/clojure/bad_def_test.clj" (str "(ns clojure.bad-def-test)\n" s))
             (try
-              (binding [*compile-path* "test"]
+              (binding [*compile-path* "target/test-classes"]
                 (clojure.core/compile 'clojure.bad-def-test))
               (finally
-                (doseq [f (.listFiles (java.io.File. "test/clojure"))
+                (doseq [f     (.listFiles (java.io.File. "test/clojure"))
                         :when (re-find #"bad_def_test" (str f))]
                   (.delete f)))))]
     (testing "do in a vector throws an exception in compilation"
