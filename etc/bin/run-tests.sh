@@ -4,12 +4,15 @@ function do_tests () {
   case $CIRCLE_NODE_INDEX in
     0)
       ant test-example 2>&1 | tee test-example.log
+      return $?
       ;;
     1)
       ant test-generative 2>&1 | tee test-generative.log
+      return $?
       ;;
     2)
       bash etc/bin/test-cider.sh 2>&1 | tee test-cider.log
+      return $?
       ;;
   esac
 }
@@ -20,6 +23,7 @@ bash etc/bin/antsetup.sh    # set up standalone classpath
 if [ -n "$CIRCLE_NODE_INDEX" ]
 then
   do_tests
+  exit $?
 else
   ( export CIRCLE_NODE_INDEX=0;
     do_tests > /dev/null ) &
