@@ -4266,9 +4266,9 @@
         exclude (:exclude fs [])
         only    (:refer fs (:only fs :all))]
     `[[~ns-sym
-       ~@[:refer only]
+       ~@[:refer (vec only)]
        ~@(when-not (empty? exclude)
-           [:exclude exclude])
+           [:exclude (vec exclude)])
        ~@(when-not (empty? rename)
            [:rename rename])]]))
 
