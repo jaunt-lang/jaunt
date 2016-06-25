@@ -27,7 +27,7 @@
     <isset property="env.CIRCLE_ARTIFACTS"/>
   </condition>
 
-  <property name="classpath" value="${maven.compile.classpath}:${build}:${cljsrc}:${resources}"/>
+  <property name="classpath" value="${maven.compile.classpath}:${build}:${cljsrc}:${cljscript}:${resources}"/>
 
   <!-- Get the version string out of the POM -->
   <xmlproperty file="pom.xml" prefix="pom"/>
@@ -41,6 +41,7 @@
   <property name="directlinking" value="true"/>
 
   <!-- Lazy compilation flag files -->
+  <property name="properties-flag" value="${target}/properties.flag"/>
   <property name="compile-java-flag" value="${target}/compile-java.flag"/>
   <property name="compile-clojure-flag" value="${target}/compile-clojure.flag"/>
   <property name="compile-tests-flag" value="${target}/compile-tests.flag"/>
@@ -56,8 +57,7 @@
     <exec executable="mvn">
       <arg value="pl.project13.maven:git-commit-id-plugin:2.2.0:revision"/>
     </exec>
-    <echo>Created version file ${git.properties}</echo>
-    <echo>Classpath is: ${classpath}</echo>
+    <touch file="${properties-flag}"/>
   </target>
 
   <target name="compile-java.check">
@@ -215,6 +215,7 @@
         <path location="${test}"/>
         <path location="${build}"/>
         <path location="${cljsrc}"/>
+        <path location="${cljscript}"/>
         <path location="${resources}"/>
       </classpath>
       <arg value="${test-script}"/>
@@ -258,6 +259,7 @@
         <path location="${test}"/>
         <path location="${build}"/>
         <path location="${cljsrc}"/>
+        <path location="${cljscript}"/>
         <path location="${resources}"/>
       </classpath>
       <arg value="${test-generative-script}"/>
