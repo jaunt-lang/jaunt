@@ -1,12 +1,23 @@
 (System/setProperty "java.awt.headless" "true")
 
 (require '[clojure.test :as test]
+         <<<<<<< Updated upstream
          '[clojure.tools.namespace.find :as ns]
          'clojure.repl)
 
 (def namespaces
   (remove (read-string (System/getProperty "clojure.test-clojure.exclude-namespaces"))
           (ns/find-namespaces-in-dir (java.io.File. "test"))))
+=======
+'[clojure.tools.namespace.find :as ns])
+
+(def namespaces
+  (remove
+   (read-string
+    (System/getProperty "clojure.test-clojure.exclude-namespaces"))
+   (ns/find-namespaces-in-dir
+    (java.io.File. "test"))))
+>>>>>>> Stashed changes
 
 (def empty-summary
   {:type  :summary
@@ -80,15 +91,18 @@
               status (if ok? 0 -1)]
           (println ok? status)
           (System/exit status)))
-    (recur (try (require ns)
-                (if (has-tests? ns)
-                  (let [summary (test/run-tests ns)]
-                    (test/report summary)
-                    (merge-summary acc summary))
-                  (do (printf "Warning: namespace %s%s%s has no tests!\n"
-                              (color-codes :fg/yellow) (name ns) (color-codes :reset))
-                      acc))
-                (catch Exception e
-                  (.printStackTrace e)
-                  (merge-summary acc {:error 1})))
-           namespaces)))
+    (let [{:keys [fail error]
+           :as   res} (try (require ns)
+                           (if (has-tests? ns)
+                             (let [summary (test/run-tests ns)]
+                               (test/report summary)
+                               (merge-summary acc summary))
+                             (do (printf "Warning: namespace %s%s%s has no tests!\n"
+                                         (color-codes :fg/yellow) (name ns) (color-codes :reset))
+                                 acc))
+                           (catch Exception e
+                             (.printStackTrace e)
+                             (merge-summary acc {:error 1})))]
+      (if (zero? (+ fail error))
+        (recur res namespaces)
+        (System/exit -1)))))
