@@ -2377,6 +2377,26 @@ public class RT {
     return classForName(name);
   }
 
+  static public String name(Object o) {
+    if (o instanceof String) {
+      return (String) o;
+    } else if (o instanceof Named) {
+      return ((Named) o).getName();
+    } else {
+      throw new IllegalArgumentException("Cannot take name of class: " + o.getClass().getSimpleName());
+    }
+  }
+
+  static public String namespace(Object o) {
+    if (o instanceof String) {
+      return null;
+    } else if (o instanceof Named) {
+      return ((Named) o).getNamespace();
+    } else {
+      throw new IllegalArgumentException("Cannot take namespace of class: " + o.getClass().getSimpleName());
+    }
+  }
+
   static public float aget(float[] xs, int i) {
     return xs[i];
   }

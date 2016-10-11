@@ -1663,19 +1663,19 @@
 
 (defn name
   "Returns the name String of a string, symbol or keyword."
-  {:tag String
-   :added "0.1.0"
+  {:tag    String
+   :added  "0.1.0"
    :static true}
   [x]
-  (if (string? x) x (. ^clojure.lang.Named x (getName))))
+  (clojure.lang.RT/name x))
 
 (defn namespace
   "Returns the namespace String of a symbol or keyword, or nil if not present."
-  {:tag String
-   :added "0.1.0"
+  {:tag    String
+   :added  "0.1.0"
    :static true}
-  [^clojure.lang.Named x]
-  (. x (getNamespace)))
+  [x]
+  (clojure.lang.RT/namespace x))
 
 (defmacro locking
   "Executes exprs in an implicit do, while holding the monitor of x.
