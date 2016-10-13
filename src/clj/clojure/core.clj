@@ -2915,6 +2915,28 @@
       (when (pred (first s))
         (cons (first s) (take-while pred (rest s))))))))
 
+(defn take-if
+  "Returns a pair [el? coll]. If (pred (first coll)) then el? is the first element. Otherwise
+  nil. coll is the tail if an element was taken, otherwise it is the unmodified collection.
+
+  (defmacro defsomething
+    \"Defines a foo with the provided name, metadata and form\"
+    {:arglists '([name doc? meta? form])}
+    [name & args]
+    (let [[doc? args]  (take-if string? args)
+          [meta? args] (take-if map? args)
+          meta         (meta name)
+          meta         (merge meta meta?)
+          meta         (if doc? (assoc meta :doc doc?) meta)]
+      ... ))"
+  {:added "0.3.0"}
+  [pred coll]
+  (let [e     (first coll)
+        coll' (rest coll)]
+    (if (pred e)
+      [e   coll']
+      [nil coll])))
+
 (defn drop
   "Returns a lazy sequence of all but the first n items in coll.
   Returns a stateful transducer when no collection is provided."
@@ -5851,18 +5873,30 @@
 (defmacro defonce
   "defs name to have the root value of the expr iff the named var has no root value,
   else expr is unevaluated"
-  {:added "0.1.0"}
-  [name expr]
-  (assert-args
-   (symbol? name) "Name must be a symbol."
-   (not (namespace name)) "Cannot define namespace qualified symbols.")
-  `(let [v# (clojure.lang.Var/intern
-             ^clojure.lang.Namespace *ns*
-             ^clojure.lang.Symbol '~name)]
-     (when-not (or (.isOnce v#)
-                   (.hasRoot v#))
-       (def ~(with-meta name (assoc (meta name) :once true)) ~expr))
-     v#))
+  {:added    "0.1.0"
+   :arglists '([name docstring? attr-map? expr])}
+  [name & forms]
+  (let [[docstring? forms] (take-if string? forms)
+        [attr-map?  forms] (take-if map? forms)
+        attr-map           (meta name)
+        attr-map           (if attr-map?
+                             (merge attr-map attr-map?)
+                             attr-map)
+        attr-map           (if docstring?
+                             (assoc attr-map :doc docstring?)
+                             attr-map)
+        [expr & tail]      forms]
+    (assert-args
+     (symbol? name)         "Name must be a symbol."
+     (not (namespace name)) "Cannot define namespace qualified symbols."
+     (empty? tail)          "defonce got unexpected trailing arguments!")
+    `(let [v# (clojure.lang.Var/intern
+               ^clojure.lang.Namespace *ns*
+               ^clojure.lang.Symbol '~name)]
+       (when-not (or (.isOnce v#)
+                     (.hasRoot v#))
+         (def ~(with-meta name (assoc attr-map :once true)) ~expr))
+       v#)))
 
 ;;;;;;;;;;; require/use/load, contributed by Stephen C. Gilardi ;;;;;;;;;;;;;;;;;;
 
