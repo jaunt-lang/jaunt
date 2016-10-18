@@ -825,7 +825,7 @@ public class Compiler implements Opcodes {
 
     static class Parser implements IParser {
       public Expr parse(C context, Object form) {
-        return new ImportExpr((String) RT.second(form));
+        return new ImportExpr(RT.name(RT.second(form)));
       }
     }
   }
