@@ -1,7 +1,7 @@
 # Change Log
 
 ## Upcoming
-- [#143](https://github.com/jaunt-lang/jaunt/pull/142) Strip unquoting from refer replacement messages (@arrdem).
+- [#143](https://github.com/jaunt-lang/jaunt/pull/143) Strip unquoting from refer replacement messages (@arrdem).
 - [#142](https://github.com/jaunt-lang/jaunt/pull/142) Improve replacement messages from refer (@arrdem).
 - [#136](https://github.com/jaunt-lang/jaunt/pull/136) Support `^:deprecated` annotations on single fn arities (@arrdem).
 - [#138](https://github.com/jaunt-lang/jaunt/pull/138) Roll back deprecation of `clojure-version`, `*clojure-version*` (@arrdem).
