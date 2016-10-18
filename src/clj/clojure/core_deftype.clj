@@ -558,27 +558,28 @@
   (boolean (find-protocol-impl protocol x)))
 
 (defn -cache-protocol-fn [^clojure.lang.AFunction pf x ^Class c ^clojure.lang.IFn interf]
-  (let [cache  (.__methodImplCache pf)
-        f (if (.isInstance c x)
-            interf
-            (find-protocol-method (.protocol cache) (.methodk cache) x))]
+  (let [cache (.__methodImplCache pf)
+        f     (if (.isInstance c x)
+                interf
+                (find-protocol-method (.protocol cache) (.methodk cache) x))]
     (when-not f
-      (throw (IllegalArgumentException. (str "No implementation of method: " (.methodk cache)
-                                             " of protocol: " (:var (.protocol cache))
-                                             " found for class: " (if (nil? x) "nil" (.getName (class x)))))))
+      (throw (IllegalArgumentException.
+              (str "No implementation of method: " (.methodk cache)
+                   " of protocol: " (:var (.protocol cache))
+                   " found for class: " (if (nil? x) "nil" (.getName (class x)))))))
     (set! (.__methodImplCache pf) (expand-method-impl-cache cache (class x) f))
     f))
 
 (defn- emit-method-builder [on-interface method on-method arglists]
   (let [methodk (keyword method)
-        gthis (with-meta (gensym) {:tag 'clojure.lang.AFunction})
+        gthis   (with-meta (gensym) {:tag 'clojure.lang.AFunction})
         ginterf (gensym)]
     `(fn [cache#]
        (let [~ginterf
              (fn
                ~@(map
                   (fn [args]
-                    (let [gargs (map #(gensym (str "gf__" % "__")) args)
+                    (let [gargs  (map #(gensym (str "gf__" % "__")) args)
                           target (first gargs)]
                       `([~@gargs]
                         (. ~(with-meta target {:tag on-interface}) (~(or on-method method) ~@(rest gargs))))))
@@ -587,11 +588,11 @@
              (fn ~gthis
                ~@(map
                   (fn [args]
-                    (let [gargs (map #(gensym (str "gf__" % "__")) args)
+                    (let [gargs  (map #(gensym (str "gf__" % "__")) args)
                           target (first gargs)]
                       `([~@gargs]
                         (let [cache# (.__methodImplCache ~gthis)
-                              f# (.fnFor cache# (clojure.lang.Util/classOf ~target))]
+                              f#     (.fnFor cache# (clojure.lang.Util/classOf ~target))]
                           (if f#
                             (f# ~@gargs)
                             ((-cache-protocol-fn ~gthis ~target ~on-interface ~ginterf) ~@gargs))))))
@@ -615,94 +616,196 @@
                      (str "method " (.sym v) " of protocol " (.sym p))
                      (str "function " (.sym v)))))))))
 
-(defn- emit-protocol [name opts+sigs]
-  (let [iname (symbol (str (munge (namespace-munge *ns*)) "." (munge name)))
-        [opts sigs]
-        (loop [opts {:on (list 'quote iname) :on-interface iname} sigs opts+sigs]
-          (condp #(%1 %2) (first sigs)
-            string? (recur (assoc opts :doc (first sigs)) (next sigs))
-            keyword? (recur (assoc opts (first sigs) (second sigs)) (nnext sigs))
-            [opts sigs]))
-        sigs (when sigs
-               (reduce1 (fn [m s]
-                          (let [name-meta (meta (first s))
-                                mname (with-meta (first s) nil)
-                                [arglists doc]
-                                (loop [as [] rs (rest s)]
-                                  (if (vector? (first rs))
-                                    (recur (conj as (first rs)) (next rs))
-                                    [(seq as) (first rs)]))]
-                            (when (some #{0} (map count arglists))
-                              (throw (IllegalArgumentException. (str "Definition of function " mname " in protocol " name " must take at least one arg."))))
-                            (when (m (keyword mname))
-                              (throw (IllegalArgumentException. (str "Function " mname " in protocol " name " was redefined. Specify all arities in single definition."))))
-                            (assoc m (keyword mname)
-                                   (merge name-meta
-                                          {:name (vary-meta mname assoc :doc doc :arglists arglists)
-                                           :arglists arglists
-                                           :doc doc}))))
-                        {} sigs))
-        meths (mapcat (fn [sig]
-                        (let [m (munge (:name sig))]
+(defn- into1 [e coll]
+  (reduce1 conj e coll))
+
+(defn- parse-kwopts
+  [name opts+more]
+  (loop [opts     {}
+         more     nil
+         worklist opts+more]
+    (if-not (empty? worklist)
+      (if (keyword? (first worklist))
+        (if-not (>= 2 (count worklist))
+          (throw
+           (IllegalArgumentException.
+            (format "Got trailing keyword option while parsing protocol %s" name)))
+          (recur (assoc opts (first worklist) (second worklist))
+                 more (nnext worklist)))
+        (recur opts (conj more (first worklist)) (next worklist)))
+      [opts more])))
+
+(defn- parse-sig
+  "Parses a signature of the form (name args* docstring? attr-map?), inserting it into the protocol"
+  [proto-name m s]
+  (let [[method-name & s] s
+        name-meta         (meta name)
+        ;; hat trick to simplify parsing - reverse the tail, take from the tail, reverse it again to
+        ;; get args in order. Args order matters for :arglists metadata which is expected to be in
+        ;; declared order despite only being used setwise.
+        s                 (reverse s)
+        [meta? s]         (take-if map? s)
+        [docstring? s]    (take-if string? s)
+        arglists          (reverse s)]
+
+    (when-not (symbol? method-name)
+      (throw
+       (IllegalArgumentException.
+        (format "Definition of function %s in protocol %s, sig name must be a symbol"
+                method-name proto-name))))
+
+    (when-not arglists
+      (throw
+       (IllegalArgumentException.
+        (format "Definition of function %s in protocol %s, function has no arities"
+                method-name proto-name))))
+
+    (when-let [i (some #(if (not (vector? %)) %) arglists)]
+      (throw
+       (IllegalArgumentException.
+        (format "Definition of function %s in protocol %s, arglists must be vectors, got %s"
+                method-name proto-name (.getSimpleName ^Class (class i))))))
+
+    (when-not (every? #(every? symbol? %) arglists)
+      (throw
+       (IllegalArgumentException.
+        (format "Definition of function %s in protocol %s, arglists are limited to symbols"
+                method-name proto-name))))
+
+    (when (some #{0} (map count arglists))
+      (throw
+       (IllegalArgumentException.
+        (format "Definition of function %s in protocol %s must take at least one arg."
+                method-name proto-name))))
+
+    (when (contains? m (keyword method-name))
+      (throw
+       (IllegalArgumentException.
+        (format "Function %s in protocol %s was redefined. Specify all arities in single definition."
+                method-name proto-name))))
+
+    (let [;; FIXME: this is cond-> output, could use that instead given eval order changes
+          metadata (let [metadata name-meta
+                         metadata (if meta?
+                                    (merge metadata meta?)
+                                    metadata)
+                         metadata (if docstring?
+                                    (assoc metadata :doc docstring?)
+                                    metadata)]
+                     metadata)]
+      (assoc m (keyword method-name)
+             {:name     method-name
+              :meta     metadata
+              :on       (:on metadata)
+              :arglists (list* arglists)}))))
+
+(defn- emit-protocol
+  [name opts+sigs]
+  (let [[docstring? opts+sigs] (take-if string? opts+sigs)
+        [meta? opts+sigs]      (take-if map? opts+sigs)
+        [opts sigs]            (parse-kwopts name opts+sigs)
+        meta                   (let [meta (meta name)
+                                     meta (merge meta opts)
+                                     meta (merge meta meta?)
+                                     meta (if docstring?
+                                            (assoc meta :doc docstring?)
+                                            meta)]
+                                 meta)
+
+        iname (if-let [iname (:on opts)]
+                (if-not (check-classname iname)
+                  (throw
+                   (IllegalArgumentException.
+                    (format "Defining protocol %s, specified interface \"%s\" not a legal classname"
+                            name iname)))
+                  (symbol (name iname)))
+                (symbol (str (munge (namespace-munge *ns*)) "." (munge name))))
+        opts  {:on           (list 'quote iname)
+               :on-interface iname}
+        sigs  (when sigs
+                (reduce1 #(parse-sig name %1 %2) {} sigs))
+        meths (mapcat (fn [{:keys [name arglists metadata] :as sig}]
+                        (let [m (munge name)]
+                          ;; FIXME: this is where we get an all-object calling
+                          ;; convention on protocols. Nice and easy to emit code
+                          ;; for, probably not something we really want to keep
+                          ;; forever.
                           (map #(vector m (vec (repeat (dec (count %)) 'Object)) 'Object)
-                               (:arglists sig))))
-                      (vals sigs))]
-    `(do
-       (defonce ~name {})
-       (gen-interface :name ~iname :methods ~meths)
-       (alter-meta! (var ~name) assoc :doc ~(:doc opts))
-       ~(when sigs
-          `(#'assert-same-protocol (var ~name) '~(map :name (vals sigs))))
-       (alter-var-root (var ~name) merge
-                       (assoc ~opts
-                              :sigs '~sigs
-                              :var (var ~name)
-                              :method-map
-                              ~(and (:on opts)
-                                    (apply hash-map
-                                           (mapcat
-                                            (fn [s]
-                                              [(keyword (:name s)) (keyword (or (:on s) (:name s)))])
-                                            (vals sigs))))
-                              :method-builders
-                              ~(apply hash-map
-                                      (mapcat
-                                       (fn [s]
-                                         [`(intern *ns* (with-meta '~(:name s) (merge '~s {:protocol (var ~name)})))
-                                          (emit-method-builder (:on-interface opts) (:name s) (:on s) (:arglists s))])
-                                       (vals sigs)))))
-       (-reset-methods ~name)
-       '~name)))
+                               arglists)))
+                      (vals sigs))
+
+        method-map (->> sigs
+                        vals
+                        (map (fn [s]
+                               [(keyword (:name s))
+                                (keyword (or (:on s) (:name s)))]))
+                        (into1 {}))
+
+        method-builders (->> sigs
+                             vals
+                             (map
+                              (fn [s]
+                                [`(intern *ns* (vary-meta '~(:name s)
+                                                          merge
+                                                          '~(:meta s)
+                                                          {:protocol (var ~name)
+                                                           :arglists '~(:arglists s)}))
+                                 (emit-method-builder (:on-interface opts)
+                                                      (:name s)
+                                                      (:on s)
+                                                      (:arglists s))]))
+                             (into1 {}))]
+    `(do (defonce ~(with-meta name meta) {})
+         (gen-interface :name ~iname :methods ~meths)
+         ~(when-not (empty? sigs)
+            `(#'assert-same-protocol (var ~name) '~(map :name (vals sigs))))
+         (alter-var-root (var ~name) merge
+                         (merge ~opts
+                                {:sigs            '~sigs
+                                 :var             (var ~name)
+                                 :method-map      ~method-map
+                                 :method-builders ~method-builders}))
+         (-reset-methods ~name)
+         '~name)))
 
 (defmacro defprotocol
   "A protocol is a named set of named methods and their signatures:
   (defprotocol AProtocolName
+    ; optional doc string
 
-    ;optional doc string
     \"A doc string for AProtocol abstraction\"
+    ; optional metadata
+    {:author [\"Ada Lovelace <adal@gmail.com>\"]}
 
-  ;method signatures
-    (bar [this a b] \"bar docs\")
-    (baz [this a] [this a b] [this a b c] \"baz docs\"))
+    ; method signatures
+    (bar
+      [this a b]
+      ; optional method docstring
+      \"bar docs\"
+      ; optional method metadata
+      {:foo :bar})
 
-  No implementations are provided. Docs can be specified for the
-  protocol overall and for each method. The above yields a set of
-  polymorphic functions and a protocol object. All are
-  namespace-qualified by the ns enclosing the definition The resulting
-  functions dispatch on the type of their first argument, which is
-  required and corresponds to the implicit target object ('this' in
-  Java parlance). defprotocol is dynamic, has no special compile-time
-  effect, and defines no new types or classes. Implementations of
-  the protocol methods can be provided using extend.
+    (baz
+      ; methods may be multi-arity
+      [this a]
+      [this a b]
+      [this a b c]))
 
-  defprotocol will automatically generate a corresponding interface,
-  with the same name as the protocol, i.e. given a protocol:
-  my.ns/Protocol, an interface: my.ns.Protocol. The interface will
-  have methods corresponding to the protocol functions, and the
-  protocol will automatically work with instances of the interface.
+  No implementations are provided. Docs can be specified for the protocol overall and for each
+  method. The above yields a set of polymorphic functions and a protocol object. All are
+  namespace-qualified by the ns enclosing the definition The resulting functions dispatch on the
+  type of their first argument, which is required and corresponds to the implicit target
+  object ('this' in Java parlance). defprotocol is dynamic, has no special compile-time effect, and
+  defines no new types or classes. Implementations of the protocol methods can be provided using
+  extend.
 
-  Note that you should not use this interface with deftype or
-  reify, as they support the protocol directly:
+  defprotocol will automatically generate a corresponding interface, with the same name as the
+  protocol, i.e. given a protocol: my.ns/Protocol, an interface: my.ns.Protocol. The interface will
+  have methods corresponding to the protocol functions, and the protocol will automatically work
+  with instances of the interface.
+
+  Note that you should not use this interface with deftype or reify, as they support the protocol
+  directly:
 
   (defprotocol P
     (foo [this])
@@ -724,7 +827,8 @@
         (bar-me [this] x)
         (bar-me [this y] x))))
   => 17"
-  {:added "0.1.0"}
+  {:added    "0.1.0"
+   :arglists '([name docstring? attr-map? & sigs])}
   [name & opts+sigs]
   (emit-protocol name opts+sigs))
 
@@ -867,4 +971,3 @@
 
   [p & specs]
   (emit-extend-protocol p specs))
-
