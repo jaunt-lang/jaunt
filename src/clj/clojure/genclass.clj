@@ -66,10 +66,14 @@
 
 (defn- ctor-sigs [^Class super]
   (for [^Constructor ctor (. super (getDeclaredConstructors))
-        :when (not (. Modifier (isPrivate (. ctor (getModifiers)))))]
+        :when             (not (. Modifier (isPrivate (. ctor (getModifiers)))))]
     (apply vector (. ctor (getParameterTypes)))))
 
+(defn- check-classname [name]
+  (boolean (re-matches #"([a-zA-Z_$][a-zA-Z\d_$]*\.)*[a-zA-Z_$][a-zA-Z\d_$]*" name)))
+
 (defn- escape-class-name [^Class c]
+  {:post [(check-classname %)]}
   (.. (.getSimpleName c)
       (replace "[]" "<>")))
 
@@ -85,29 +89,27 @@
       (if (= c Object)
         (throw (new Exception (str "field, " f ", not defined in class, " start-class ", or its ancestors")))
         (let [dflds (.getDeclaredFields c)
-              rfld (first (filter #(= f (.getName ^java.lang.reflect.Field %)) dflds))]
+              rfld  (first (filter #(= f (.getName ^java.lang.reflect.Field %)) dflds))]
           (or rfld (recur (.getSuperclass c))))))))
 
-;;(distinct (map first (keys (mapcat non-private-methods [Object IPersistentMap]))))
-
 (def ^{:private true} prim->class
-  {'int Integer/TYPE
-   'ints (Class/forName "[I")
-   'long Long/TYPE
-   'longs (Class/forName "[J")
-   'float Float/TYPE
-   'floats (Class/forName "[F")
-   'double Double/TYPE
-   'doubles (Class/forName "[D")
-   'void Void/TYPE
-   'short Short/TYPE
-   'shorts (Class/forName "[S")
-   'boolean Boolean/TYPE
+  {'int      Integer/TYPE
+   'ints     (Class/forName "[I")
+   'long     Long/TYPE
+   'longs    (Class/forName "[J")
+   'float    Float/TYPE
+   'floats   (Class/forName "[F")
+   'double   Double/TYPE
+   'doubles  (Class/forName "[D")
+   'void     Void/TYPE
+   'short    Short/TYPE
+   'shorts   (Class/forName "[S")
+   'boolean  Boolean/TYPE
    'booleans (Class/forName "[Z")
-   'byte Byte/TYPE
-   'bytes (Class/forName "[B")
-   'char Character/TYPE
-   'chars (Class/forName "[C")})
+   'byte     Byte/TYPE
+   'bytes    (Class/forName "[B")
+   'char     Character/TYPE
+   'chars    (Class/forName "[C")})
 
 (defn- ^Class the-class [x]
   (cond
@@ -135,84 +137,84 @@
         {:keys [name extends implements constructors methods main factory state init exposes
                 exposes-methods prefix load-impl-ns impl-ns post-init]}
         (merge default-options options-map)
-        name-meta (meta name)
-        name (str name)
-        super (if extends (the-class extends) Object)
-        interfaces (map the-class implements)
-        supers (cons super interfaces)
-        ctor-sig-map (or constructors (zipmap (ctor-sigs super) (ctor-sigs super)))
-        cv (new ClassWriter (. ClassWriter COMPUTE_MAXS))
-        cname (. name (replace "." "/"))
-        pkg-name name
-        impl-pkg-name (str impl-ns)
-        impl-cname (.. impl-pkg-name (replace "." "/") (replace \- \_))
-        ctype (. Type (getObjectType cname))
-        iname (fn [^Class c] (.. Type (getType c) (getInternalName)))
-        totype (fn [^Class c] (. Type (getType c)))
-        to-types (fn [cs] (if (pos? (count cs))
-                            (into-array (map totype cs))
-                            (make-array Type 0)))
-        obj-type ^Type (totype Object)
-        arg-types (fn [n] (if (pos? n)
-                            (into-array (repeat n obj-type))
-                            (make-array Type 0)))
-        super-type ^Type (totype super)
-        init-name (str init)
-        post-init-name (str post-init)
-        factory-name (str factory)
-        state-name (str state)
-        main-name "main"
-        var-name (fn [s] (clojure.lang.Compiler/munge (str s "__var")))
-        class-type  (totype Class)
-        rt-type  (totype clojure.lang.RT)
-        var-type ^Type (totype clojure.lang.Var)
-        ifn-type (totype clojure.lang.IFn)
-        iseq-type (totype clojure.lang.ISeq)
-        ex-type  (totype java.lang.UnsupportedOperationException)
-        util-type (totype clojure.lang.Util)
-        all-sigs (distinct (concat (map #(let [[m p] (key %)] {m [p]}) (mapcat non-private-methods supers))
-                                   (map (fn [[m p]] {(str m) [p]}) methods)))
-        sigs-by-name (apply merge-with concat {} all-sigs)
-        overloads (into1 {} (filter (fn [[m s]] (next s)) sigs-by-name))
-        var-fields (concat (when init [init-name])
-                           (when post-init [post-init-name])
-                           (when main [main-name])
-                                        ;(when exposes-methods (map str (vals exposes-methods)))
-                           (distinct (concat (keys sigs-by-name)
-                                             (mapcat (fn [[m s]] (map #(overload-name m (map the-class %)) s)) overloads)
-                                             (mapcat (comp (partial map str) vals val) exposes))))
-        emit-get-var (fn [^GeneratorAdapter gen v]
-                       (let [false-label (. gen newLabel)
-                             end-label (. gen newLabel)]
-                         (. gen getStatic ctype (var-name v) var-type)
-                         (. gen dup)
-                         (. gen invokeVirtual var-type (. Method (getMethod "boolean isBound()")))
-                         (. gen ifZCmp (. GeneratorAdapter EQ) false-label)
-                         (. gen invokeVirtual var-type (. Method (getMethod "Object get()")))
-                         (. gen goTo end-label)
-                         (. gen mark false-label)
-                         (. gen pop)
-                         (. gen visitInsn (. Opcodes ACONST_NULL))
-                         (. gen mark end-label)))
+
+        name-meta        (meta name)
+        name             (str name)
+        super            (if extends (the-class extends) Object)
+        interfaces       (map the-class implements)
+        supers           (cons super interfaces)
+        ctor-sig-map     (or constructors (zipmap (ctor-sigs super) (ctor-sigs super)))
+        cv               (new ClassWriter (. ClassWriter COMPUTE_MAXS))
+        cname            (. name (replace "." "/"))
+        pkg-name         name
+        impl-pkg-name    (str impl-ns)
+        impl-cname       (.. impl-pkg-name (replace "." "/") (replace \- \_))
+        ctype            (. Type (getObjectType cname))
+        iname            (fn [^Class c] (.. Type (getType c) (getInternalName)))
+        totype           (fn [^Class c] (. Type (getType c)))
+        to-types         (fn [cs] (if (pos? (count cs))
+                                    (into-array (map totype cs))
+                                    (make-array Type 0)))
+        obj-type         ^Type (totype Object)
+        arg-types        (fn [n] (if (pos? n)
+                                   (into-array (repeat n obj-type))
+                                   (make-array Type 0)))
+        super-type       ^Type (totype super)
+        init-name        (str init)
+        post-init-name   (str post-init)
+        factory-name     (str factory)
+        state-name       (str state)
+        main-name        "main"
+        var-name         (fn [s] (clojure.lang.Compiler/munge (str s "__var")))
+        class-type       (totype Class)
+        rt-type          (totype clojure.lang.RT)
+        var-type         ^Type (totype clojure.lang.Var)
+        ifn-type         (totype clojure.lang.IFn)
+        iseq-type        (totype clojure.lang.ISeq)
+        ex-type          (totype java.lang.UnsupportedOperationException)
+        util-type        (totype clojure.lang.Util)
+        all-sigs         (distinct (concat (map #(let [[m p] (key %)] {m [p]}) (mapcat non-private-methods supers))
+                                           (map (fn [[m p]] {(str m) [p]}) methods)))
+        sigs-by-name     (apply merge-with concat {} all-sigs)
+        overloads        (into1 {} (filter (fn [[m s]] (next s)) sigs-by-name))
+        var-fields       (concat (when init [init-name])
+                                 (when post-init [post-init-name])
+                                 (when main [main-name])
+                                 (distinct (concat (keys sigs-by-name)
+                                                   (mapcat (fn [[m s]] (map #(overload-name m (map the-class %)) s)) overloads)
+                                                   (mapcat (comp (partial map str) vals val) exposes))))
+        emit-get-var     (fn [^GeneratorAdapter gen v]
+                           (let [false-label (. gen newLabel)
+                                 end-label   (. gen newLabel)]
+                             (. gen getStatic ctype (var-name v) var-type)
+                             (. gen dup)
+                             (. gen invokeVirtual var-type (. Method (getMethod "boolean isBound()")))
+                             (. gen ifZCmp (. GeneratorAdapter EQ) false-label)
+                             (. gen invokeVirtual var-type (. Method (getMethod "Object get()")))
+                             (. gen goTo end-label)
+                             (. gen mark false-label)
+                             (. gen pop)
+                             (. gen visitInsn (. Opcodes ACONST_NULL))
+                             (. gen mark end-label)))
         emit-unsupported (fn [^GeneratorAdapter gen ^Method m]
                            (. gen (throwException ex-type (str (. m (getName)) " ("
                                                                impl-pkg-name "/" prefix (.getName m)
                                                                " not defined?)"))))
         emit-forwarding-method
         (fn [name pclasses rclass as-static else-gen]
-          (let [mname (str name)
-                pmetas (map meta pclasses)
-                pclasses (map the-class pclasses)
-                rclass (the-class rclass)
-                ptypes (to-types pclasses)
-                rtype ^Type (totype rclass)
-                m (new Method mname rtype ptypes)
+          (let [mname       (str name)
+                pmetas      (map meta pclasses)
+                pclasses    (map the-class pclasses)
+                rclass      (the-class rclass)
+                ptypes      (to-types pclasses)
+                rtype       ^Type (totype rclass)
+                m           (new Method mname rtype ptypes)
                 is-overload (seq (overloads mname))
-                gen (new GeneratorAdapter (+ (. Opcodes ACC_PUBLIC) (if as-static (. Opcodes ACC_STATIC) 0))
-                         m nil nil cv)
+                gen         (new GeneratorAdapter (+ (. Opcodes ACC_PUBLIC) (if as-static (. Opcodes ACC_STATIC) 0))
+                                 m nil nil cv)
                 found-label (. gen (newLabel))
-                else-label (. gen (newLabel))
-                end-label (. gen (newLabel))]
+                else-label  (. gen (newLabel))
+                end-label   (. gen (newLabel))]
             (add-annotations gen (meta name))
             (dotimes [i (count pmetas)]
               (add-annotations gen (nth pmetas i) i))
@@ -230,28 +232,27 @@
                 (. gen (ifNull else-label))
                 (when is-overload
                   (. gen (mark found-label)))
-                                        ;if found
+                ;; if found
                 (.checkCast gen ifn-type)
                 (when-not as-static
                   (. gen (loadThis)))
-                                        ;box args
+                ;; box args
                 (dotimes [i (count ptypes)]
                   (. gen (loadArg i))
                   (. clojure.lang.Compiler$HostExpr (emitBoxReturn nil gen (nth pclasses i))))
-                                        ;call fn
-                (. gen (invokeInterface ifn-type (new Method "invoke" obj-type
-                                                      (to-types (repeat (+ (count ptypes)
-                                                                           (if as-static 0 1))
-                                                                        Object)))))
-                                        ;(into-array (cons obj-type
-                ;; (repeat (count ptypes) obj-type))))))
-                                        ;unbox return
+                ;; call fn
+                (. gen (invokeInterface ifn-type
+                                        (new Method "invoke" obj-type
+                                             (to-types (repeat (+ (count ptypes)
+                                                                  (if as-static 0 1))
+                                                               Object)))))
+                ;; unbox return
                 (. gen (unbox rtype))
                 (when (= (. rtype (getSort)) (. Type VOID))
                   (. gen (pop)))
                 (. gen (goTo end-label))
 
-                                        ;else call supplied alternative generator
+                ;; else call supplied alternative generator
                 (. gen (mark else-label))
                 (. gen (pop))
 
@@ -260,7 +261,7 @@
                 (. gen (mark end-label))))
             (. gen (returnValue))
             (. gen (endMethod))))]
-                                        ;start class definition
+    ;; start class definition
     (. cv (visit (. Opcodes V1_5) (+ (. Opcodes ACC_PUBLIC) (. Opcodes ACC_SUPER))
                  cname nil (iname super)
                  (when-let [ifc (seq interfaces)]
@@ -269,21 +270,21 @@
     ;; class annotations
     (add-annotations cv name-meta)
 
-                                        ;static fields for vars
+    ;; static fields for vars
     (doseq [v var-fields]
       (. cv (visitField (+ (. Opcodes ACC_PRIVATE) (. Opcodes ACC_FINAL) (. Opcodes ACC_STATIC))
                         (var-name v)
                         (. var-type getDescriptor)
                         nil nil)))
 
-                                        ;instance field for state
+    ;; instance field for state
     (when state
       (. cv (visitField (+ (. Opcodes ACC_PUBLIC) (. Opcodes ACC_FINAL))
                         state-name
                         (. obj-type getDescriptor)
                         nil nil)))
 
-                                        ;static init to set up var fields and load init
+    ;; static init to set up var fields and load init
     (let [gen (new GeneratorAdapter (+ (. Opcodes ACC_PUBLIC) (. Opcodes ACC_STATIC))
                    (. Method getMethod "void <clinit> ()")
                    nil nil cv)]
@@ -305,23 +306,23 @@
       (. gen (returnValue))
       (. gen (endMethod)))
 
-                                        ;ctors
+    ;; ctors
     (doseq [[pclasses super-pclasses] ctor-sig-map]
       (let [constructor-annotations (meta pclasses)
-            pclasses (map the-class pclasses)
-            super-pclasses (map the-class super-pclasses)
-            ptypes (to-types pclasses)
-            super-ptypes (to-types super-pclasses)
-            m (new Method "<init>" (. Type VOID_TYPE) ptypes)
-            super-m (new Method "<init>" (. Type VOID_TYPE) super-ptypes)
-            gen (new GeneratorAdapter (. Opcodes ACC_PUBLIC) m nil nil cv)
-            _ (add-annotations gen constructor-annotations)
-            no-init-label (. gen newLabel)
-            end-label (. gen newLabel)
-            no-post-init-label (. gen newLabel)
-            end-post-init-label (. gen newLabel)
-            nth-method (. Method (getMethod "Object nth(Object,int)"))
-            local (. gen newLocal obj-type)]
+            pclasses                (map the-class pclasses)
+            super-pclasses          (map the-class super-pclasses)
+            ptypes                  (to-types pclasses)
+            super-ptypes            (to-types super-pclasses)
+            m                       (new Method "<init>" (. Type VOID_TYPE) ptypes)
+            super-m                 (new Method "<init>" (. Type VOID_TYPE) super-ptypes)
+            gen                     (new GeneratorAdapter (. Opcodes ACC_PUBLIC) m nil nil cv)
+            _                       (add-annotations gen constructor-annotations)
+            no-init-label           (. gen newLabel)
+            end-label               (. gen newLabel)
+            no-post-init-label      (. gen newLabel)
+            end-post-init-label     (. gen newLabel)
+            nth-method              (. Method (getMethod "Object nth(Object,int)"))
+            local                   (. gen newLocal obj-type)]
         (. gen (visitCode))
 
         (if init
@@ -330,14 +331,14 @@
             (. gen dup)
             (. gen ifNull no-init-label)
             (.checkCast gen ifn-type)
-                                        ;box init args
+            ;; box init args
             (dotimes [i (count pclasses)]
               (. gen (loadArg i))
               (. clojure.lang.Compiler$HostExpr (emitBoxReturn nil gen (nth pclasses i))))
-                                        ;call init fn
+            ;; call init fn
             (. gen (invokeInterface ifn-type (new Method "invoke" obj-type
                                                   (arg-types (count ptypes)))))
-                                        ;expecting [[super-ctor-args] state] returned
+            ;; expecting [[super-ctor-args] state] returned
             (. gen dup)
             (. gen push (int 0))
             (. gen (invokeStatic rt-type nth-method))
@@ -360,7 +361,7 @@
               (. gen pop))
 
             (. gen goTo end-label)
-                                        ;no init found
+            ;; no init found
             (. gen mark no-init-label)
             (. gen (throwException ex-type (str impl-pkg-name "/" prefix init-name " not defined")))
             (. gen mark end-label))
@@ -377,25 +378,25 @@
           (. gen ifNull no-post-init-label)
           (.checkCast gen ifn-type)
           (. gen (loadThis))
-                                        ;box init args
+          ;; box init args
           (dotimes [i (count pclasses)]
             (. gen (loadArg i))
             (. clojure.lang.Compiler$HostExpr (emitBoxReturn nil gen (nth pclasses i))))
-                                        ;call init fn
+          ;; call init fn
           (. gen (invokeInterface ifn-type (new Method "invoke" obj-type
                                                 (arg-types (inc (count ptypes))))))
           (. gen pop)
           (. gen goTo end-post-init-label)
-                                        ;no init found
+          ;; no init found
           (. gen mark no-post-init-label)
           (. gen (throwException ex-type (str impl-pkg-name "/" prefix post-init-name " not defined")))
           (. gen mark end-post-init-label))
 
         (. gen (returnValue))
         (. gen (endMethod))
-                                        ;factory
+        ;; factory
         (when factory
-          (let [fm (new Method factory-name ctype ptypes)
+          (let [fm  (new Method factory-name ctype ptypes)
                 gen (new GeneratorAdapter (+ (. Opcodes ACC_PUBLIC) (. Opcodes ACC_STATIC))
                          fm nil nil cv)]
             (. gen (visitCode))
@@ -406,7 +407,7 @@
             (. gen (returnValue))
             (. gen (endMethod))))))
 
-                                        ;add methods matching supers', if no fn -> call super
+    ;; add methods matching supers', if no fn -> call super
     (let [mm (non-private-methods super)]
       (doseq [^java.lang.reflect.Method meth (vals mm)]
         (emit-forwarding-method (.getName meth) (.getParameterTypes meth) (.getReturnType meth) false
@@ -438,11 +439,11 @@
                                                                      (conj ms [((symbol name) exposes-methods) m])
                                                                      ms)) [] (concat (seq mm)
                                                                                      (seq (protected-final-methods super))))]
-        (let [ptypes (to-types (.getParameterTypes m))
-              rtype (totype (.getReturnType m))
+        (let [ptypes    (to-types (.getParameterTypes m))
+              rtype     (totype (.getReturnType m))
               exposer-m (new Method (str local-mname) rtype ptypes)
-              target-m (new Method (.getName m) rtype ptypes)
-              gen (new GeneratorAdapter (. Opcodes ACC_PUBLIC) exposer-m nil nil cv)]
+              target-m  (new Method (.getName m) rtype ptypes)
+              gen       (new GeneratorAdapter (. Opcodes ACC_PUBLIC) exposer-m nil nil cv)]
           (. gen (loadThis))
           (. gen (loadArgs))
           (. gen (visitMethodInsn (. Opcodes INVOKESPECIAL)
@@ -453,11 +454,11 @@
           (. gen (endMethod)))))
                                         ;main
     (when main
-      (let [m (. Method getMethod "void main (String[])")
-            gen (new GeneratorAdapter (+ (. Opcodes ACC_PUBLIC) (. Opcodes ACC_STATIC))
-                     m nil nil cv)
+      (let [m             (. Method getMethod "void main (String[])")
+            gen           (new GeneratorAdapter (+ (. Opcodes ACC_PUBLIC) (. Opcodes ACC_STATIC))
+                               m nil nil cv)
             no-main-label (. gen newLabel)
-            end-label (. gen newLabel)]
+            end-label     (. gen newLabel)]
         (. gen (visitCode))
 
         (emit-get-var gen main-name)
@@ -478,12 +479,12 @@
         (. gen (endMethod))))
                                         ;field exposers
     (doseq [[f {getter :get setter :set}] exposes]
-      (let [fld (find-field super (str f))
-            ftype (totype (.getType fld))
+      (let [fld     (find-field super (str f))
+            ftype   (totype (.getType fld))
             static? (Modifier/isStatic (.getModifiers fld))
-            acc (+ Opcodes/ACC_PUBLIC (if static? Opcodes/ACC_STATIC 0))]
+            acc     (+ Opcodes/ACC_PUBLIC (if static? Opcodes/ACC_STATIC 0))]
         (when getter
-          (let [m (new Method (str getter) ftype (to-types []))
+          (let [m   (new Method (str getter) ftype (to-types []))
                 gen (new GeneratorAdapter acc m nil nil cv)]
             (. gen (visitCode))
             (if static?
@@ -494,7 +495,7 @@
             (. gen (returnValue))
             (. gen (endMethod))))
         (when setter
-          (let [m (new Method (str setter) Type/VOID_TYPE (into-array [ftype]))
+          (let [m   (new Method (str setter) Type/VOID_TYPE (into-array [ftype]))
                 gen (new GeneratorAdapter acc m nil nil cv)]
             (. gen (visitCode))
             (if static?
@@ -722,7 +723,7 @@
   {:added "0.1.0"}
 
   [& options]
-  (let [options-map (apply hash-map options)
+  (let [options-map      (apply hash-map options)
         [cname bytecode] (generate-interface options-map)]
     (when *compile-files*
       (clojure.lang.Compiler/writeClassFile cname bytecode))
